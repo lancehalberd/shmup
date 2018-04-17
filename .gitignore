@@ -57,3 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 
+# Directory for files related to the project but not in the repo
+etc/
+
+# osx file
+.DS_Store
