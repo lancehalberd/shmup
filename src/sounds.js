@@ -101,6 +101,7 @@ const muteSounds = () => {
     'sfx/hit.mp3+200+1',
     'sfx/flydeath.mp3+0+5',
     'sfx/coin.mp3',
+    'sfx/powerup.mp3',
     'sfx/startgame.mp3',
     'sfx/exclamation.mp3+0+3',
     'sfx/heal.mp3+200+5',
