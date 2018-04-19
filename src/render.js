@@ -4,6 +4,7 @@ const {
     GAME_HEIGHT,
     FRAME_LENGTH,
     DEATH_COOLDOWN,
+    POINTS_FOR_POWERUP,
 } = require('gameConstants');
 
 const Rectangle = require('Rectangle');
@@ -26,9 +27,10 @@ const {
     backgroundSky,
     plainsBackground,
     plainsMidground,
-    plainsForeground,
+    plainsNearground,
     blastStartAnimation,
     blastLoopAnimation,
+    ladybugAttackAnimation,
     bulletAnimation,
     explosionAnimation,
     selectNeedleImage,
@@ -38,6 +40,7 @@ const {
     portraitImage,
     gameOverImage,
     hudImage,
+    powerupBarAnimation,
     getHitBox,
     getFrame,
 } = require('animations');
@@ -47,7 +50,8 @@ const {
 } = require('heroes');
 
 const {
-    renderLoot
+    lootData,
+    renderLoot,
 } = require('loot');
 
 const {
@@ -84,48 +88,28 @@ const render = (state) => {
         return;
     }
     context.save();
-    if (isKeyDown(KEY_R)) {
-        rewindAlpha = Math.max(0.05, rewindAlpha - .06);
-    } else {
-        rewindAlpha = Math.min(1, rewindAlpha + .02);
-    }
-    context.globalAlpha = rewindAlpha;
-    renderBackground(state.world);
-    context.globalAlpha = 1;
+        if (isKeyDown(KEY_R)) {
+            rewindAlpha = Math.max(0.05, rewindAlpha - .06);
+        } else {
+            rewindAlpha = Math.min(1, rewindAlpha + .02);
+        }
+        context.globalAlpha = rewindAlpha;
+        renderBackground(state.world);
+        context.globalAlpha = 1;
 
-    context.save();
-    context.translate(0, hudImage.height);
-    state.playerAttacks.map(renderPlayerAttack);
-    state.enemies.map(enemy => renderEnemy(context, enemy));
-    state.loot.map(loot => renderLoot(context, loot));
-    state.effects.map(effect => renderEffect(context, effect));
-    // Thinking an attack shuold display on top of other effects so it can be avoided.
-    state.enemyAttacks.map(renderEnemyAttack);
-    state.players.map(hero => renderHero(context, hero));
+        context.save();
+        context.translate(0, hudImage.height);
+        state.playerAttacks.map(renderPlayerAttack);
+        state.enemies.map(enemy => renderEnemy(context, enemy));
+        state.loot.map(loot => renderLoot(context, loot));
+        state.effects.map(effect => renderEffect(context, effect));
+        // Thinking an attack shuold display on top of other effects so it can be avoided.
+        state.enemyAttacks.map(renderEnemyAttack);
+        state.players.map(hero => renderHero(context, hero));
+        context.restore();
+
     context.restore();
-
-    renderForeground(state.world);
-    context.restore();
-
-    drawImage(context, hudImage.image, hudImage, hudImage);
-    drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING, HUD_PADDING));
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font="20px sans-serif";
-    embossText(context, {
-        text: `x ${state.players[0].lives}`,
-        left: HUD_PADDING + portraitImage.width + HUD_PADDING,
-        top: HUD_PADDING + portraitImage.height / 2 + 1,
-        backgroundColor: '#AAA',
-    });
-
-    context.textAlign = 'right';
-    embossText(context, {
-        text: `SCORE: ${state.players[0].score}`,
-        left: WIDTH - HUD_PADDING - 2,
-        top: HUD_PADDING + portraitImage.height / 2 + 1,
-        backgroundColor: '#AAA',
-    });
+    renderHUD(context, state);
 
     if (state.deathCooldown > 0) stopTrack();
     if (state.deathCooldown > 0 && state.deathCooldown < 500) {
@@ -147,6 +131,38 @@ const render = (state) => {
         playSound(sfx);
     }
     state.sfx = [];
+};
+
+const renderHUD = (context, state) => {
+    drawImage(context, hudImage.image, hudImage, hudImage);
+    drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING, HUD_PADDING));
+    context.textAlign = 'left';
+    context.textBaseline = 'middle';
+    context.font="20px sans-serif";
+    embossText(context, {
+        text: `x ${state.players[0].lives}`,
+        left: HUD_PADDING + portraitImage.width + HUD_PADDING,
+        top: HUD_PADDING + portraitImage.height / 2 + 1,
+        backgroundColor: '#AAA',
+    });
+
+    context.textAlign = 'right';
+    embossText(context, {
+        text: `SCORE: ${state.players[0].score}`,
+        left: WIDTH - HUD_PADDING - 2,
+        top: HUD_PADDING + portraitImage.height / 2 + 1,
+        backgroundColor: '#AAA',
+    });
+
+    let powerupFrame = Math.floor(powerupBarAnimation.frames.length * (state.players[0].score % POINTS_FOR_POWERUP) / POINTS_FOR_POWERUP);
+    let frame = powerupBarAnimation.frames[powerupFrame];
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(100, 8));
+
+    for (let i = 0; i < state.players[0].powerups.length; i++) {
+        const powerupType = state.players[0].powerups[i];
+        frame = getFrame(lootData[powerupType].animation, state.players[0].sprite.animationTime);
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(210 + 20 * i, 8));
+    }
 };
 
 const renderTitle = (context, state) => {
@@ -177,10 +193,15 @@ const renderTitle = (context, state) => {
     //drawImage(context, optionsImage.image, optionsImage,
     //    new Rectangle(optionsImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2 + startGameImage.height * 3 + 10)
     //);
-    renderForeground(state.world);
-}
+    // renderForeground(state.world);
+};
 
 const renderPlayerAttack = (attack) => {
+    if (attack.type === 'ladybug') {
+        const frame = getFrame(ladybugAttackAnimation, attack.animationTime);
+        drawImage(context, frame.image, frame, attack);
+        return;
+    }
     const {animationTime} = attack;
     let frameIndex = animationTime / FRAME_LENGTH;
     const startFrames = blastStartAnimation.frames.length * blastStartAnimation.frameDuration;
@@ -191,7 +212,9 @@ const renderPlayerAttack = (attack) => {
     }
     frameIndex = Math.floor(frameIndex / animation.frameDuration);
     const frame = animation.frames[frameIndex % animation.frames.length];
-    drawImage(context, frame.image, frame, attack);
+    if (attack.damage === 3) drawTintedImage(context, frame.image, 'blue', .3, frame, attack);
+    else if (attack.damage === 2) drawTintedImage(context, frame.image, 'red', .3, frame, attack);
+    else drawImage(context, frame.image, frame, attack);
     if (attack.sfx) {
         playSound(attack.sfx);
         attack.sfx = false;
@@ -202,10 +225,6 @@ const renderEnemyAttack = (attack) => {
     const frame = getFrame(bulletAnimation, attack.animationTime);
     drawImage(context, frame.image, frame, attack);
 };
-
- //   plainsBackground,
- //   plainsMidground,
- //   plainsForeground,
 
 const renderBackgroundLayer = (context, {image, x, y}) => {
     const left = (x) % image.width;
@@ -220,7 +239,7 @@ const renderBackgroundLayer = (context, {image, x, y}) => {
         context.drawImage(image.image, left, 0, image.width, image.height,
             0, y, image.width, image.height);
     }
-}
+};
 
 const renderBackground = (world) => {
     // context.fillStyle = 'black';
@@ -229,6 +248,7 @@ const renderBackground = (world) => {
         x, y,
         backgroundYFactor, backgroundXFactor, backgroundXOffset, backgroundYOffset,
         midgroundYFactor, midgroundXFactor, midgroundXOffset, midgroundYOffset,
+        neargroundYFactor, neargroundXFactor, neargroundXOffset, neargroundYOffset,
     } = world;
     renderBackgroundLayer(context, {image: plainsBackground,
         x: x * backgroundXFactor + (backgroundXOffset || 0),
@@ -238,13 +258,17 @@ const renderBackground = (world) => {
         x: x * midgroundXFactor + (midgroundXOffset || 0),
         y: y * midgroundYFactor + (midgroundYOffset || 0),
     });
+    renderBackgroundLayer(context, {image: plainsNearground,
+        x: x * neargroundXFactor + (neargroundXOffset || 0),
+        y: y * neargroundYFactor + (neargroundYOffset || 0),
+    });
 };
 
-const renderForeground = ({x, y, foregroundXFactor, foregroundYFactor, foregroundXOffset, foregroundYOffset}) => {
+/*const renderForeground = ({x, y, foregroundXFactor, foregroundYFactor, foregroundXOffset, foregroundYOffset}) => {
     renderBackgroundLayer(context, {image: plainsForeground,
         x: x * foregroundXFactor + (foregroundXOffset || 0),
         y: y * foregroundYFactor + (foregroundYOffset || 0),
     });
-};
+};*/
 
 module.exports = render;

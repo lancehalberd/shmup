@@ -38,12 +38,23 @@ const heroHitBox = {left: 10, top: 15, width: 70, height: 30};
 const heroRectangle = r(88, 56, {hitBox: heroHitBox});
 const heroAnimation = {
     frames: [
-        {...heroRectangle, image: requireImage('gfx/hero1.png')},
-        {...heroRectangle, image: requireImage('gfx/hero2.png')},
-        {...heroRectangle, image: requireImage('gfx/hero3.png')},
-        {...heroRectangle, image: requireImage('gfx/hero4.png')},
-        {...heroRectangle, image: requireImage('gfx/hero3.png')},
-        {...heroRectangle, image: requireImage('gfx/hero2.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero1.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero2.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero3.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero4.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero3.png')},
+        {...heroRectangle, image: requireImage('gfx/heroes/hero2.png')},
+    ],
+    frameDuration: 3,
+};
+
+const ladybugRectangle = r(25, 20);
+const ladybugAnimation = {
+    frames: [
+        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug1.png')},
+        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug2.png')},
+        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug3.png')},
+        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug4.png')},
     ],
     frameDuration: 3,
 };
@@ -65,6 +76,16 @@ const blastLoopAnimation = {
     frameDuration: 2,
 };
 
+const ladybugAttackRectangle = r(10, 10);
+const ladybugAttackAnimation = {
+    frames: [
+        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot1.png')},
+        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot2.png')},
+        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot3.png')},
+        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot4.png')},
+    ],
+    frameDuration: 2,
+};
 
 const bulletRectangle = r(14, 15);
 const bulletAnimation = {
@@ -149,6 +170,30 @@ const flyingAntSoldierDeathAnimation = {
     frameDuration: 3,
 };
 
+const monkHitBox = {left: 0, top: 8, width: 42, height: 42};
+const monkRectangle = r(42, 50, {hitBox: monkHitBox});
+const monkAnimation = {
+    frames: [
+        {...monkRectangle, image: requireImage('gfx/enemies/robe1.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/robe2.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/robe3.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/robe4.png')},
+    ],
+    frameDuration: 6,
+};
+const monkAttackAnimation = {
+    frames: [
+        {...r(42, 50), image: requireImage('gfx/enemies/robeAttack.png')},
+    ],
+    frameDuration: 5,
+};
+const monkDeathAnimation = {
+    frames: [
+        {...r(46, 41), image: requireImage('gfx/enemies/robeded.png')},
+    ],
+    frameDuration: 5,
+};
+
 const damageRectangle = r(28, 28);
 const damageAnimation = {
     frames: [
@@ -171,6 +216,18 @@ const explosionAnimation = {
     frameDuration: 3
 };
 
+
+const dustRectangle = r(20, 20);
+const dustAnimation = {
+    frames: [
+        {...dustRectangle, image: requireImage('gfx/effects/dust1.png')},
+        {...dustRectangle, image: requireImage('gfx/effects/dust2.png')},
+        {...dustRectangle, image: requireImage('gfx/effects/dust3.png')},
+        {...dustRectangle, image: requireImage('gfx/effects/dust4.png')},
+    ],
+    frameDuration: 4
+};
+
 const coinRectangle = r(9, 9);
 const coinAnimation = {
     frames: [
@@ -180,6 +237,36 @@ const coinAnimation = {
         {...coinRectangle, image: requireImage('gfx/items/coin4.png')},
     ],
     frameDuration: 5
+};
+
+const powerupRectangle = r(20, 20);
+const powerupDiamondAnimation = {
+    frames: [
+        {...powerupRectangle, image: requireImage('gfx/items/diamond1.png')},
+        {...powerupRectangle, image: requireImage('gfx/items/diamond2.png')},
+    ],
+    frameDuration: 8
+};
+const powerupSquareAnimation = {
+    frames: [
+        {...powerupRectangle, image: requireImage('gfx/items/square1.png')},
+        {...powerupRectangle, image: requireImage('gfx/items/square2.png')},
+    ],
+    frameDuration: 8
+};
+const powerupTriangleAnimation = {
+    frames: [
+        {...powerupRectangle, image: requireImage('gfx/items/triangle1.png')},
+        {...powerupRectangle, image: requireImage('gfx/items/triangle2.png')},
+    ],
+    frameDuration: 8
+};
+
+const powerupLadybugAnimation = {
+    frames: [
+        {...r(30, 15), image: requireImage('gfx/items/ladybugicon.png')},
+    ],
+    frameDuration: 8
 };
 
 
@@ -194,10 +281,10 @@ const getHitBox = (animation, animationTime) => {
 
 const plainsBackground = r(1200, 600, {image: requireImage('gfx/scene/plains_bg.png')});
 const plainsMidground = r(2000, 600, {image: requireImage('gfx/scene/plains_mg.png')});
-const plainsForeground = r(1200, 600, {image: requireImage('gfx/scene/plains_fg.png')});
+const plainsNearground = r(1200, 600, {image: requireImage('gfx/scene/plains_ng.png')});
 const backgroundSky = r(1600, 600, {image: requireImage('gfx/scene/background_sky.png')});
 
-const portraitImage = r(17, 18, {image: requireImage('gfx/lifeportrait.png')});
+const portraitImage = r(17, 18, {image: requireImage('gfx/hud/lifeportrait.png')});
 const lifeAnimation = {
     frames: [
         {...portraitImage},
@@ -213,7 +300,26 @@ const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png')});
 
 const startImage = r(58, 30, {image: requireImage('gfx/start.png')});
 
-const hudImage = r(800, 36, {image: requireImage('gfx/hud.png')});
+const hudImage = r(800, 36, {image: requireImage('gfx/hud/hud.png')});
+
+
+const powerupBarRectangle = r(100, 19);
+const powerupBarAnimation = {
+    frames: [
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup0.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup1.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup2.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup3.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup4.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup5.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup6.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup7.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup8.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup9.png')},
+        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup10.png')},
+    ],
+    frameDuration: 5
+};
 
 module.exports = {
     getFrame,
@@ -221,20 +327,25 @@ module.exports = {
     backgroundSky,
     plainsBackground,
     plainsMidground,
-    plainsForeground,
+    plainsNearground,
     heroRectangle,
     heroAnimation,
+    ladybugAnimation,
     requireImage,
     blastRectangle,
     blastStartAnimation,
     blastLoopAnimation,
+    ladybugAttackAnimation,
     bulletAnimation,
-    damageRectangle,
     damageAnimation,
-    explosionRectangle,
     explosionAnimation,
+    dustAnimation,
     coinRectangle,
     coinAnimation,
+    powerupDiamondAnimation,
+    powerupTriangleAnimation,
+    powerupSquareAnimation,
+    powerupLadybugAnimation,
     lifeAnimation,
     flyRectangle,
     flyAnimation,
@@ -246,6 +357,9 @@ module.exports = {
     flyingAntDeathAnimation,
     flyingAntSoldierAnimation,
     flyingAntSoldierDeathAnimation,
+    monkAnimation,
+    monkDeathAnimation,
+    monkAttackAnimation,
     selectNeedleImage,
     startGameImage,
     optionsImage,
@@ -253,4 +367,5 @@ module.exports = {
     portraitImage,
     gameOverImage,
     hudImage,
+    powerupBarAnimation,
 };
