@@ -36,7 +36,7 @@ const getNewState = () => ({
     world: getNewWorld(),
 });
 
-const TEST_ENEMY = ENEMY_FLY;
+const TEST_ENEMY = false;
 
 const advanceState = (state) => {
     let updatedState = {...state};
