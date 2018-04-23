@@ -9,6 +9,7 @@ export const KEY_BACK_SPACE = 8;
 export const KEY_E = 'E'.charCodeAt(0);
 export const KEY_G = 'G'.charCodeAt(0);
 export const KEY_R = 'R'.charCodeAt(0);
+export const KEY_X = 'X'.charCodeAt(0);
 
 const KEY_MAPPINGS = {
     ['A'.charCodeAt(0)]: KEY_LEFT,

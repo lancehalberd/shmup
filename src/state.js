@@ -2,7 +2,7 @@
 const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH, OFFSCREEN_PADDING, ATTACK_OFFSET,
     ENEMY_COOLDOWN, DEATH_COOLDOWN, SPAWN_COOLDOWN, SPAWN_INV_TIME,
-    ENEMY_FLY, ENEMY_HORNET, ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER, ENEMY_MONK,
+    ENEMY_FLY, ENEMY_HORNET, ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER, ENEMY_MONK, ENEMY_CARGO_BEETLE,
 } = require('gameConstants');
 
 const {
@@ -36,7 +36,7 @@ const getNewState = () => ({
     world: getNewWorld(),
 });
 
-const TEST_ENEMY = false;
+const TEST_ENEMY = ENEMY_FLY;
 
 const advanceState = (state) => {
     let updatedState = {...state};
@@ -76,15 +76,15 @@ const advanceState = (state) => {
         return {...state, paused};
     }
     updatedState.newPlayerAttacks = [];
+    updatedState.newEffects = [];
+    updatedState.newLoot = [];
+    updatedState.newEnemies = [];
+    updatedState.newEnemyAttacks = [];
     for (let playerIndex = 0; playerIndex < updatedState.players.length; playerIndex++) {
         updatedState = advanceHero(updatedState, playerIndex);
     }
     world = advanceWorld(updatedState, world);
 
-    updatedState.newEffects = [];
-    updatedState.newLoot = [];
-    updatedState.newEnemies = [];
-    updatedState.newEnemyAttacks = [];
     let currentPlayerAttacks = updatedState.playerAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
     for (let enemyIndex = 0; enemyIndex < updatedState.enemies.length; enemyIndex++) {
         updatedState = advanceEnemy(updatedState, enemyIndex);
@@ -101,9 +101,9 @@ const advanceState = (state) => {
         if (!updatedState.enemies.length) {
             const newEnemy = createEnemy(TEST_ENEMY, {
                 left: WIDTH + 10,
-                top: 40 + (GAME_HEIGHT - 80) * (0.5 + 0.5 * Math.sin(world.time / (1000 - updatedState.spawnDuration / 5))),
+                top: 100 + (GAME_HEIGHT - 200) * (0.5 + 0.5 * Math.sin(world.time / (1000 - updatedState.spawnDuration / 5))),
             });
-            newEnemy.vx = newEnemy.vx || -6 + 3 * (world.time % 5000) / updatedState.spawnDuration;
+            newEnemy.vx = newEnemy.vx || -5;
             newEnemy.top = newEnemy.grounded ? getGroundHeight(updatedState) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
             updatedState = addEnemyToState(updatedState, newEnemy);
         }
@@ -143,10 +143,9 @@ const advanceState = (state) => {
     updatedState.sfx = [...updatedState.sfx];
     // Check for enemies hit by attacks.
     for (let i = 0; i < updatedState.enemies.length; i++) {
-        const enemy = updatedState.enemies[i];
-        if (enemy.done || enemy.dead) continue;
+        let enemy = updatedState.enemies[i];
         const enemyHitBox = getEnemyHitBox(enemy);
-        for (let j = 0; j < currentPlayerAttacks.length; j++) {
+        for (let j = 0; j < currentPlayerAttacks.length && !enemy.dead && !enemy.done; j++) {
             const attack = currentPlayerAttacks[j];
             if (!attack.done && Rectangle.collision(enemyHitBox, attack)) {
                 currentPlayerAttacks[j] = {...attack,
@@ -154,13 +153,13 @@ const advanceState = (state) => {
                     done: (attack.damage - enemy.life) <= 0,
                 };
                 updatedState = damageEnemy(updatedState, i, attack);
+                enemy = updatedState.enemies[i];
             }
         }
         for (let j = 0; j < updatedState.players.length; j++) {
-            const sprite = updatedState.players[j].sprite;
             if (!updatedState.players[j].invulnerableFor && !updatedState.players[j].done &&
                 !enemy.done && !enemy.dead &&
-                Rectangle.collision(enemyHitBox, getHeroHitBox(sprite))
+                Rectangle.collision(enemyHitBox, getHeroHitBox(updatedState.players[j]))
             ) {
                 updatedState = damageHero(updatedState, j);
             }
@@ -173,8 +172,7 @@ const advanceState = (state) => {
     let currentEnemyAttacks = updatedState.enemyAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
     for (let i = 0; i < updatedState.players.length; i++) {
         if (updatedState.players[i].invulnerableFor) continue;
-        const sprite = updatedState.players[i].sprite;
-        const playerHitBox = getHeroHitBox(sprite);
+        const playerHitBox = getHeroHitBox(updatedState.players[i]);
         for (let j = 0; j < currentEnemyAttacks.length && !updatedState.players[i].done; j++) {
             const attack = currentEnemyAttacks[j];
             if (Rectangle.collision(playerHitBox, attack)) {
@@ -191,8 +189,7 @@ const advanceState = (state) => {
         if (lootDrop.done) continue;
         for (let j = 0; j < updatedState.players.length; j++) {
             if (updatedState.players[j].done) continue;
-            const sprite = updatedState.players[j].sprite;
-            if (Rectangle.collision(lootDrop, getHeroHitBox(sprite))) {
+            if (Rectangle.collision(lootDrop, getHeroHitBox(updatedState.players[j]))) {
                 updatedState = lootData[lootDrop.type].collect(updatedState, j, lootDrop)
                 updatedState.loot[i] = {...lootDrop, done: true};
                 updatedState.sfx.push(lootData[lootDrop.type].sfx);
@@ -201,21 +198,6 @@ const advanceState = (state) => {
     }
     updatedState.loot = updatedState.loot.filter(lootDrop => !lootDrop.done);
 
-    let enemy;
-    for (enemy of updatedState.enemies) {
-        if (enemy.type !== ENEMY_HORNET && enemy.life > 2) {
-            console.log(enemy);
-            console.log(new Error("Bugged fly in enemies"));
-            debugger;
-        }
-    }
-    for (enemy of updatedState.newEnemies) {
-        if (enemy.type !== ENEMY_HORNET && enemy.life > 2) {
-            console.log(enemy);
-            console.log(new Error("Bugged fly in new enemies"));
-            debugger;
-        }
-    }
     // Add new enemies/attacks.
     updatedState.enemies = [...updatedState.enemies, ...updatedState.newEnemies];
     updatedState.playerAttacks = [...currentPlayerAttacks, ...updatedState.newPlayerAttacks];

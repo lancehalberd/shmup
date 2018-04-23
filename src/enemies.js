@@ -4,9 +4,9 @@ const { drawImage } = require('draw');
 
 const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH, OFFSCREEN_PADDING,
-    ENEMY_FLY, ENEMY_HORNET, ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER, ENEMY_MONK,
+    ENEMY_FLY, ENEMY_HORNET, ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER, ENEMY_MONK, ENEMY_CARGO_BEETLE,
     EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
-    LOOT_COIN, LOOT_LIFE,
+    LOOT_COIN,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
 } = require('gameConstants');
 
@@ -20,14 +20,9 @@ const {
     flyingAntAnimation, flyingAntDeathAnimation,
     flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation,
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
+    cargoBeetleAnimation, cargoBeetleDeathAnimation,
     bulletAnimation,
 } = require('animations');
-
-const { getNewSpriteState } = require('sprites');
-const { getGroundHeight } = require('world');
-
-const { createEffect, addEffectToState } = require('effects');
-const { createLoot, getRandomPowerupType, getAdaptivePowerupType, gainPoints } = require('loot');
 
 const enemyData = {
     [ENEMY_FLY]: {
@@ -42,7 +37,7 @@ const enemyData = {
     [ENEMY_HORNET]: {
         animation: hornetAnimation,
         deathAnimation: hornetDeathAnimation,
-        deathSound: 'sfx/flydeath.mp3',
+        deathSound: 'sfx/hornetdeath.mp3',
         accelerate: (state, enemy) => {
             let {vx, vy, seed, targetX, targetY, mode, modeTime} = enemy;
             const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 2000;
@@ -142,7 +137,7 @@ const enemyData = {
     [ENEMY_FLYING_ANT_SOLDIER]: {
         animation: flyingAntSoldierAnimation,
         deathAnimation: flyingAntSoldierDeathAnimation,
-        deathSound: 'sfx/flydeath.mp3',
+        deathSound: 'sfx/hit.mp3',
         accelerate(state, enemy) {
             let {vx, vy, seed} = enemy;
             const speed = enemy.speed;
@@ -216,6 +211,7 @@ const enemyData = {
         animation: monkAnimation,
         deathAnimation: monkDeathAnimation,
         attackAnimation: monkAttackAnimation,
+        deathSound: 'sfx/robedeath.mp3',
         accelerate(state, enemy) {
             // Stop moving while attacking.
             const vx = (enemy.attackCooldownFramesLeft > 0) ? 0.001 : enemy.speed;
@@ -258,7 +254,6 @@ const enemyData = {
             enemies[enemyIndex] = {...enemy, ttl: 600, vx: 0, vy: 0};
             return {...state, enemies};
         },
-        deathSound: 'sfx/flydeath.mp3',
         props: {
             life: 2,
             score: 30,
@@ -269,16 +264,38 @@ const enemyData = {
             shotCooldownFrames: 80,
         },
     },
+    [ENEMY_CARGO_BEETLE]: {
+        animation: cargoBeetleAnimation,
+        deathAnimation: cargoBeetleDeathAnimation,
+        accelerate(state, enemy) {
+            // Move up and down in a sin wave.
+            const theta = Math.PI / 2 + Math.PI * 4 * enemy.animationTime / 2000;
+            const vy = 2 * Math.sin(theta);
+            return {...enemy, vy};
+        },
+        deathSound: 'sfx/flydeath.mp3',
+        onDeathEffect(state, enemyIndex) {
+            const enemy = state.enemies[enemyIndex];
+            const loot = createLoot(enemy.lootType || getAdaptivePowerupType(state));
+            const newLoot = [...state.newLoot, getNewSpriteState({
+                ...loot,
+                // These offsets are chosen to match the position of the bucket.
+                left: enemy.left + 50 - loot.width / 2,
+                top: enemy.top + 85 - loot.height / 2,
+            })];
+            return {...state, newLoot};
+        },
+        props: {
+            life: 5,
+            score: 0,
+            speed: 1,
+            vx: -5,
+        },
+    }
 }
 
 const createEnemy = (type, props) => {
     const frame = enemyData[type].animation.frames[0];
-    if (frame.life) {
-        console.log("found life on frame");
-    }
-    if (props.life) {
-        console.log("found life on props");
-    }
     return getNewSpriteState({
         ...frame,
         ...enemyData[type].props,
@@ -349,13 +366,7 @@ const damageEnemy = (state, enemyIndex, attack) => {
             enemy = updatedState.enemies[enemyIndex]
         }
         if (Math.random() < enemy.score / 200) {
-            let lootType = LOOT_COIN;
-            if (Math.random() < .1) {
-                lootType = getAdaptivePowerupType(updatedState);
-            } else if (Math.random() < 0.03) {
-                lootType = LOOT_LIFE;
-            }
-            const loot = createLoot(lootType);
+            const loot = createLoot(LOOT_COIN);
             updatedState.newLoot.push(getNewSpriteState({
                 ...loot,
                 left: enemy.left + (enemy.width - loot.width ) / 2,
@@ -494,7 +505,7 @@ const advanceEnemy = (state, enemyIndex) => {
     } else if (!done) {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         done = (enemy.dead || !enemy.permanent) &&
-            (enemy.left + enemy.width < -OFFSCREEN_PADDING || enemy.left > WIDTH + OFFSCREEN_PADDING ||
+            (enemy.left + enemy.width < -OFFSCREEN_PADDING || (enemy.vx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
             enemy.top + enemy.height < -OFFSCREEN_PADDING || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
     }
     return updateEnemy(state, enemyIndex, {done, ttl, attackCooldownFramesLeft, pendingDamage: 0});
@@ -509,3 +520,10 @@ module.exports = {
     renderEnemy,
     getEnemyHitBox,
 };
+
+// Move possible circular imports to after exports.
+const { getNewSpriteState } = require('sprites');
+const { getGroundHeight } = require('world');
+
+const { createEffect, addEffectToState } = require('effects');
+const { createLoot, getRandomPowerupType, getAdaptivePowerupType, gainPoints } = require('loot');

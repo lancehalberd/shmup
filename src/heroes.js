@@ -4,11 +4,12 @@ const {
     FRAME_LENGTH,
     DEATH_COOLDOWN,
     SHOT_COOLDOWN, ATTACK_OFFSET,
-    SPAWN_COOLDOWN,
     SPAWN_INV_TIME,
     ACCELERATION,
     MAX_SPEED,
-    EFFECT_EXPLOSION,
+    EFFECT_EXPLOSION, EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
+    EFFECT_NEEDLE_FLIP,
+    HERO_DRAGONFLY,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED
 } = require('gameConstants');
 
@@ -22,13 +23,12 @@ const {
 
 const { getNewSpriteState } = require('sprites');
 
-const { getGroundHeight } = require('world');
-
-const { createEffect, addEffectToState } = require('effects');
-
 const {
-    heroAnimation,
-    heroRectangle,
+    dragonflyAnimation,
+    dragonflyEnterAnimation,
+    dragonflyCatchAnimation,
+    dragonflyDeathAnimation,
+    dragonflyPortraitImage,
     ladybugAnimation,
     ladybugAttackAnimation,
     blastRectangle,
@@ -36,12 +36,21 @@ const {
     getFrame,
 } = require('animations');
 
+const heroesData = {
+    [HERO_DRAGONFLY]: {
+        animation: dragonflyAnimation,
+        enterAnimation: dragonflyEnterAnimation,
+        catchAnimation: dragonflyCatchAnimation,
+        deathEffect: EFFECT_DEAD_DRAGONFLY,
+        switchEffect: EFFECT_SWITCH_DRAGONFLY,
+        portraitImage: dragonflyPortraitImage,
+    },
+};
 
 const getNewPlayerState = () => ({
     score: 0,
-    lives: 3,
-    sprite: getNewSpriteState({...heroRectangle, left: -100, top: 100}),
-    spawnCooldown: SPAWN_COOLDOWN,
+    sprite: getNewSpriteState({...dragonflyAnimation.frames[0], left: -100, top: 150, targetLeft: 100, targetTop: 100, spawnSpeed: MAX_SPEED}),
+    heroes: [HERO_DRAGONFLY, HERO_DRAGONFLY, HERO_DRAGONFLY],
     invulnerableFor: SPAWN_INV_TIME,
     shotCooldown: 0,
     ladybugShotCooldown: 0,
@@ -70,8 +79,11 @@ const updatePlayer = (state, playerIndex, props) => {
 };
 
 const advanceHero = (state, playerIndex) => {
+    if (state.players[playerIndex].done) {
+        return state;
+    }
     let player = state.players[playerIndex];
-    let {shotCooldown, spawnCooldown, invulnerableFor, ladybugShotCooldown} = player;
+    let {shotCooldown, invulnerableFor, ladybugShotCooldown} = player;
     if (shotCooldown > 0) {
         shotCooldown--;
     } else if (player.actions.shoot) {
@@ -103,7 +115,7 @@ const advanceHero = (state, playerIndex) => {
             state = addNewPlayerAttack(state, playerIndex, getNewSpriteState({
                 ...ladybugAttackAnimation.frames[0],
                 left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
-                top: ladybug.top + player.sprite.vy + Math.round((ladybug.height - ladybugAttackAnimation.frames[0].height) / 2),
+                top: ladybug.top + player.sprite.vy + Math.round((ladybug.height - ladybugAttackAnimation.frames[0].height) / 2) + 6,
                 vx: 15,
                 playerIndex,
                 damage: 1,
@@ -113,20 +125,25 @@ const advanceHero = (state, playerIndex) => {
         }
     }
 
-    let {top, left, vx, vy, width, height, animationTime} = player.sprite;
+    let {top, left, vx, vy, width, height, animationTime, targetLeft, targetTop} = player.sprite;
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
     }
-    if (spawnCooldown > 0) {
-        spawnCooldown -= FRAME_LENGTH;
-        left += 4;
-        const ladybugs = updateLadyBugs(player);
+    if (targetLeft != false) {
+        const theta = Math.atan2(targetTop - top, targetLeft - left);
+        left = Math.min(left + player.sprite.spawnSpeed * Math.cos(theta), targetLeft);
+        top = Math.max(top + player.sprite.spawnSpeed * Math.sin(theta), targetTop);
+        if (left === targetLeft && top === targetTop) {
+            targetLeft = targetTop = false;
+        }
         return updatePlayer(state, playerIndex, {
-            spawnCooldown, ladybugShotCooldown, invulnerableFor, shotCooldown: 1,
-            ladybugs,
-            sprite: {...player.sprite, left, animationTime},
+            ladybugShotCooldown, invulnerableFor, shotCooldown: 1,
+            sprite: {...player.sprite, left, top, animationTime, targetLeft, targetTop},
         });
+    }
+    if (player.actions.switch) {
+        return switchHeroes(state, playerIndex);
     }
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED).length;
     const maxSpeed = MAX_SPEED + speedPowerups * 3;
@@ -142,17 +159,16 @@ const advanceHero = (state, playerIndex) => {
     vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
 
     // Update player position based on their
-    const animation = heroAnimation;
-    const frame = getFrame(animation, animationTime);
     left += vx;
-    top = Math.min(top + vy, getGroundHeight(state) - frame.height);
-    const hitBox = getHeroHitBox({animationTime, left: 0, top: 0});
+    top +=  vy;
+    const hitBox = new Rectangle(getHeroHitBox(player)).translate(-player.sprite.left, -player.sprite.top);
     if (top + hitBox.top < 0) {
         top = -hitBox.top;
         vy = 0;
     }
-    if (top + hitBox.top + hitBox.height > GAME_HEIGHT) {
-        top = GAME_HEIGHT - (hitBox.top + hitBox.height);
+    const bottom = Math.min(getGroundHeight(state), GAME_HEIGHT);
+    if (top + hitBox.top + hitBox.height > bottom) {
+        top = bottom - (hitBox.top + hitBox.height);
         vy = 0;
     }
     if (left + hitBox.left < 0) {
@@ -165,7 +181,17 @@ const advanceHero = (state, playerIndex) => {
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
     const ladybugs = updateLadyBugs(player);
-    const updatedProps = {shotCooldown, ladybugShotCooldown, spawnCooldown, invulnerableFor, sprite, ladybugs};
+    let chasingNeedle = player.chasingNeedle, catchingNeedleFrames = player.catchingNeedleFrames;
+    if (chasingNeedle) {
+        chasingNeedle = false;
+        catchingNeedleFrames = 6;
+    } else if(catchingNeedleFrames > 0) {
+        catchingNeedleFrames--;
+    }
+    const updatedProps = {
+        shotCooldown, ladybugShotCooldown, invulnerableFor, sprite,
+        ladybugs, chasingNeedle, catchingNeedleFrames,
+    };
     return updatePlayer(state, playerIndex, updatedProps);
 };
 
@@ -186,27 +212,82 @@ const updateLadyBugs = (player) => {
     return ladybugs;
 }
 
+const switchHeroes = (updatedState, playerIndex) => {
+    let player = updatedState.players[playerIndex];
+    const sprite = player.sprite;
+
+    // Display the dying character as a single animation effect.
+    const switchEffect = createEffect(heroesData[player.heroes[0]].switchEffect);
+    switchEffect.left = sprite.left + (sprite.width - switchEffect.width ) / 2;
+    switchEffect.top = sprite.top + (sprite.height - switchEffect.height ) / 2;
+    updatedState = addEffectToState(updatedState, switchEffect);
+    const needleEffect = createEffect(EFFECT_NEEDLE_FLIP);
+    needleEffect.left = sprite.left + (sprite.width - needleEffect.width ) / 2;
+    needleEffect.top = sprite.top + (sprite.height - needleEffect.height ) / 2;
+    updatedState = addEffectToState(updatedState, needleEffect);
+
+    const heroes = [...player.heroes];
+    heroes.push(heroes.shift());
+    const targetLeft = sprite.left, targetTop = sprite.top;
+    const left = -100, top = GAME_HEIGHT - 100;
+    const dx = left - targetLeft, dy = targetTop - top;
+    const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
+    updatedState = updatePlayer(updatedState, playerIndex, {
+        sprite: {
+            ...sprite,
+            ...heroesData[player.heroes[0]].animation.frames[0],
+            left, top, targetLeft, targetTop, spawnSpeed,
+            vx: 0, vy: 0,
+        },
+        heroes,
+        invulnerableFor: 25 * FRAME_LENGTH,
+        chasingNeedle: true,
+    });
+    player = updatedState.players[playerIndex];
+
+    const sfx = [...updatedState.sfx, 'sfx/exclamation.mp3'];
+    return {...updatedState, sfx};
+};
+
 const damageHero = (updatedState, playerIndex) => {
     let deathCooldown = updatedState.deathCooldown
     let player = updatedState.players[playerIndex];
     const sprite = player.sprite;
     const ladybugs = [...player.ladybugs];
     ladybugs.shift();
+
+    // Display the dying character as a single animation effect.
+    const deathEffect = createEffect(heroesData[player.heroes[0]].deathEffect);
+    deathEffect.left = sprite.left + (sprite.width - deathEffect.width ) / 2;
+    deathEffect.top = sprite.top + (sprite.height - deathEffect.height ) / 2;
+    updatedState = addEffectToState(updatedState, deathEffect);
+    const needleEffect = createEffect(EFFECT_NEEDLE_FLIP);
+    needleEffect.left = sprite.left + (sprite.width - needleEffect.width ) / 2;
+    needleEffect.top = sprite.top + (sprite.height - needleEffect.height ) / 2;
+    updatedState = addEffectToState(updatedState, needleEffect);
+
+    const heroes = [...player.heroes];
+    heroes.shift();
+    const targetLeft = sprite.left, targetTop = sprite.top;
+    const left = -100, top = GAME_HEIGHT - 100;
+    const dx = left - targetLeft, dy = targetTop - top;
+    const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
-        sprite: {...sprite, left: -150, top: 100},
-        lives: Math.max(0, player.lives - 1),
-        done: player.lives <= 0,
-        spawnCooldown: SPAWN_COOLDOWN,
+        sprite: {
+            ...sprite,
+            ...heroesData[player.heroes[0]].animation.frames[0],
+            left, top, targetLeft, targetTop, spawnSpeed,
+            vx: 0, vy: 0,
+        },
+        heroes,
+        dead: true,
+        done: heroes.length <= 0,
         invulnerableFor: SPAWN_INV_TIME,
+        chasingNeedle: true,
         ladybugs,
     });
     player = updatedState.players[playerIndex];
 
-    // Display an explosion where the player was defeated.
-    const explosion = createEffect(EFFECT_EXPLOSION);
-    explosion.left = sprite.left + (sprite.width - explosion.width ) / 2;
-    explosion.top = sprite.top + (sprite.height - explosion.height ) / 2;
-    updatedState = addEffectToState(updatedState, explosion);
 
     const sfx = [...updatedState.sfx];
     if (player.done) {
@@ -218,13 +299,23 @@ const damageHero = (updatedState, playerIndex) => {
     return {...updatedState, deathCooldown, sfx};
 };
 
-const getHeroHitBox = ({animationTime, left, top}) => {
-    return new Rectangle(getHitBox(heroAnimation, animationTime)).translate(left, top);
+const getHeroHitBox = (player) => {
+    const {animationTime, left, top} = player.sprite;
+    const animation = heroesData[player.heroes[0]].animation;
+    return new Rectangle(getHitBox(animation, animationTime)).translate(left, top);
 };
 
-const renderHero = (context, {sprite, invulnerableFor, done, ladybugs}) => {
+const renderHero = (context, player) => {
+    let {sprite, invulnerableFor, done, ladybugs} = player;
     if (done) return;
-    const animation = heroAnimation;
+    const heroData = heroesData[player.heroes[0]];
+    let animation = heroData.animation;
+    if (player.chasingNeedle) {
+        animation = heroData.enterAnimation;
+    }
+    if (player.catchingNeedleFrames > 0) {
+        animation = heroData.catchAnimation;
+    }
     context.save();
     if (invulnerableFor > 1000) {
         context.globalAlpha = .5 + Math.sin(invulnerableFor / 40) * .2;
@@ -237,7 +328,7 @@ const renderHero = (context, {sprite, invulnerableFor, done, ladybugs}) => {
     drawImage(context, frame.image, frame, sprite);
     context.restore();
     if (isKeyDown(KEY_SHIFT)) {
-        const hitBox = getHeroHitBox(sprite);
+        const hitBox = getHeroHitBox(player);
         context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'green';
@@ -260,4 +351,11 @@ module.exports = {
     getHeroHitBox,
     damageHero,
     renderHero,
-}
+    heroesData,
+};
+
+
+const { getGroundHeight } = require('world');
+
+const { createEffect, addEffectToState } = require('effects');
+

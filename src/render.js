@@ -37,30 +37,13 @@ const {
     startGameImage,
     optionsImage,
     startImage,
-    portraitImage,
+    dragonflyPortraitImage,
     gameOverImage,
     hudImage,
     powerupBarAnimation,
     getHitBox,
     getFrame,
 } = require('animations');
-
-const {
-    renderHero
-} = require('heroes');
-
-const {
-    lootData,
-    renderLoot,
-} = require('loot');
-
-const {
-    renderEnemy
-} = require('enemies');
-
-const {
-    renderEffect
-} = require('effects');
 
 const canvas = document.createElement('canvas');
 canvas.width = WIDTH;
@@ -135,22 +118,18 @@ const render = (state) => {
 
 const renderHUD = (context, state) => {
     drawImage(context, hudImage.image, hudImage, hudImage);
-    drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING, HUD_PADDING));
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font="20px sans-serif";
-    embossText(context, {
-        text: `x ${state.players[0].lives}`,
-        left: HUD_PADDING + portraitImage.width + HUD_PADDING,
-        top: HUD_PADDING + portraitImage.height / 2 + 1,
-        backgroundColor: '#AAA',
-    });
+    for (let i = 0; i < state.players[0].heroes.length; i++) {
+        const { portraitImage } = heroesData[state.players[0].heroes[i]];
+        drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING + i * 22, HUD_PADDING));
+    }
 
+    context.textBaseline = 'middle';
     context.textAlign = 'right';
+    context.font = "20px sans-serif";
     embossText(context, {
         text: `SCORE: ${state.players[0].score}`,
         left: WIDTH - HUD_PADDING - 2,
-        top: HUD_PADDING + portraitImage.height / 2 + 1,
+        top: HUD_PADDING + dragonflyPortraitImage.height / 2 + 1,
         backgroundColor: '#AAA',
     });
 
@@ -272,3 +251,21 @@ const renderBackground = (world) => {
 };*/
 
 module.exports = render;
+
+const {
+    heroesData,
+    renderHero,
+} = require('heroes');
+
+const {
+    lootData,
+    renderLoot,
+} = require('loot');
+
+const {
+    renderEnemy
+} = require('enemies');
+
+const {
+    renderEffect
+} = require('effects');

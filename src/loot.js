@@ -7,6 +7,8 @@ const {
     POINTS_FOR_POWERUP,
     LOOT_COIN, LOOT_LIFE, LOOT_LADYBUG,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
+    HERO_DRAGONFLY,
+    ENEMY_CARGO_BEETLE,
 } = require('gameConstants');
 
 const {
@@ -83,7 +85,11 @@ const lootData = {
         animation: lifeAnimation,
         accelerate: circleAcceleration,
         collect(state, playerIndex, loot) {
-            return updatePlayer(state, playerIndex, {lives: state.players[playerIndex].lives + 1});
+            const heroes = [...state.players[playerIndex].heroes];
+            if (heroes.length < 3) {
+                heroes.push(HERO_DRAGONFLY);
+            }
+            return updatePlayer(state, playerIndex, {heroes});
         },
         draw: drawGlowing,
         sfx: 'sfx/heal.mp3',
@@ -141,9 +147,7 @@ const advanceLoot = (state, loot) => {
         loot = data.accelerate(state, loot);
     }
 
-    const done =
-        left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
-        top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
+    const done = left + width < 0;;
 
     return {...loot, left, top, animationTime, done};
 };
@@ -162,7 +166,8 @@ const getRandomPowerupType = () => {
 5: If they only have 1 ladybug, it drops a ladybug. Otherwise...
 6: Drops a random of the main 3 powerups.*/
 const getAdaptivePowerupType = (state) => {
-    if (state.players[0].powerups.length < 1) return getRandomPowerupType();
+    if (state.players[0].heroes.length < 3) return LOOT_LIFE;
+    if (state.players[0].powerups.length < 2) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 1) return LOOT_LADYBUG;
     if (state.players[0].powerups.length < 4) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 2) return LOOT_LADYBUG;
@@ -175,16 +180,14 @@ const gainPoints = (state, playerIndex, points) => {
     let score = state.players[playerIndex].score + points;
     state = updatePlayer(state, playerIndex, {score});
     if (Math.floor(score / POINTS_FOR_POWERUP) > Math.floor((score - points) / POINTS_FOR_POWERUP)) {
-        const loot = createLoot(getAdaptivePowerupType(state));
-        state.newLoot.push(getNewSpriteState({
-            ...loot,
-            left: WIDTH + 30,
+        const cargoBeetle = createEnemy(ENEMY_CARGO_BEETLE, {
+            left: WIDTH + 10,
             top: GAME_HEIGHT / 2,
-        }));
+        });
+        state = addEnemyToState(state, cargoBeetle);
     }
     return state;
 };
-
 
 module.exports = {
     lootData,
@@ -195,3 +198,6 @@ module.exports = {
     getRandomPowerupType,
     getAdaptivePowerupType,
 };
+
+// Move possible circular imports to after exports.
+const { addEnemyToState, createEnemy } = require('enemies');

@@ -3,6 +3,8 @@ const { drawImage } = require('draw');
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
     EFFECT_DAMAGE, EFFECT_EXPLOSION, EFFECT_DUST,
+    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
+    EFFECT_NEEDLE_FLIP,
 } = require('gameConstants');
 
 const {
@@ -10,6 +12,9 @@ const {
     damageAnimation,
     dustAnimation,
     explosionAnimation,
+    dragonflyDeathAnimation,
+    dragonflySwitchAnimation,
+    needleFlipAnimation,
 } = require('animations');
 
 const {
@@ -30,6 +35,15 @@ const effects = {
         props: {
             relativeToGround: true,
         },
+    },
+    [EFFECT_NEEDLE_FLIP]: {
+        animation: needleFlipAnimation,
+    },
+    [EFFECT_DEAD_DRAGONFLY]: {
+        animation: dragonflyDeathAnimation,
+    },
+    [EFFECT_SWITCH_DRAGONFLY]: {
+        animation: dragonflySwitchAnimation,
     },
 }
 

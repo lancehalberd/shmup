@@ -34,18 +34,48 @@ const rectangleToFrames = (rectangle, image, numberOfFrames) => {
 
 const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props});
 
-const heroHitBox = {left: 10, top: 15, width: 70, height: 30};
-const heroRectangle = r(88, 56, {hitBox: heroHitBox});
-const heroAnimation = {
+const dragonflyHitBox = {left: 10, top: 15, width: 70, height: 30};
+const dragonflyRectangle = r(88, 56, {hitBox: dragonflyHitBox});
+const dragonflyAnimation = {
     frames: [
-        {...heroRectangle, image: requireImage('gfx/heroes/hero1.png')},
-        {...heroRectangle, image: requireImage('gfx/heroes/hero2.png')},
-        {...heroRectangle, image: requireImage('gfx/heroes/hero3.png')},
-        {...heroRectangle, image: requireImage('gfx/heroes/hero4.png')},
-        {...heroRectangle, image: requireImage('gfx/heroes/hero3.png')},
-        {...heroRectangle, image: requireImage('gfx/heroes/hero2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly4.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png')},
     ],
     frameDuration: 3,
+};
+const dragonflyEnterAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/flyin1.png')},
+    ],
+    frameDuration: 3,
+};
+const dragonflyCatchAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/flyin2.png')},
+    ],
+    frameDuration: 3,
+};
+const dragonflySwitchAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/switch1.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/switch2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/switch3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/switch4.png')},
+    ],
+    frameDuration: 6,
+};
+const dragonflyDeathAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/die1.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/die2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/die3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/die4.png')},
+    ],
+    frameDuration: 6,
 };
 
 const ladybugRectangle = r(25, 20);
@@ -57,6 +87,17 @@ const ladybugAnimation = {
         {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug4.png')},
     ],
     frameDuration: 3,
+};
+
+const needleFlipRectangle = r(88, 56);
+const needleFlipAnimation = {
+    frames: [
+        {...needleFlipRectangle, image: requireImage('gfx/effects/needleflip1.png')},
+        {...needleFlipRectangle, image: requireImage('gfx/effects/needleflip2.png')},
+        {...needleFlipRectangle, image: requireImage('gfx/effects/needleflip3.png')},
+        {...needleFlipRectangle, image: requireImage('gfx/effects/needleflip4.png')},
+    ],
+    frameDuration: 6,
 };
 
 
@@ -194,6 +235,25 @@ const monkDeathAnimation = {
     frameDuration: 5,
 };
 
+const cargoBeetleHitBox = {left: 0, top: 16, width: 100, height: 84};
+const cargoBeetleRectangle = r(100, 100, {hitBox: cargoBeetleHitBox});
+const cargoBeetleAnimation = {
+    frames: [
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly1.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly2.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly3.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly4.png')},
+    ],
+    frameDuration: 6,
+};
+const cargoBeetleDeathAnimation = {
+    frames: [
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bflyded.png')},
+    ],
+    frameDuration: 5,
+};
+
+
 const damageRectangle = r(28, 28);
 const damageAnimation = {
     frames: [
@@ -284,10 +344,10 @@ const plainsMidground = r(2000, 600, {image: requireImage('gfx/scene/plains_mg.p
 const plainsNearground = r(1200, 600, {image: requireImage('gfx/scene/plains_ng.png')});
 const backgroundSky = r(1600, 600, {image: requireImage('gfx/scene/background_sky.png')});
 
-const portraitImage = r(17, 18, {image: requireImage('gfx/hud/lifeportrait.png')});
+const dragonflyPortraitImage = r(17, 18, {image: requireImage('gfx/hud/lifeportrait.png')});
 const lifeAnimation = {
     frames: [
-        {...portraitImage},
+        {...dragonflyPortraitImage},
     ],
     frameDuration: 5
 };
@@ -328,8 +388,12 @@ module.exports = {
     plainsBackground,
     plainsMidground,
     plainsNearground,
-    heroRectangle,
-    heroAnimation,
+    dragonflyAnimation,
+    dragonflyEnterAnimation,
+    dragonflyCatchAnimation,
+    dragonflySwitchAnimation,
+    dragonflyDeathAnimation,
+    needleFlipAnimation,
     ladybugAnimation,
     requireImage,
     blastRectangle,
@@ -360,11 +424,13 @@ module.exports = {
     monkAnimation,
     monkDeathAnimation,
     monkAttackAnimation,
+    cargoBeetleAnimation,
+    cargoBeetleDeathAnimation,
     selectNeedleImage,
     startGameImage,
     optionsImage,
     startImage,
-    portraitImage,
+    dragonflyPortraitImage,
     gameOverImage,
     hudImage,
     powerupBarAnimation,

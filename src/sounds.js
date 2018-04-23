@@ -100,6 +100,8 @@ const muteSounds = () => {
     'sfx/shoot.mp3+0+2',
     'sfx/hit.mp3+200+1',
     'sfx/flydeath.mp3+0+5',
+    'sfx/robedeath.mp3+0+5',
+    'sfx/hornetdeath.mp3+0+8',
     'sfx/coin.mp3',
     'sfx/powerup.mp3',
     'sfx/startgame.mp3',
@@ -177,6 +179,8 @@ sounds.set('wand', {
         playBeeps([1200, 400], 0.01, .1, {smooth: true, taper: true, swell: true, distortion: true});
     }
 });
+
+window.playSound = playSound;
 
 module.exports = {
     playSound,
