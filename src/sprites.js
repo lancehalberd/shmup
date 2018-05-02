@@ -6,7 +6,7 @@ const getNewSpriteState = (base) => ({
     height: 100,
     vx: 0,
     vy: 0,
-    animation: 'default',
+    animation: false,
     animationTime: 0,
     ...base,
 });

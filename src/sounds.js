@@ -37,14 +37,14 @@ const playSound = (source, area) => {
         sound.play();
         return;
     }
-    if (sound.instances.size >= 5) return;
+    if (sound.instances.size >= 6) return;
     var newInstance = sound.cloneNode(false);
     newInstance.currentTime = (ifdefor(offset || sound.offset) || 0) / 1000;
     newInstance.volume = Math.min(1, (ifdefor(volume, sound.defaultVolume) || 1) / 50);
     newInstance.play().then(() => {
         var timeoutId;
         if (customDuration || sound.customDuration) {
-            stimeoutId = setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 sound.instances.delete(newInstance);
                 playingSounds.delete(newInstance);
                 newInstance.onended = null;
@@ -100,14 +100,23 @@ const muteSounds = () => {
     'sfx/shoot.mp3+0+2',
     'sfx/hit.mp3+200+1',
     'sfx/flydeath.mp3+0+5',
-    'sfx/robedeath.mp3+0+5',
+    'sfx/robedeath1.mp3+0+2',
     'sfx/hornetdeath.mp3+0+8',
     'sfx/coin.mp3',
     'sfx/powerup.mp3',
     'sfx/startgame.mp3',
     'sfx/exclamation.mp3+0+3',
+    'sfx/exclamation2.mp3+0+3',
+    'sfx/exclamation3.mp3+0+3',
     'sfx/heal.mp3+200+5',
     'sfx/death.mp3+0+1',
+    'sfx/dodge.mp3+200+2',
+    'sfx/meleehit.mp3+50+6',
+    'sfx/throwhit.mp3+200+5',
+    'sfx/needledropflip.mp3+0+3',
+    'sfx/needlegrab.mp3+0+3',
+    // These custom range makes for mediocre explosion sound.
+    'sfx/explosion.mp3+0+1',
     // See credits.html for: mobbrobb.
     'bgm/river.mp3+0+1',
     'bgm/area.mp3+0+2',

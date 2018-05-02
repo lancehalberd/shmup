@@ -21,13 +21,9 @@ const {
     stopTrack,
 } = require('sounds');
 
-const { isKeyDown, KEY_R } = require('keyboard');
+const { isKeyDown, KEY_SHIFT, KEY_R } = require('keyboard');
 
 const {
-    backgroundSky,
-    plainsBackground,
-    plainsMidground,
-    plainsNearground,
     blastStartAnimation,
     blastLoopAnimation,
     ladybugAttackAnimation,
@@ -37,12 +33,13 @@ const {
     startGameImage,
     optionsImage,
     startImage,
-    dragonflyPortraitImage,
     gameOverImage,
     hudImage,
     powerupBarAnimation,
+    comboBarAnimation,
     getHitBox,
     getFrame,
+    dragonflyIdleAnimation,
 } = require('animations');
 
 const canvas = document.createElement('canvas');
@@ -77,19 +74,22 @@ const render = (state) => {
             rewindAlpha = Math.min(1, rewindAlpha + .02);
         }
         context.globalAlpha = rewindAlpha;
-        renderBackground(state.world);
+        renderBackground(context, state);
         context.globalAlpha = 1;
 
         context.save();
         context.translate(0, hudImage.height);
-        state.playerAttacks.map(renderPlayerAttack);
+        state.playerAttacks.map(attack => renderAttack(context, attack));
         state.enemies.map(enemy => renderEnemy(context, enemy));
         state.loot.map(loot => renderLoot(context, loot));
         state.effects.map(effect => renderEffect(context, effect));
+        state.neutralAttacks.map(attack => renderAttack(context, attack));
         // Thinking an attack shuold display on top of other effects so it can be avoided.
-        state.enemyAttacks.map(renderEnemyAttack);
+        state.enemyAttacks.map(attack => renderAttack(context, attack));
         state.players.map(hero => renderHero(context, hero));
         context.restore();
+
+        renderForeground(context, state);
 
     context.restore();
     renderHUD(context, state);
@@ -119,33 +119,77 @@ const render = (state) => {
 const renderHUD = (context, state) => {
     drawImage(context, hudImage.image, hudImage, hudImage);
     for (let i = 0; i < state.players[0].heroes.length; i++) {
-        const { portraitImage } = heroesData[state.players[0].heroes[i]];
-        drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING + i * 22, HUD_PADDING));
+        const { portraitAnimation } = heroesData[state.players[0].heroes[i]];
+        let frame = getFrame(portraitAnimation, state.world.time);
+        drawImage(context, frame.image, frame,
+            new Rectangle(frame).moveTo(HUD_PADDING + 1 + i * 20, HUD_PADDING)
+        );
     }
+
+    context.textBaseline = 'middle';
+    context.textAlign = 'left';
+    context.font = "20px sans-serif";
+    embossText(context, {
+        text: `${state.players[0].score}`,
+        left: 665,
+        top: HUD_PADDING + 10,
+        backgroundColor: '#AAA',
+    });
+
+    let {powerupPoints, powerupIndex} = state.players[0];
+    let powerupFrame = Math.floor(powerupBarAnimation.frames.length * (powerupPoints / powerupGoals[powerupIndex]));
+    powerupFrame = Math.min(powerupBarAnimation.frames.length - 1, powerupFrame);
+    let frame = powerupBarAnimation.frames[powerupFrame];
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(190, 8));
+
+    let comboScore = state.players[0].comboScore;
+    let nextCombo = 100;
+    if (comboScore < 100) {
+        nextCombo = 100;
+    } else if (comboScore < 200) {
+        comboScore -= 100;
+        nextCombo = 100;
+    } else if (comboScore < 400) {
+        comboScore -= 200;
+        nextCombo = 200;
+    } else if (comboScore < 600) {
+        comboScore -= 400;
+        nextCombo = 200;
+    }  else {
+        comboScore -= 600;
+        nextCombo = 400;
+    }
+
+    let comboFrame = Math.min(
+        comboBarAnimation.frames.length - 1,
+        Math.floor((comboBarAnimation.frames.length - 1) * comboScore / nextCombo),
+    );
+    frame = comboBarAnimation.frames[comboFrame];
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(523, 8));
 
     context.textBaseline = 'middle';
     context.textAlign = 'right';
     context.font = "20px sans-serif";
     embossText(context, {
-        text: `SCORE: ${state.players[0].score}`,
-        left: WIDTH - HUD_PADDING - 2,
-        top: HUD_PADDING + dragonflyPortraitImage.height / 2 + 1,
+        text: (isKeyDown(KEY_SHIFT) ? `${state.players[0].comboScore} ` : '') + `${getComboMultiplier(state, 0)}x`,
+        left: 518,
+        top: HUD_PADDING + 10,
         backgroundColor: '#AAA',
     });
-
-    let powerupFrame = Math.floor(powerupBarAnimation.frames.length * (state.players[0].score % POINTS_FOR_POWERUP) / POINTS_FOR_POWERUP);
-    let frame = powerupBarAnimation.frames[powerupFrame];
-    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(100, 8));
 
     for (let i = 0; i < state.players[0].powerups.length; i++) {
         const powerupType = state.players[0].powerups[i];
         frame = getFrame(lootData[powerupType].animation, state.players[0].sprite.animationTime);
-        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(210 + 20 * i, 8));
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(292 + 20 * i, 8));
     }
 };
 
 const renderTitle = (context, state) => {
-    renderBackground(state.world);
+    renderBackground(context, state);
+    renderForeground(context, state);
+    const frame = dragonflyIdleAnimation.frames[0];
+    const sprite = state.players[0].sprite;
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(sprite.left, hudImage.height + sprite.top));
 
     const options = [startGameImage, optionsImage];
     const targets = [new Rectangle(options[0]).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2)];
@@ -175,82 +219,12 @@ const renderTitle = (context, state) => {
     // renderForeground(state.world);
 };
 
-const renderPlayerAttack = (attack) => {
-    if (attack.type === 'ladybug') {
-        const frame = getFrame(ladybugAttackAnimation, attack.animationTime);
-        drawImage(context, frame.image, frame, attack);
-        return;
-    }
-    const {animationTime} = attack;
-    let frameIndex = animationTime / FRAME_LENGTH;
-    const startFrames = blastStartAnimation.frames.length * blastStartAnimation.frameDuration;
-    let animation = blastStartAnimation;
-    if (frameIndex >= startFrames) {
-        animation = blastLoopAnimation;
-        frameIndex -= startFrames;
-    }
-    frameIndex = Math.floor(frameIndex / animation.frameDuration);
-    const frame = animation.frames[frameIndex % animation.frames.length];
-    if (attack.damage === 3) drawTintedImage(context, frame.image, 'blue', .3, frame, attack);
-    else if (attack.damage === 2) drawTintedImage(context, frame.image, 'red', .3, frame, attack);
-    else drawImage(context, frame.image, frame, attack);
-    if (attack.sfx) {
-        playSound(attack.sfx);
-        attack.sfx = false;
-    }
-};
-
-const renderEnemyAttack = (attack) => {
-    const frame = getFrame(bulletAnimation, attack.animationTime);
-    drawImage(context, frame.image, frame, attack);
-};
-
-const renderBackgroundLayer = (context, {image, x, y}) => {
-    const left = (x) % image.width;
-    const right = (x + WIDTH) % image.width;
-    if (right < left) {
-        let leftWidth = image.width - left;
-        context.drawImage(image.image, left, 0, leftWidth, image.height,
-            0, y, leftWidth, image.height);
-        context.drawImage(image.image, 0, 0, right, image.height,
-            leftWidth, y, right, image.height);
-    } else {
-        context.drawImage(image.image, left, 0, image.width, image.height,
-            0, y, image.width, image.height);
-    }
-};
-
-const renderBackground = (world) => {
-    // context.fillStyle = 'black';
-    // context.fillRect(0, 0, WIDTH, HEIGHT);
-    const {
-        x, y,
-        backgroundYFactor, backgroundXFactor, backgroundXOffset, backgroundYOffset,
-        midgroundYFactor, midgroundXFactor, midgroundXOffset, midgroundYOffset,
-        neargroundYFactor, neargroundXFactor, neargroundXOffset, neargroundYOffset,
-    } = world;
-    renderBackgroundLayer(context, {image: plainsBackground,
-        x: x * backgroundXFactor + (backgroundXOffset || 0),
-        y: y * backgroundYFactor + (backgroundYOffset || 0),
-    });
-    renderBackgroundLayer(context, {image: plainsMidground,
-        x: x * midgroundXFactor + (midgroundXOffset || 0),
-        y: y * midgroundYFactor + (midgroundYOffset || 0),
-    });
-    renderBackgroundLayer(context, {image: plainsNearground,
-        x: x * neargroundXFactor + (neargroundXOffset || 0),
-        y: y * neargroundYFactor + (neargroundYOffset || 0),
-    });
-};
-
-/*const renderForeground = ({x, y, foregroundXFactor, foregroundYFactor, foregroundXOffset, foregroundYOffset}) => {
-    renderBackgroundLayer(context, {image: plainsForeground,
-        x: x * foregroundXFactor + (foregroundXOffset || 0),
-        y: y * foregroundYFactor + (foregroundYOffset || 0),
-    });
-};*/
 
 module.exports = render;
+
+const {
+    renderBackground, renderForeground,
+} = require('world');
 
 const {
     heroesData,
@@ -260,6 +234,8 @@ const {
 const {
     lootData,
     renderLoot,
+    getComboMultiplier,
+    powerupGoals,
 } = require('loot');
 
 const {
@@ -269,3 +245,7 @@ const {
 const {
     renderEffect
 } = require('effects');
+
+const {
+    renderAttack,
+} = require('attacks');

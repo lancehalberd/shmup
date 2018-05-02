@@ -161,6 +161,8 @@ module.exports = Rectangle;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH;
 
@@ -222,27 +224,112 @@ var r = function r(width, height, props) {
     return _extends({ left: 0, top: 0, width: width, height: height }, props);
 };
 
+var createFrames = function createFrames(rect, count, source) {
+    var offset = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
+    var frames = [];
+    var image = requireImage(source);
+    for (var i = 0; i < count; i++) {
+        frames[i] = _extends({}, rect, { left: rect.width * (offset + i), image: image });
+    }
+    return frames;
+};
+
+var beeHitBox = { left: 10, top: 12, width: 60, height: 40 };
+var beeRectangle = r(88, 56, { hitBox: beeHitBox });
+var beeAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee4.png') })],
+    frameDuration: 3
+};
+var beeEnterAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeflyin1.png') })],
+    frameDuration: 3
+};
+var beeCatchAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeflyin2.png') })],
+    frameDuration: 3
+};
+var beeSwitchAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch4.png') })],
+    frameDuration: 6
+};
+var beeMeleeAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem4.png') })],
+    frameDuration: 3
+};
+var beeDeathAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie4.png') })],
+    frameDuration: 6
+};
+var beePortraitAnimation = {
+    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/bee/beeportrait.png') })],
+    frameDuration: 5
+};
+
 var dragonflyHitBox = { left: 10, top: 15, width: 70, height: 30 };
 var dragonflyRectangle = r(88, 56, { hitBox: dragonflyHitBox });
 var dragonflyAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly4.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly2.png') })],
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly4.png') })],
     frameDuration: 3
 };
 var dragonflyEnterAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/flyin1.png') })],
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyflyin1.png') })],
     frameDuration: 3
 };
 var dragonflyCatchAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/flyin2.png') })],
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyflyin2.png') })],
     frameDuration: 3
 };
 var dragonflySwitchAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/switch1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/switch2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/switch3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/switch4.png') })],
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png') })],
     frameDuration: 6
 };
+var dragonflyMeleeAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym4.png') })],
+    frameDuration: 3
+};
 var dragonflyDeathAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/die1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/die2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/die3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/die4.png') })],
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png') })],
     frameDuration: 6
+};
+var dragonflyIdleAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyidle.png') })],
+    frameDuration: 6
+};
+var dragonflyPortraitAnimation = {
+    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/dragonfly/dragonflyportrait.png') })],
+    frameDuration: 5
+};
+
+var mothHitBox = { left: 10, top: 10, width: 65, height: 42 };
+var mothRectangle = r(88, 56, { hitBox: mothHitBox });
+var mothAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth4.png') })],
+    frameDuration: 3
+};
+var mothEnterAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothflyin1.png') })],
+    frameDuration: 3
+};
+var mothCatchAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothflyin2.png') })],
+    frameDuration: 3
+};
+var mothSwitchAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch4.png') })],
+    frameDuration: 6
+};
+var mothMeleeAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm4.png') })],
+    frameDuration: 3
+};
+var mothDeathAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie4.png') })],
+    frameDuration: 6
+};
+var mothPortraitAnimation = {
+    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/moth/mothportrait.png') })],
+    frameDuration: 5
 };
 
 var ladybugRectangle = r(25, 20);
@@ -267,6 +354,18 @@ var blastLoopAnimation = {
     frameDuration: 2
 };
 
+var slashRectangle = r(30, 50);
+var slashAnimation = {
+    frames: [_extends({}, slashRectangle, { image: requireImage('gfx/attacks/slash1.png') }), _extends({}, slashRectangle, { image: requireImage('gfx/attacks/slash2.png') }), _extends({}, slashRectangle, { image: requireImage('gfx/attacks/slash3.png') }), _extends({}, slashRectangle, { image: requireImage('gfx/attacks/slash4.png') })],
+    frameDuration: 3
+};
+
+var stabRectangle = r(45, 45);
+var stabAnimation = {
+    frames: [_extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab1.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab2.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab3.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab4.png') })],
+    frameDuration: 3
+};
+
 var ladybugAttackRectangle = r(10, 10);
 var ladybugAttackAnimation = {
     frames: [_extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot1.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot2.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot3.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot4.png') })],
@@ -277,6 +376,10 @@ var bulletRectangle = r(14, 15);
 var bulletAnimation = {
     frames: [_extends({}, bulletRectangle, { image: requireImage('gfx/attacks/eb1.png') }), _extends({}, bulletRectangle, { image: requireImage('gfx/attacks/eb2.png') }), _extends({}, bulletRectangle, { image: requireImage('gfx/attacks/eb3.png') }), _extends({}, bulletRectangle, { image: requireImage('gfx/attacks/eb4.png') }), _extends({}, bulletRectangle, { image: requireImage('gfx/attacks/eb5.png') })],
     frameDuration: 2
+};
+var deflectAnimation = {
+    frames: [_extends({}, bulletRectangle, { image: requireImage('gfx/attacks/deflect1.png') }), _extends({}, bulletRectangle, { image: requireImage('gfx/attacks/deflect2.png') })],
+    frameDuration: 4
 };
 
 var flyRectangle = r(55, 40);
@@ -298,6 +401,30 @@ var hornetAnimation = {
 var hornetDeathAnimation = {
     frames: [_extends({}, hornetRectangle, { hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornetded.png') })],
     frameDuration: 3
+};
+var hornetSoldierAnimation = {
+    frames: [_extends({}, hornetRectangle, { hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet1.png') }), _extends({}, hornetRectangle, { hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet2.png') }), _extends({}, hornetRectangle, { hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet3.png') }), _extends({}, hornetRectangle, { hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet4.png') })],
+    frameDuration: 3
+};
+var fallingHornetSoldierHitBox = { left: 46, top: 48, width: 40, height: 40 };
+var hornetSoldierDeathAnimation = {
+    frames: [_extends({}, hornetRectangle, { hitBox: fallingHornetSoldierHitBox, image: requireImage('gfx/enemies/mhornetded.png') })],
+    frameDuration: 3
+};
+
+var locustRectangle = r(100, 100, { hitBox: { left: 0, top: 40, width: 100, height: 60 } });
+var locustAnimation = {
+    frames: createFrames(locustRectangle, 3, 'gfx/enemies/locust.png', 1), frameDuration: 3
+};
+var locustDeathAnimation = {
+    frames: createFrames(locustRectangle, 1, 'gfx/enemies/locust.png', 0), frameDuration: 3
+};
+var locustSoldierRectangle = _extends({}, locustRectangle, { hitBox: { left: 0, top: 18, width: 100, height: 82 } });
+var locustSoldierAnimation = {
+    frames: createFrames(locustSoldierRectangle, 3, 'gfx/enemies/locust.png', 4), frameDuration: 3
+};
+var locustSoldierDeathAnimation = {
+    frames: createFrames(locustSoldierRectangle, 1, 'gfx/enemies/locust.png', 7), frameDuration: 3
 };
 
 var flyingAntHitBox = { left: 0, top: 20, width: 35, height: 20 };
@@ -347,6 +474,14 @@ var cargoBeetleDeathAnimation = {
     frames: [_extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/bflyded.png') })],
     frameDuration: 5
 };
+var explosiveBeetleAnimation = {
+    frames: [_extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/expbfly1.png') }), _extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/expbfly2.png') }), _extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/expbfly3.png') }), _extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/expbfly4.png') })],
+    frameDuration: 6
+};
+var explosiveBeetleDeathAnimation = {
+    frames: [_extends({}, cargoBeetleRectangle, { image: requireImage('gfx/enemies/expbflyded.png') })],
+    frameDuration: 5
+};
 
 var damageRectangle = r(28, 28);
 var damageAnimation = {
@@ -358,6 +493,12 @@ var explosionRectangle = r(50, 39);
 var explosionAnimation = {
     frames: [_extends({}, explosionRectangle, { image: requireImage('gfx/effects/dead1.png') }), _extends({}, explosionRectangle, { image: requireImage('gfx/effects/dead2.png') }), _extends({}, explosionRectangle, { image: requireImage('gfx/effects/dead3.png') }), _extends({}, explosionRectangle, { image: requireImage('gfx/effects/dead4.png') })],
     frameDuration: 3
+};
+
+var hugeExplosionRectangle = r(67, 67);
+var hugeExplosionAnimation = {
+    frames: [_extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode1.png') }), _extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode2.png') }), _extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode3.png') }), _extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode4.png') }), _extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode5.png') }), _extends({}, hugeExplosionRectangle, { image: requireImage('gfx/effects/explode6.png') })],
+    frameDuration: 6
 };
 
 var dustRectangle = r(20, 20);
@@ -372,18 +513,52 @@ var coinAnimation = {
     frameDuration: 5
 };
 
+var frameDuration = 12;
 var powerupRectangle = r(20, 20);
 var powerupDiamondAnimation = {
     frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/diamond1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/diamond2.png') })],
-    frameDuration: 8
+    frameDuration: frameDuration
 };
 var powerupSquareAnimation = {
     frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/square1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/square2.png') })],
-    frameDuration: 8
+    frameDuration: frameDuration
 };
 var powerupTriangleAnimation = {
     frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/triangle1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/triangle2.png') })],
-    frameDuration: 8
+    frameDuration: frameDuration
+};
+var powerupTripleDiamondAnimation = {
+    frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/tripdiamond1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/tripdiamond2.png') })],
+    frameDuration: frameDuration
+};
+var powerupTripleSquareAnimation = {
+    frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/tripsquare1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/tripsquare2.png') })],
+    frameDuration: frameDuration
+};
+var powerupTripleTriangleAnimation = {
+    frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/triptriangle1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/triptriangle2.png') })],
+    frameDuration: frameDuration
+};
+var powerupComboAnimation = {
+    frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/tripcombo1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/tripcombo2.png') })],
+    frameDuration: frameDuration
+};
+var powerupTripleComboAnimation = {
+    frames: [_extends({}, powerupRectangle, { image: requireImage('gfx/items/ultcombo1.png') }), _extends({}, powerupRectangle, { image: requireImage('gfx/items/ultcombo2.png') })],
+    frameDuration: frameDuration
+};
+var sizeTextRectangle = r(44, 20);
+var sizeTextAnimation = {
+    frames: [_extends({}, sizeTextRectangle, { image: requireImage('gfx/items/size1.png') }), _extends({}, sizeTextRectangle, { image: requireImage('gfx/items/size2.png') })],
+    frameDuration: frameDuration
+};
+var speedTextAnimation = {
+    frames: [_extends({}, sizeTextRectangle, { image: requireImage('gfx/items/speed1.png') }), _extends({}, sizeTextRectangle, { image: requireImage('gfx/items/speed2.png') })],
+    frameDuration: frameDuration
+};
+var rateTextAnimation = {
+    frames: [_extends({}, sizeTextRectangle, { image: requireImage('gfx/items/rate1.png') }), _extends({}, sizeTextRectangle, { image: requireImage('gfx/items/rate2.png') })],
+    frameDuration: frameDuration
 };
 
 var powerupLadybugAnimation = {
@@ -393,6 +568,10 @@ var powerupLadybugAnimation = {
 
 var getFrame = function getFrame(animation, animationTime) {
     var frameIndex = Math.floor(animationTime / (FRAME_LENGTH * (animation.frameDuration || 1)));
+    if (animation.loop === false) {
+        // You can set this to prevent an animation from looping.
+        frameIndex = Math.min(frameIndex, animation.frames.length - 1);
+    }
     return animation.frames[frameIndex % animation.frames.length];
 };
 var getHitBox = function getHitBox(animation, animationTime) {
@@ -405,12 +584,6 @@ var plainsMidground = r(2000, 600, { image: requireImage('gfx/scene/plains_mg.pn
 var plainsNearground = r(1200, 600, { image: requireImage('gfx/scene/plains_ng.png') });
 var backgroundSky = r(1600, 600, { image: requireImage('gfx/scene/background_sky.png') });
 
-var dragonflyPortraitImage = r(17, 18, { image: requireImage('gfx/hud/lifeportrait.png') });
-var lifeAnimation = {
-    frames: [_extends({}, dragonflyPortraitImage)],
-    frameDuration: 5
-};
-
 var selectNeedleImage = r(58, 7, { image: requireImage('gfx/needle.png') });
 var startGameImage = r(58, 13, { image: requireImage('gfx/startgame.png') });
 var optionsImage = r(43, 13, { image: requireImage('gfx/options.png') });
@@ -419,7 +592,7 @@ var gameOverImage = r(82, 30, { image: requireImage('gfx/gameover.png') });
 
 var startImage = r(58, 30, { image: requireImage('gfx/start.png') });
 
-var hudImage = r(800, 36, { image: requireImage('gfx/hud/hud.png') });
+var hudImage = r(800, 36, { image: requireImage('gfx/hud/newhud.png') });
 
 var powerupBarRectangle = r(100, 19);
 var powerupBarAnimation = {
@@ -427,62 +600,265 @@ var powerupBarAnimation = {
     frameDuration: 5
 };
 
-module.exports = {
+var comboBarRectangle = r(100, 19);
+var comboBarAnimation = {
+    frames: [_extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo0.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo1.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo2.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo3.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo4.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo5.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo6.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo7.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo8.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo9.png') }), _extends({}, comboBarRectangle, { image: requireImage('gfx/hud/combo10.png') })],
+    frameDuration: 5
+};
+
+module.exports = _defineProperty({
     getFrame: getFrame,
+    createFrames: createFrames,
     getHitBox: getHitBox,
     backgroundSky: backgroundSky,
     plainsBackground: plainsBackground,
     plainsMidground: plainsMidground,
     plainsNearground: plainsNearground,
+    beeAnimation: beeAnimation,
+    beeEnterAnimation: beeEnterAnimation,
+    beeCatchAnimation: beeCatchAnimation,
+    beeSwitchAnimation: beeSwitchAnimation,
+    beeMeleeAnimation: beeMeleeAnimation,
+    beeDeathAnimation: beeDeathAnimation,
+    beePortraitAnimation: beePortraitAnimation,
     dragonflyAnimation: dragonflyAnimation,
     dragonflyEnterAnimation: dragonflyEnterAnimation,
     dragonflyCatchAnimation: dragonflyCatchAnimation,
     dragonflySwitchAnimation: dragonflySwitchAnimation,
+    dragonflyMeleeAnimation: dragonflyMeleeAnimation,
+    dragonflyIdleAnimation: dragonflyIdleAnimation,
     dragonflyDeathAnimation: dragonflyDeathAnimation,
+    dragonflyPortraitAnimation: dragonflyPortraitAnimation,
+    mothAnimation: mothAnimation,
+    mothEnterAnimation: mothEnterAnimation,
+    mothCatchAnimation: mothCatchAnimation,
+    mothSwitchAnimation: mothSwitchAnimation,
+    mothMeleeAnimation: mothMeleeAnimation,
+    mothDeathAnimation: mothDeathAnimation,
+    mothPortraitAnimation: mothPortraitAnimation,
     needleFlipAnimation: needleFlipAnimation,
     ladybugAnimation: ladybugAnimation,
     requireImage: requireImage,
-    blastRectangle: blastRectangle,
     blastStartAnimation: blastStartAnimation,
     blastLoopAnimation: blastLoopAnimation,
+    slashAnimation: slashAnimation,
+    stabAnimation: stabAnimation,
     ladybugAttackAnimation: ladybugAttackAnimation,
     bulletAnimation: bulletAnimation,
+    deflectAnimation: deflectAnimation,
     damageAnimation: damageAnimation,
     explosionAnimation: explosionAnimation,
+    hugeExplosionAnimation: hugeExplosionAnimation,
     dustAnimation: dustAnimation,
-    coinRectangle: coinRectangle,
     coinAnimation: coinAnimation,
     powerupDiamondAnimation: powerupDiamondAnimation,
     powerupTriangleAnimation: powerupTriangleAnimation,
     powerupSquareAnimation: powerupSquareAnimation,
+    powerupTripleDiamondAnimation: powerupTripleDiamondAnimation,
+    powerupTripleSquareAnimation: powerupTripleSquareAnimation,
+    powerupTripleTriangleAnimation: powerupTripleTriangleAnimation,
+    powerupComboAnimation: powerupComboAnimation,
+    powerupTripleComboAnimation: powerupTripleComboAnimation,
+    rateTextAnimation: rateTextAnimation,
+    sizeTextAnimation: sizeTextAnimation,
+    speedTextAnimation: speedTextAnimation,
     powerupLadybugAnimation: powerupLadybugAnimation,
-    lifeAnimation: lifeAnimation,
-    flyRectangle: flyRectangle,
-    flyAnimation: flyAnimation,
-    flyDeathAnimation: flyDeathAnimation,
-    hornetRectangle: hornetRectangle,
-    hornetAnimation: hornetAnimation,
-    hornetDeathAnimation: hornetDeathAnimation,
-    flyingAntAnimation: flyingAntAnimation,
-    flyingAntDeathAnimation: flyingAntDeathAnimation,
-    flyingAntSoldierAnimation: flyingAntSoldierAnimation,
-    flyingAntSoldierDeathAnimation: flyingAntSoldierDeathAnimation,
-    monkAnimation: monkAnimation,
-    monkDeathAnimation: monkDeathAnimation,
-    monkAttackAnimation: monkAttackAnimation,
-    cargoBeetleAnimation: cargoBeetleAnimation,
-    cargoBeetleDeathAnimation: cargoBeetleDeathAnimation,
+    flyAnimation: flyAnimation, flyDeathAnimation: flyDeathAnimation,
+    hornetAnimation: hornetAnimation, hornetDeathAnimation: hornetDeathAnimation,
+    hornetSoldierAnimation: hornetSoldierAnimation, hornetSoldierDeathAnimation: hornetSoldierDeathAnimation,
+    locustAnimation: locustAnimation, locustDeathAnimation: locustDeathAnimation,
+    locustSoldierAnimation: locustSoldierAnimation, locustSoldierDeathAnimation: locustSoldierDeathAnimation,
+    flyingAntAnimation: flyingAntAnimation, flyingAntDeathAnimation: flyingAntDeathAnimation,
+    flyingAntSoldierAnimation: flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation: flyingAntSoldierDeathAnimation,
+    monkAnimation: monkAnimation, monkDeathAnimation: monkDeathAnimation, monkAttackAnimation: monkAttackAnimation,
+    cargoBeetleAnimation: cargoBeetleAnimation, cargoBeetleDeathAnimation: cargoBeetleDeathAnimation,
+    explosiveBeetleAnimation: explosiveBeetleAnimation, explosiveBeetleDeathAnimation: explosiveBeetleDeathAnimation,
     selectNeedleImage: selectNeedleImage,
     startGameImage: startGameImage,
     optionsImage: optionsImage,
     startImage: startImage,
-    dragonflyPortraitImage: dragonflyPortraitImage,
     gameOverImage: gameOverImage,
     hudImage: hudImage,
-    powerupBarAnimation: powerupBarAnimation
+    powerupBarAnimation: powerupBarAnimation,
+    comboBarAnimation: comboBarAnimation
+}, 'requireImage', requireImage);
+
+},{"gameConstants":8}],3:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _attacks;
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require('draw'),
+    drawImage = _require.drawImage,
+    drawTintedImage = _require.drawTintedImage;
+
+var _require2 = require('gameConstants'),
+    FRAME_LENGTH = _require2.FRAME_LENGTH,
+    WIDTH = _require2.WIDTH,
+    GAME_HEIGHT = _require2.GAME_HEIGHT,
+    OFFSCREEN_PADDING = _require2.OFFSCREEN_PADDING,
+    ATTACK_OFFSET = _require2.ATTACK_OFFSET,
+    ATTACK_BLAST = _require2.ATTACK_BLAST,
+    ATTACK_SLASH = _require2.ATTACK_SLASH,
+    ATTACK_STAB = _require2.ATTACK_STAB,
+    ATTACK_BULLET = _require2.ATTACK_BULLET,
+    ATTACK_ORB = _require2.ATTACK_ORB,
+    ATTACK_DEFEATED_ENEMY = _require2.ATTACK_DEFEATED_ENEMY,
+    ATTACK_EXPLOSION = _require2.ATTACK_EXPLOSION;
+
+var _require3 = require('sounds'),
+    playSound = _require3.playSound;
+
+var _require4 = require('animations'),
+    getFrame = _require4.getFrame,
+    blastStartAnimation = _require4.blastStartAnimation,
+    blastLoopAnimation = _require4.blastLoopAnimation,
+    slashAnimation = _require4.slashAnimation,
+    stabAnimation = _require4.stabAnimation,
+    ladybugAttackAnimation = _require4.ladybugAttackAnimation,
+    bulletAnimation = _require4.bulletAnimation,
+    hugeExplosionAnimation = _require4.hugeExplosionAnimation;
+
+var _require5 = require('sprites'),
+    getNewSpriteState = _require5.getNewSpriteState;
+
+var attacks = (_attacks = {}, _defineProperty(_attacks, ATTACK_BLAST, {
+    startAnimation: blastStartAnimation,
+    animation: blastLoopAnimation,
+    props: {
+        sfx: 'sfx/shoot.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_SLASH, {
+    animation: slashAnimation,
+    hitSfx: 'sfx/meleehit.mp3',
+    props: {
+        melee: true,
+        piercing: true,
+        sfx: 'sfx/dodge.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_STAB, {
+    animation: stabAnimation,
+    hitSfx: 'sfx/meleehit.mp3',
+    props: {
+        melee: true,
+        piercing: true,
+        sfx: 'sfx/dodge.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_BULLET, {
+    animation: bulletAnimation
+}), _defineProperty(_attacks, ATTACK_ORB, {
+    animation: ladybugAttackAnimation
+}), _defineProperty(_attacks, ATTACK_DEFEATED_ENEMY, {
+    // The animation will be the enemy death animation.
+    hitSfx: 'sfx/throwhit.mp3',
+    props: {
+        piercing: true
+    }
+}), _defineProperty(_attacks, ATTACK_EXPLOSION, {
+    animation: hugeExplosionAnimation,
+    props: {
+        damage: 20, piercing: true,
+        sfx: 'sfx/explosion.mp3',
+        explosion: true
+    }
+}), _attacks);
+
+var createAttack = function createAttack(type, props) {
+    var frame = (props.animation || attacks[type].animation).frames[0];
+    return getNewSpriteState(_extends({}, frame, attacks[type].props, {
+        type: type,
+        hitIds: {}
+    }, props));
 };
 
-},{"gameConstants":7}],3:[function(require,module,exports){
+var addPlayerAttackToState = function addPlayerAttackToState(state, attack) {
+    return _extends({}, state, { newPlayerAttacks: [].concat(_toConsumableArray(state.newPlayerAttacks), [attack]) });
+};
+
+var addEnemyAttackToState = function addEnemyAttackToState(state, attack) {
+    return _extends({}, state, { newEnemyAttacks: [].concat(_toConsumableArray(state.newEnemyAttacks), [attack]) });
+};
+
+var addNeutralAttackToState = function addNeutralAttackToState(state, attack) {
+    return _extends({}, state, { newNeutralAttacks: [].concat(_toConsumableArray(state.newNeutralAttacks), [attack]) });
+};
+
+var renderAttack = function renderAttack(context, attack) {
+    var animationTime = attack.animationTime;
+
+    var attackData = attacks[attack.type];
+    var animation = attack.animation || attackData.animation;
+    if (attackData.startAnimation) {
+        var startAnimationLength = attackData.startAnimation.frames.length * attackData.startAnimation.frameDuration * FRAME_LENGTH;
+        if (animationTime >= startAnimationLength) {
+            animationTime -= startAnimationLength;
+        } else {
+            animation = attackData.startAnimation;
+        }
+    }
+    var frame = getFrame(animation, animationTime);
+    if (attack.explosion && attack.delay) return;
+    // These should only apply to player attacks since any damage defeats a player.
+    if (attack.explosion || attack.damage === 1 || !attack.damage) drawImage(context, frame.image, frame, attack);else if (attack.damage >= 6) drawTintedImage(context, frame.image, 'white', .9, frame, attack);else if (attack.damage === 5) drawTintedImage(context, frame.image, 'black', .9, frame, attack);else if (attack.damage === 4) drawTintedImage(context, frame.image, 'blue', .5, frame, attack);else if (attack.damage === 3) drawTintedImage(context, frame.image, 'red', .4, frame, attack);else if (attack.damage === 2) drawTintedImage(context, frame.image, 'orange', .5, frame, attack);
+    if (attack.sfx) {
+        playSound(attack.sfx);
+        attack.sfx = false;
+    }
+};
+
+var advanceAttack = function advanceAttack(state, attack) {
+    var left = attack.left,
+        top = attack.top,
+        width = attack.width,
+        height = attack.height,
+        vx = attack.vx,
+        vy = attack.vy,
+        delay = attack.delay,
+        animationTime = attack.animationTime,
+        playerIndex = attack.playerIndex,
+        melee = attack.melee,
+        explosion = attack.explosion;
+
+    if (delay > 0 || melee) {
+        delay--;
+        if (!explosion && playerIndex >= 0) {
+            var source = state.players[playerIndex].sprite;
+            left = source.left + source.vx + source.width + (attack.xOffset || 0);
+            top = source.top + source.vy + Math.round((source.height - height) / 2) + (attack.yOffset || 0);
+        }
+    }
+    if (!(delay > 0)) {
+        left += vx;
+        top += vy;
+    }
+    animationTime += FRAME_LENGTH;
+    var done = false;
+    if (melee || explosion) {
+        var animation = attacks[attack.type].animation;
+        done = animationTime >= animation.frames.length * animation.frameDuration * FRAME_LENGTH;
+    } else {
+        done = left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING || top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
+    }
+    return _extends({}, attack, { delay: delay, left: left, top: top, animationTime: animationTime, done: done });
+};
+
+module.exports = {
+    attacks: attacks,
+    createAttack: createAttack,
+    addPlayerAttackToState: addPlayerAttackToState,
+    addNeutralAttackToState: addNeutralAttackToState,
+    addEnemyAttackToState: addEnemyAttackToState,
+    advanceAttack: advanceAttack,
+    renderAttack: renderAttack
+};
+
+},{"animations":2,"draw":5,"gameConstants":8,"sounds":14,"sprites":15}],4:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
@@ -506,7 +882,8 @@ var _require3 = require('keyboard'),
     KEY_SPACE = _require3.KEY_SPACE,
     KEY_ENTER = _require3.KEY_ENTER,
     KEY_R = _require3.KEY_R,
-    KEY_X = _require3.KEY_X;
+    KEY_X = _require3.KEY_X,
+    KEY_C = _require3.KEY_C;
 
 var now = function now() {
     return Date.now();
@@ -524,6 +901,7 @@ var update = function update() {
         up: isKeyDown(KEY_UP, state.title), down: isKeyDown(KEY_DOWN, state.title),
         left: isKeyDown(KEY_LEFT), right: isKeyDown(KEY_RIGHT),
         shoot: isKeyDown(KEY_SPACE),
+        melee: isKeyDown(KEY_C),
         switch: isKeyDown(KEY_X),
         start: isKeyDown(KEY_ENTER, true)
     });
@@ -555,7 +933,7 @@ var renderLoop = function renderLoop() {
 };
 renderLoop();
 
-},{"gameConstants":7,"keyboard":9,"render":11,"state":14}],4:[function(require,module,exports){
+},{"gameConstants":8,"keyboard":10,"render":13,"state":16}],5:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
@@ -611,7 +989,7 @@ module.exports = {
     embossText: embossText
 };
 
-},{"gameConstants":7}],5:[function(require,module,exports){
+},{"gameConstants":8}],6:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -633,18 +1011,34 @@ var _require2 = require('gameConstants'),
     EFFECT_DAMAGE = _require2.EFFECT_DAMAGE,
     EFFECT_EXPLOSION = _require2.EFFECT_EXPLOSION,
     EFFECT_DUST = _require2.EFFECT_DUST,
+    EFFECT_DEAD_BEE = _require2.EFFECT_DEAD_BEE,
+    EFFECT_SWITCH_BEE = _require2.EFFECT_SWITCH_BEE,
     EFFECT_DEAD_DRAGONFLY = _require2.EFFECT_DEAD_DRAGONFLY,
     EFFECT_SWITCH_DRAGONFLY = _require2.EFFECT_SWITCH_DRAGONFLY,
-    EFFECT_NEEDLE_FLIP = _require2.EFFECT_NEEDLE_FLIP;
+    EFFECT_DEAD_MOTH = _require2.EFFECT_DEAD_MOTH,
+    EFFECT_SWITCH_MOTH = _require2.EFFECT_SWITCH_MOTH,
+    EFFECT_NEEDLE_FLIP = _require2.EFFECT_NEEDLE_FLIP,
+    EFFECT_RATE_UP = _require2.EFFECT_RATE_UP,
+    EFFECT_SIZE_UP = _require2.EFFECT_SIZE_UP,
+    EFFECT_SPEED_UP = _require2.EFFECT_SPEED_UP,
+    EFFECT_DEFLECT_BULLET = _require2.EFFECT_DEFLECT_BULLET;
 
 var _require3 = require('animations'),
     getFrame = _require3.getFrame,
     damageAnimation = _require3.damageAnimation,
     dustAnimation = _require3.dustAnimation,
     explosionAnimation = _require3.explosionAnimation,
+    beeDeathAnimation = _require3.beeDeathAnimation,
+    beeSwitchAnimation = _require3.beeSwitchAnimation,
     dragonflyDeathAnimation = _require3.dragonflyDeathAnimation,
     dragonflySwitchAnimation = _require3.dragonflySwitchAnimation,
-    needleFlipAnimation = _require3.needleFlipAnimation;
+    mothDeathAnimation = _require3.mothDeathAnimation,
+    mothSwitchAnimation = _require3.mothSwitchAnimation,
+    needleFlipAnimation = _require3.needleFlipAnimation,
+    rateTextAnimation = _require3.rateTextAnimation,
+    sizeTextAnimation = _require3.sizeTextAnimation,
+    speedTextAnimation = _require3.speedTextAnimation,
+    deflectAnimation = _require3.deflectAnimation;
 
 var _require4 = require('sounds'),
     playSound = _require4.playSound;
@@ -663,10 +1057,38 @@ var effects = (_effects = {}, _defineProperty(_effects, EFFECT_DAMAGE, {
     }
 }), _defineProperty(_effects, EFFECT_NEEDLE_FLIP, {
     animation: needleFlipAnimation
+}), _defineProperty(_effects, EFFECT_DEAD_BEE, {
+    animation: beeDeathAnimation
+}), _defineProperty(_effects, EFFECT_SWITCH_BEE, {
+    animation: beeSwitchAnimation
 }), _defineProperty(_effects, EFFECT_DEAD_DRAGONFLY, {
     animation: dragonflyDeathAnimation
 }), _defineProperty(_effects, EFFECT_SWITCH_DRAGONFLY, {
     animation: dragonflySwitchAnimation
+}), _defineProperty(_effects, EFFECT_DEAD_MOTH, {
+    animation: mothDeathAnimation
+}), _defineProperty(_effects, EFFECT_SWITCH_MOTH, {
+    animation: mothSwitchAnimation
+}), _defineProperty(_effects, EFFECT_RATE_UP, {
+    animation: rateTextAnimation,
+    props: {
+        vy: -0.5,
+        loops: 3
+    }
+}), _defineProperty(_effects, EFFECT_SIZE_UP, {
+    animation: sizeTextAnimation,
+    props: {
+        vy: -0.5,
+        loops: 3
+    }
+}), _defineProperty(_effects, EFFECT_SPEED_UP, {
+    animation: speedTextAnimation,
+    props: {
+        vy: -0.5,
+        loops: 3
+    }
+}), _defineProperty(_effects, EFFECT_DEFLECT_BULLET, {
+    animation: deflectAnimation
 }), _effects);
 
 var createEffect = function createEffect(type, props) {
@@ -705,12 +1127,12 @@ var advanceEffect = function advanceEffect(state, effect) {
     left += vx;
     top += vy;
     if (effect.relativeToGround) {
-        left -= state.world.neargroundXFactor * state.world.vx;
-        top += state.world.neargroundYFactor * state.world.vy;
+        left -= state.world.nearground.xFactor * state.world.vx;
+        top += state.world.nearground.yFactor * state.world.vy;
     }
     animationTime += FRAME_LENGTH;
 
-    var done = animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration || left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING || top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
+    var done = animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (effect.loops || 1) || left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING || top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
 
     return _extends({}, effect, { left: left, top: top, animationTime: animationTime, done: done });
 };
@@ -722,7 +1144,7 @@ module.exports = {
     renderEffect: renderEffect
 };
 
-},{"animations":2,"draw":4,"gameConstants":7,"sounds":12,"sprites":13}],6:[function(require,module,exports){
+},{"animations":2,"draw":5,"gameConstants":8,"sounds":14,"sprites":15}],7:[function(require,module,exports){
 'use strict';
 
 var _enemyData;
@@ -744,11 +1166,18 @@ var _require2 = require('gameConstants'),
     FRAME_LENGTH = _require2.FRAME_LENGTH,
     OFFSCREEN_PADDING = _require2.OFFSCREEN_PADDING,
     ENEMY_FLY = _require2.ENEMY_FLY,
-    ENEMY_HORNET = _require2.ENEMY_HORNET,
+    ENEMY_MONK = _require2.ENEMY_MONK,
     ENEMY_FLYING_ANT = _require2.ENEMY_FLYING_ANT,
     ENEMY_FLYING_ANT_SOLDIER = _require2.ENEMY_FLYING_ANT_SOLDIER,
-    ENEMY_MONK = _require2.ENEMY_MONK,
+    ENEMY_HORNET = _require2.ENEMY_HORNET,
+    ENEMY_HORNET_SOLDIER = _require2.ENEMY_HORNET_SOLDIER,
+    ENEMY_LOCUST = _require2.ENEMY_LOCUST,
+    ENEMY_LOCUST_SOLDIER = _require2.ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE = _require2.ENEMY_CARGO_BEETLE,
+    ENEMY_EXPLOSIVE_BEETLE = _require2.ENEMY_EXPLOSIVE_BEETLE,
+    ATTACK_BULLET = _require2.ATTACK_BULLET,
+    ATTACK_DEFEATED_ENEMY = _require2.ATTACK_DEFEATED_ENEMY,
+    ATTACK_EXPLOSION = _require2.ATTACK_EXPLOSION,
     EFFECT_EXPLOSION = _require2.EFFECT_EXPLOSION,
     EFFECT_DAMAGE = _require2.EFFECT_DAMAGE,
     EFFECT_DUST = _require2.EFFECT_DUST,
@@ -768,6 +1197,12 @@ var _require4 = require('animations'),
     flyDeathAnimation = _require4.flyDeathAnimation,
     hornetAnimation = _require4.hornetAnimation,
     hornetDeathAnimation = _require4.hornetDeathAnimation,
+    hornetSoldierAnimation = _require4.hornetSoldierAnimation,
+    hornetSoldierDeathAnimation = _require4.hornetSoldierDeathAnimation,
+    locustAnimation = _require4.locustAnimation,
+    locustDeathAnimation = _require4.locustDeathAnimation,
+    locustSoldierAnimation = _require4.locustSoldierAnimation,
+    locustSoldierDeathAnimation = _require4.locustSoldierDeathAnimation,
     flyingAntAnimation = _require4.flyingAntAnimation,
     flyingAntDeathAnimation = _require4.flyingAntDeathAnimation,
     flyingAntSoldierAnimation = _require4.flyingAntSoldierAnimation,
@@ -777,7 +1212,26 @@ var _require4 = require('animations'),
     monkAttackAnimation = _require4.monkAttackAnimation,
     cargoBeetleAnimation = _require4.cargoBeetleAnimation,
     cargoBeetleDeathAnimation = _require4.cargoBeetleDeathAnimation,
-    bulletAnimation = _require4.bulletAnimation;
+    explosiveBeetleAnimation = _require4.explosiveBeetleAnimation,
+    explosiveBeetleDeathAnimation = _require4.explosiveBeetleDeathAnimation;
+
+var uniqueIdCounter = 0;
+
+var spawnMonkOnGround = function spawnMonkOnGround(state, enemyIndex) {
+    var enemy = state.enemies[enemyIndex];
+    var fallDamage = Math.floor(enemy.vy / 13);
+    var monk = createEnemy(ENEMY_MONK, {
+        left: enemy.left,
+        top: getGroundHeight(state),
+        animationTime: 20,
+        pendingDamage: fallDamage
+    });
+    monk.top -= monk.height;
+    // Add the new enemy to the state.
+    state = addEnemyToState(state, monk);
+    // Remove the current enemy from the state.
+    return updateEnemy(state, enemyIndex, { done: true });
+};
 
 var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
     animation: flyAnimation,
@@ -874,6 +1328,236 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         permanent: true,
         doNotFlip: true
     }
+}), _defineProperty(_enemyData, ENEMY_HORNET_SOLDIER, {
+    animation: hornetSoldierAnimation,
+    deathAnimation: hornetSoldierDeathAnimation,
+    deathSound: 'sfx/hit.mp3',
+    accelerate: function accelerate(state, enemy) {
+        var vx = enemy.vx,
+            vy = enemy.vy,
+            seed = enemy.seed,
+            targetX = enemy.targetX,
+            targetY = enemy.targetY,
+            mode = enemy.mode,
+            modeTime = enemy.modeTime;
+
+        var theta = Math.PI / 2 + Math.PI * 4 * modeTime / 8000;
+        var radius = 1;
+        switch (mode) {
+            case 'enter':
+                // Advance circling until almost fully in frame, then circle in place.
+                vx = radius * Math.cos(theta);
+                vy = radius * Math.sin(theta);
+                if (vx < 0) vx *= 2;
+                if (vx > 0) vx *= .5;
+                if (modeTime > 4000) {
+                    mode = 'circle';
+                    modeTime = 0;
+                }
+                break;
+            case 'circle':
+                // Advance circling until almost fully in frame, then circle in place.
+                vx = radius * Math.cos(theta);
+                vy = radius * Math.sin(theta);
+                if (vy > 0 && enemy.top < 100) vy *= 1 + (100 - enemy.top) / 100;
+                if (vy < 0 && enemy.top + enemy.height > GAME_HEIGHT - 100) {
+                    vy *= 1 + (enemy.top + enemy.height - (GAME_HEIGHT - 100)) / 100;
+                }
+                if (modeTime > 4000) {
+                    mode = 'attack';
+                    modeTime = 0;
+                }
+                break;
+            case 'attack':
+                if (modeTime === FRAME_LENGTH) {
+                    var target = state.players[0].sprite;
+                    targetX = target.left + target.width / 2;
+                    targetY = target.top + target.height / 2;
+
+                    var _getTargetVector3 = getTargetVector(enemy, target),
+                        dx = _getTargetVector3.dx,
+                        dy = _getTargetVector3.dy;
+
+                    var _theta2 = Math.atan2(dy, dx);
+                    vx = enemy.speed * Math.cos(_theta2);
+                    vy = enemy.speed * Math.sin(_theta2);
+                } else {
+                    var _getTargetVector4 = getTargetVector(enemy, { left: targetX, top: targetY }),
+                        _dx2 = _getTargetVector4.dx,
+                        _dy2 = _getTargetVector4.dy;
+
+                    if (_dx2 * vx < 0) {
+                        mode = 'retreat';
+                        modeTime = 0;
+                    }
+                }
+                break;
+            case 'retreat':
+                if (modeTime === FRAME_LENGTH) {
+                    vx = 0;
+                    vy = 0; //-vy;
+                } else if (modeTime === 200) {
+                    vx = enemy.speed * 1.5;
+                } else if (enemy.left + enemy.width / 2 > WIDTH - 100) {
+                    mode = 'circle';
+                    modeTime = 0;
+                }
+        }
+        modeTime += FRAME_LENGTH;
+        return _extends({}, enemy, { targetX: targetX, targetY: targetY, vx: vx, vy: vy, mode: mode, modeTime: modeTime });
+    },
+    shoot: function shoot(state, enemyIndex) {
+        var enemies = [].concat(_toConsumableArray(state.enemies));
+        var enemy = enemies[enemyIndex];
+        if (enemy.mode !== 'circle' && enemy.mode !== 'retreat') return state;
+        if (enemy.shotCooldown > 0) {
+            enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldown - 1 });
+            return _extends({}, state, { enemies: enemies });
+        }
+
+        var _getTargetVector5 = getTargetVector(enemy, state.players[0].sprite),
+            dx = _getTargetVector5.dx,
+            dy = _getTargetVector5.dy;
+
+        var theta = Math.atan2(dy, dx);
+        enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
+        var bullet = createAttack(ATTACK_BULLET, {
+            vx: enemy.bulletSpeed * Math.cos(theta),
+            vy: enemy.bulletSpeed * Math.sin(theta),
+            top: enemy.top + enemy.vy + enemy.height / 2,
+            left: enemy.left + enemy.vx
+        });
+        bullet.top -= bullet.height / 2;
+        return addEnemyAttackToState(_extends({}, state, { enemies: enemies }), bullet);
+    },
+    onDeathEffect: function onDeathEffect(state, enemyIndex) {
+        var enemy = state.enemies[enemyIndex];
+        var hornet = createEnemy(ENEMY_HORNET, {
+            life: 20,
+            score: enemyData[ENEMY_HORNET].props.score / 2,
+            left: enemy.left,
+            top: enemy.top,
+            vx: 0,
+            vy: 0,
+            mode: 'retreat'
+        });
+        // Delete the current enemy from the state so it can be
+        // added on top of the mount enemy.
+        state = updateEnemy(state, enemyIndex, { done: true });
+        state = addEnemyToState(state, hornet);
+        return addEnemyToState(state, enemy);
+    },
+
+    onHitGroundEffect: spawnMonkOnGround,
+    props: {
+        life: 40,
+        score: 500,
+        speed: 10,
+        bulletSpeed: 10,
+        mode: 'enter',
+        modeTime: 0,
+        permanent: true,
+        doNotFlip: true,
+        shotCooldownFrames: 50
+    }
+}), _defineProperty(_enemyData, ENEMY_LOCUST, {
+    animation: locustAnimation,
+    deathAnimation: locustDeathAnimation,
+    deathSound: 'sfx/hornetdeath.mp3',
+    accelerate: function accelerate(state, enemy) {
+        var vx = enemy.vx,
+            vy = enemy.vy,
+            targetX = enemy.targetX,
+            targetY = enemy.targetY,
+            animationTime = enemy.animationTime;
+
+        var theta = Math.PI / 2 + Math.PI * 2 * animationTime / 2000;
+        vy = 2 * enemy.speed * Math.sin(theta);
+        vx = -enemy.speed;
+        if (vy > 0 && enemy.top < 50) vy *= 1 + (50 - enemy.top) / 100;
+        if (vy < 0 && enemy.top + enemy.height > GAME_HEIGHT - 50) {
+            vy *= 1 + (enemy.top + enemy.height - (GAME_HEIGHT - 50)) / 100;
+        }
+        return _extends({}, enemy, { targetX: targetX, targetY: targetY, vx: vx, vy: vy });
+    },
+    props: {
+        life: 8,
+        score: 100,
+        speed: 3,
+        doNotFlip: true
+    }
+}), _defineProperty(_enemyData, ENEMY_LOCUST_SOLDIER, {
+    animation: locustSoldierAnimation,
+    deathAnimation: locustSoldierDeathAnimation,
+    deathSound: 'sfx/hit.mp3',
+    accelerate: function accelerate(state, enemy) {
+        var vx = enemy.vx,
+            vy = enemy.vy,
+            targetX = enemy.targetX,
+            targetY = enemy.targetY,
+            animationTime = enemy.animationTime;
+
+        var theta = Math.PI / 2 + Math.PI * 2 * animationTime / 2000;
+        vy = 2 * enemy.speed * Math.sin(theta);
+        vx = -enemy.speed;
+        if (vy > 0 && enemy.top < 100) vy *= 1 + (100 - enemy.top) / 100;
+        if (vy < 0 && enemy.top + enemy.height > GAME_HEIGHT - 100) {
+            vy *= 1 + (enemy.top + enemy.height - (GAME_HEIGHT - 100)) / 100;
+        }
+        return _extends({}, enemy, { targetX: targetX, targetY: targetY, vx: vx, vy: vy });
+    },
+    shoot: function shoot(state, enemyIndex) {
+        var enemies = [].concat(_toConsumableArray(state.enemies));
+        var enemy = enemies[enemyIndex];
+        if (enemy.shotCooldown > 0) {
+            enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldown - 1 });
+            return _extends({}, state, { enemies: enemies });
+        }
+
+        var _getTargetVector6 = getTargetVector(enemy, state.players[0].sprite),
+            dx = _getTargetVector6.dx,
+            dy = _getTargetVector6.dy;
+
+        var theta = Math.atan2(dy, dx);
+        enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
+        var bullet = createAttack(ATTACK_BULLET, {
+            vx: enemy.bulletSpeed * Math.cos(theta),
+            vy: enemy.bulletSpeed * Math.sin(theta),
+            top: enemy.top + enemy.vy + enemy.height / 2,
+            left: enemy.left + enemy.vx
+        });
+        bullet.top -= bullet.height / 2;
+        return addEnemyAttackToState(_extends({}, state, { enemies: enemies }), bullet);
+    },
+    onDeathEffect: function onDeathEffect(state, enemyIndex) {
+        var enemy = state.enemies[enemyIndex];
+        var locust = createEnemy(ENEMY_LOCUST, {
+            life: 6,
+            score: enemyData[ENEMY_LOCUST].props.score / 2,
+            left: enemy.left,
+            top: enemy.top,
+            vx: enemy.vx,
+            vy: enemy.vy,
+            animationTime: enemy.animationTime, // This helps keep acceleration in sync.
+            speed: 3,
+            mode: 'retreat'
+        });
+        // Delete the current enemy from the state so it can be
+        // added on top of the mount enemy.
+        state = updateEnemy(state, enemyIndex, { done: true });
+        state = addEnemyToState(state, locust);
+        return addEnemyToState(state, enemy);
+    },
+
+    onHitGroundEffect: spawnMonkOnGround,
+    props: {
+        life: 12,
+        score: 500,
+        speed: 1,
+        bulletSpeed: 10,
+        doNotFlip: true,
+        shotCooldownFrames: 80
+    }
 }), _defineProperty(_enemyData, ENEMY_FLYING_ANT, {
     animation: flyingAntAnimation,
     deathAnimation: flyingAntDeathAnimation,
@@ -894,6 +1578,10 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         } else if (enemy.animationTime < 3000) {
             vx = (vx * 20 + speed * Math.cos(theta)) / 21;
             vy = (vy * 20 + speed * Math.sin(theta)) / 21;
+        } else {
+            var tvx = 6 * Math.abs(vx) / vx;
+            vx = (vx * 20 + tvx) / 21;
+            vy = (vy * 20 + 0) / 21;
         }
         return _extends({}, enemy, { vx: vx, vy: vy });
     },
@@ -913,17 +1601,21 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
 
         var speed = enemy.speed;
 
-        var _getTargetVector3 = getTargetVector(enemy, state.players[0].sprite),
-            dx = _getTargetVector3.dx,
-            dy = _getTargetVector3.dy;
+        var _getTargetVector7 = getTargetVector(enemy, state.players[0].sprite),
+            dx = _getTargetVector7.dx,
+            dy = _getTargetVector7.dy;
 
         var theta = Math.atan2(dy, dx);
         if (enemy.animationTime === 0) {
             vx = speed * Math.cos(theta);
             vy = speed * Math.sin(theta);
-        } else if (enemy.animationTime < 3000) {
+        } else if (enemy.animationTime < 5000) {
             vx = (vx * 20 + speed * Math.cos(theta)) / 21;
             vy = (vy * 20 + speed * Math.sin(theta)) / 21;
+        } else {
+            var tvx = 6 * Math.abs(vx) / vx;
+            vx = (vx * 20 + tvx) / 21;
+            vy = (vy * 20 + 0) / 21;
         }
         return _extends({}, enemy, { vx: vx, vy: vy });
     },
@@ -931,22 +1623,29 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         var enemies = [].concat(_toConsumableArray(state.enemies));
         var enemy = enemies[enemyIndex];
         if (enemy.shotCooldown === undefined) {
-            enemy.shotCooldown = 20 + Math.floor(100 * Math.random());
+            enemy.shotCooldown = 20 + Math.floor(50 * Math.random());
         }
         if (enemy.shotCooldown > 0) {
             enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldown - 1 });
             return _extends({}, state, { enemies: enemies });
         } else {
+            var _getTargetVector8 = getTargetVector(enemy, state.players[0].sprite),
+                dx = _getTargetVector8.dx,
+                dy = _getTargetVector8.dy;
+            // Don't shoot unless aiming approximately towards the player.
+            //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
+
+
             enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
         }
-        var bulletFrame = bulletAnimation.frames[0];
-        var attack = getNewSpriteState(_extends({}, bulletFrame, {
+        var theta = Math.atan2(enemy.vy, enemy.vx);
+        var bullet = createAttack(ATTACK_BULLET, {
             left: enemy.left - enemy.vx,
-            top: enemy.top + enemy.vy + Math.round((enemy.height - bulletAnimation.frames[0].height) / 2),
-            vx: enemy.vx * 1.3,
-            vy: enemy.vy * 1.3
-        }));
-        return _extends({}, state, { enemies: enemies, newEnemyAttacks: [].concat(_toConsumableArray(state.newEnemyAttacks), [attack]) });
+            vx: enemy.bulletSpeed * Math.cos(theta),
+            vy: enemy.bulletSpeed * Math.sin(theta)
+        });
+        bullet.top = enemy.top + enemy.vy + Math.round((enemy.height - bullet.height) / 2);
+        return addEnemyAttackToState(_extends({}, state, { enemies: enemies }), bullet);
     },
     onDeathEffect: function onDeathEffect(state, enemyIndex) {
         var enemy = state.enemies[enemyIndex];
@@ -958,34 +1657,26 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
             vy: Math.random() < .5 ? -5 : 5,
             animationTime: 20
         });
-        return addEnemyToState(state, flyingAnt);
-    },
-    onHitGroundEffect: function onHitGroundEffect(state, enemyIndex) {
-        var enemy = state.enemies[enemyIndex];
-        var fallDamage = Math.floor(enemy.vy / 13);
-        var monk = createEnemy(ENEMY_MONK, {
-            left: enemy.left,
-            top: getGroundHeight(state) - enemy.height,
-            animationTime: 20,
-            pendingDamage: fallDamage
-        });
-        // Add the new enemy to the state.
-        state = addEnemyToState(state, monk);
-        // Remove the current enemy from the state.
-        return updateEnemy(state, enemyIndex, { done: true });
+        // Delete the current enemy from the state so it can be
+        // added on top of the mount enemy.
+        state = updateEnemy(state, enemyIndex, { done: true });
+        state = addEnemyToState(state, flyingAnt);
+        return addEnemyToState(state, enemy);
     },
 
+    onHitGroundEffect: spawnMonkOnGround,
     props: {
+        bulletSpeed: 8,
         life: 2,
         score: 20,
         speed: 5,
-        shotCooldownFrames: 200
+        shotCooldownFrames: 100
     }
 }), _defineProperty(_enemyData, ENEMY_MONK, {
     animation: monkAnimation,
     deathAnimation: monkDeathAnimation,
     attackAnimation: monkAttackAnimation,
-    deathSound: 'sfx/robedeath.mp3',
+    deathSound: 'sfx/robedeath1.mp3',
     accelerate: function accelerate(state, enemy) {
         // Stop moving while attacking.
         var vx = enemy.attackCooldownFramesLeft > 0 ? 0.001 : enemy.speed;
@@ -1003,27 +1694,28 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         } else {
             enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
         }
-        var bulletFrame = bulletAnimation.frames[0];
         var target = state.players[0].sprite;
         target = _extends({}, target, { left: target.left + state.world.vx * 40 });
 
-        var _getTargetVector4 = getTargetVector(enemy, target),
-            dx = _getTargetVector4.dx,
-            dy = _getTargetVector4.dy;
+        var _getTargetVector9 = getTargetVector(enemy, target),
+            dx = _getTargetVector9.dx,
+            dy = _getTargetVector9.dy;
 
         var mag = Math.sqrt(dx * dx + dy * dy);
         if (!mag) {
             return state;
         }
-        var attack = getNewSpriteState(_extends({}, bulletFrame, {
+
+        var bullet = createAttack(ATTACK_BULLET, {
             left: enemy.left - enemy.vx + enemy.width / 2,
             top: enemy.top + enemy.vy,
             vx: enemy.bulletSpeed * dx / mag - state.world.vx,
             vy: enemy.bulletSpeed * dy / mag
-        }));
+        });
+        bullet.left -= bullet.width / 2;
+        bullet.top -= bullet.height;
         enemies[enemyIndex] = _extends({}, enemies[enemyIndex], { attackCooldownFramesLeft: enemy.attackCooldownFrames });
-
-        return _extends({}, state, { enemies: enemies, newEnemyAttacks: [].concat(_toConsumableArray(state.newEnemyAttacks), [attack]) });
+        return addEnemyAttackToState(_extends({}, state, { enemies: enemies }), bullet);
     },
     onDeathEffect: function onDeathEffect(state, enemyIndex) {
         var enemy = state.enemies[enemyIndex];
@@ -1067,7 +1759,44 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         life: 5,
         score: 0,
         speed: 1,
-        vx: -5
+        vx: -3
+    }
+}), _defineProperty(_enemyData, ENEMY_EXPLOSIVE_BEETLE, {
+    animation: explosiveBeetleAnimation,
+    deathAnimation: explosiveBeetleDeathAnimation,
+    accelerate: function accelerate(state, enemy) {
+        // Move up and down in a sin wave.
+        var theta = Math.PI / 2 + Math.PI * 4 * enemy.animationTime / 2000;
+        var vy = 2 * Math.sin(theta);
+        return _extends({}, enemy, { vy: vy });
+    },
+
+    // deathSound: 'sfx/flydeath.mp3',
+    onDeathEffect: function onDeathEffect(state, enemyIndex) {
+        var playerIndex = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+        var enemy = state.enemies[enemyIndex];
+        // The bucket explodes on death.
+        var explosion = createAttack(ATTACK_EXPLOSION, {
+            // These offsets are chosen to match the position of the bucket.
+            left: enemy.left + 30 + enemy.vx,
+            top: enemy.top + 90 + enemy.vy,
+            playerIndex: playerIndex,
+            delay: 10,
+            vx: enemy.vx, vy: enemy.vy
+        });
+        explosion.width *= 4;
+        explosion.height *= 4;
+        explosion.left -= explosion.width / 2;
+        explosion.top -= explosion.height / 2;
+        return addNeutralAttackToState(state, explosion);
+    },
+
+    props: {
+        life: 3,
+        score: 0,
+        speed: 1,
+        vx: -3
     }
 }), _enemyData);
 
@@ -1076,7 +1805,9 @@ var createEnemy = function createEnemy(type, props) {
     return getNewSpriteState(_extends({}, frame, enemyData[type].props, {
         type: type,
         seed: Math.random()
-    }, props));
+    }, props, {
+        id: 'enemy' + uniqueIdCounter++
+    }));
 };
 
 var updateEnemy = function updateEnemy(state, enemyIndex, props) {
@@ -1125,10 +1856,12 @@ var damageEnemy = function damageEnemy(state, enemyIndex, attack) {
         animationTime: enemy.life <= damage ? 0 : enemy.animationTime
     });
     if (updatedState.enemies[enemyIndex].dead) {
-
+        if (attack.playerIndex >= 0) {
+            var hits = attack.hitIds ? 1 + Object.keys(attack.hitIds).length : 1;
+            var comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 10 * hits);
+            updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore: comboScore });
+        }
         updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
-
-        updatedState.spawnDuration = Math.min(2500, updatedState.spawnDuration + 100);
         if (enemyData[enemy.type].onDeathEffect) {
             updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemyIndex);
         }
@@ -1138,6 +1871,30 @@ var damageEnemy = function damageEnemy(state, enemyIndex, attack) {
         explosion.left = enemy.left + (enemy.width - explosion.width) / 2;
         explosion.top = enemy.top + (enemy.height - explosion.height) / 2;
         updatedState = addEffectToState(updatedState, explosion);
+
+        if (attack.melee) {
+            var playerSprite = updatedState.players[attack.playerIndex].sprite;
+
+            var _getTargetVector10 = getTargetVector(playerSprite, enemy),
+                dx = _getTargetVector10.dx,
+                dy = _getTargetVector10.dy;
+
+            var theta = Math.atan2(dy, dx);
+            var defeatedEnemyAttack = createAttack(ATTACK_DEFEATED_ENEMY, {
+                animation: enemyData[enemy.type].deathAnimation || enemyData[enemy.type].animation,
+                damage: 1,
+                top: enemy.top,
+                left: enemy.left,
+                vx: 10 * Math.cos(theta),
+                vy: 10 * Math.sin(theta),
+                playerIndex: attack.playerIndex,
+                hitIds: _defineProperty({}, enemy.id, true)
+            });
+            // Remove the enemy, it is replaced by the defeatedEnemyAttack.
+            updatedState.enemies[enemyIndex] = _extends({}, enemy, { done: true });
+            updatedState = addPlayerAttackToState(updatedState, defeatedEnemyAttack);
+        }
+
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
         if (enemy.grounded && attack.left) {
             updatedState = updateEnemy(updatedState, enemyIndex, { vx: 6, vy: -6 });
@@ -1159,6 +1916,9 @@ var damageEnemy = function damageEnemy(state, enemyIndex, attack) {
             _damage.top = attack.top + attack.vy + (attack.height - _damage.height) / 2;
             updatedState = addEffectToState(updatedState, _damage);
         }
+    }
+    if (attack.type && attacks[attack.type].hitSfx) {
+        updatedState = _extends({}, updatedState, { sfx: [].concat(_toConsumableArray(updatedState.sfx), [attacks[attack.type].hitSfx]) });
     }
     return updatedState;
 };
@@ -1213,12 +1973,12 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
         animation = enemyData[enemy.type].deathAnimation;
     }
     var frame = getFrame(animation, enemy.animationTime);
+    var hitBox = frame || frame.hitBox;
 
-    // Force grounded enemies to line up with the ground.
+    // Grounded enemies should move relative to the ground.
     if (enemy.grounded) {
         state = updateEnemy(state, enemyIndex, {
-            left: enemy.left - state.world.neargroundXFactor * state.world.vx,
-            top: Math.min(enemy.top, getGroundHeight(state) - frame.height)
+            left: enemy.left - state.world.nearground.xFactor * state.world.vx
         });
         enemy = state.enemies[enemyIndex];
     }
@@ -1231,7 +1991,7 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
     left += enemy.vx;
     top += enemy.vy;
     if (!enemy.dead) {
-        top = Math.min(top, getGroundHeight(state) - frame.height);
+        top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
     }
     animationTime += FRAME_LENGTH;
     state = updateEnemy(state, enemyIndex, { left: left, top: top, animationTime: animationTime });
@@ -1239,7 +1999,7 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
     enemy = state.enemies[enemyIndex];
     if (enemy.dead || enemy.grounded) {
         // Flying enemies fall when they are dead, grounded enemies always fall unless they are on the ground.
-        var touchingGround = enemy.top + frame.height >= getGroundHeight(state);
+        var touchingGround = enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state);
         state = updateEnemy(state, enemyIndex, {
             vy: !touchingGround || !enemy.grounded ? enemy.vy + 1 : 0,
             // Dead bodies shouldn't slide along the ground
@@ -1249,7 +2009,7 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
         if (!enemy.grounded) {
             var onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
-                if (enemy.top + frame.height > getGroundHeight(state)) {
+                if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state)) {
                     state = onHitGroundEffect(state, enemyIndex);
                     enemy = state.enemies[enemyIndex];
 
@@ -1259,7 +2019,7 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
                     });
                     dust.left = enemy.left + (enemy.width - dust.width) / 2;
                     // Add dust at the bottom of the enemy frame.
-                    dust.top = Math.min(enemy.top + enemy.height, getGroundHeight(state)) - dust.height;
+                    dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state)) - dust.height;
                     state = addEffectToState(state, dust);
                     enemy = state.enemies[enemyIndex];
                 }
@@ -1287,6 +2047,10 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
     } else if (!done) {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         done = (enemy.dead || !enemy.permanent) && (enemy.left + enemy.width < -OFFSCREEN_PADDING || enemy.vx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING || enemy.top + enemy.height < -OFFSCREEN_PADDING || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
+        if (done && !enemy.dead) {
+            var comboScore = Math.max(0, state.players[0].comboScore - 50);
+            state = updatePlayer(state, 0, { comboScore: comboScore });
+        }
     }
     return updateEnemy(state, enemyIndex, { done: done, ttl: ttl, attackCooldownFramesLeft: attackCooldownFramesLeft, pendingDamage: 0 });
 };
@@ -1313,46 +2077,74 @@ var _require7 = require('effects'),
     createEffect = _require7.createEffect,
     addEffectToState = _require7.addEffectToState;
 
-var _require8 = require('loot'),
-    createLoot = _require8.createLoot,
-    getRandomPowerupType = _require8.getRandomPowerupType,
-    getAdaptivePowerupType = _require8.getAdaptivePowerupType,
-    gainPoints = _require8.gainPoints;
+var _require8 = require('attacks'),
+    attacks = _require8.attacks,
+    createAttack = _require8.createAttack,
+    addEnemyAttackToState = _require8.addEnemyAttackToState,
+    addPlayerAttackToState = _require8.addPlayerAttackToState,
+    addNeutralAttackToState = _require8.addNeutralAttackToState;
 
-},{"Rectangle":1,"animations":2,"draw":4,"effects":5,"gameConstants":7,"keyboard":9,"loot":10,"sprites":13,"world":15}],7:[function(require,module,exports){
+var _require9 = require('loot'),
+    createLoot = _require9.createLoot,
+    getRandomPowerupType = _require9.getRandomPowerupType,
+    getAdaptivePowerupType = _require9.getAdaptivePowerupType,
+    gainPoints = _require9.gainPoints;
+
+var _require10 = require('heroes'),
+    updatePlayer = _require10.updatePlayer;
+
+},{"Rectangle":1,"animations":2,"attacks":3,"draw":5,"effects":6,"gameConstants":8,"heroes":9,"keyboard":10,"loot":11,"sprites":15,"world":17}],8:[function(require,module,exports){
 'use strict';
 
 module.exports = {
-    WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564,
+    WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
-    ACCELERATION: 1, MAX_SPEED: 10, SHOT_COOLDOWN: 8, ATTACK_OFFSET: -4,
+    ACCELERATION: 1, SHOT_COOLDOWN: 8, ATTACK_OFFSET: -4,
     ENEMY_COOLDOWN: 10, DEATH_COOLDOWN: 1000, SPAWN_COOLDOWN: 1000, SPAWN_INV_TIME: 2000,
     POINTS_FOR_POWERUP: 1000,
 
-    HERO_DRAGONFLY: 'dragonfly',
+    HERO_BEE: 'bee', HERO_DRAGONFLY: 'dragonfly', HERO_MOTH: 'moth',
 
     ENEMY_FLY: 'fly',
     ENEMY_HORNET: 'hornet',
+    ENEMY_HORNET_SOLDIER: 'hornetSoldier',
     ENEMY_FLYING_ANT: 'flyingAnt',
     ENEMY_FLYING_ANT_SOLDIER: 'flyingAntSoldier',
     ENEMY_MONK: 'monk',
     ENEMY_CARGO_BEETLE: 'cargoBeetle',
+    ENEMY_EXPLOSIVE_BEETLE: 'explosiveBeetle',
+    ENEMY_LOCUST: 'locust',
+    ENEMY_LOCUST_SOLDIER: 'locustSoldier',
+
+    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet', ATTACK_ORB: 'orb',
+    ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 
     EFFECT_DAMAGE: 'damage', EFFECT_EXPLOSION: 'explosion', EFFECT_DUST: 'dust',
+    EFFECT_DEAD_BEE: 'deadBee', EFFECT_SWITCH_BEE: 'switchBee',
     EFFECT_DEAD_DRAGONFLY: 'deadDragonfly', EFFECT_SWITCH_DRAGONFLY: 'switchDragonfly',
+    EFFECT_DEAD_MOTH: 'deadMoth', EFFECT_SWITCH_MOTH: 'switchMoth',
     EFFECT_NEEDLE_FLIP: 'needleFlip',
+    EFFECT_RATE_UP: 'rateUp', EFFECT_SIZE_UP: 'sizeUp', EFFECT_SPEED_UP: 'speedUp',
+    EFFECT_DEFLECT_BULLET: 'deflect',
     LOOT_COIN: 'coin',
     LOOT_LIFE: 'life',
     LOOT_LADYBUG: 'ladybug',
     LOOT_SPEED: 'speed',
     LOOT_ATTACK_POWER: 'power',
-    LOOT_ATTACK_SPEED: 'attackSpeed'
+    LOOT_ATTACK_SPEED: 'attackSpeed',
+    LOOT_TRIPLE_SPEED: 'tripleSpeed',
+    LOOT_TRIPLE_POWER: 'triplePower',
+    LOOT_TRIPLE_RATE: 'tripleRate',
+    LOOT_COMBO: 'combo',
+    LOOT_TRIPLE_COMBO: 'tripleCombo'
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _heroesData;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -1367,15 +2159,29 @@ var _require = require('gameConstants'),
     ATTACK_OFFSET = _require.ATTACK_OFFSET,
     SPAWN_INV_TIME = _require.SPAWN_INV_TIME,
     ACCELERATION = _require.ACCELERATION,
-    MAX_SPEED = _require.MAX_SPEED,
+    ATTACK_BLAST = _require.ATTACK_BLAST,
+    ATTACK_ORB = _require.ATTACK_ORB,
+    ATTACK_SLASH = _require.ATTACK_SLASH,
+    ATTACK_STAB = _require.ATTACK_STAB,
     EFFECT_EXPLOSION = _require.EFFECT_EXPLOSION,
+    EFFECT_DEAD_BEE = _require.EFFECT_DEAD_BEE,
+    EFFECT_SWITCH_BEE = _require.EFFECT_SWITCH_BEE,
     EFFECT_DEAD_DRAGONFLY = _require.EFFECT_DEAD_DRAGONFLY,
     EFFECT_SWITCH_DRAGONFLY = _require.EFFECT_SWITCH_DRAGONFLY,
+    EFFECT_DEAD_MOTH = _require.EFFECT_DEAD_MOTH,
+    EFFECT_SWITCH_MOTH = _require.EFFECT_SWITCH_MOTH,
     EFFECT_NEEDLE_FLIP = _require.EFFECT_NEEDLE_FLIP,
+    HERO_BEE = _require.HERO_BEE,
     HERO_DRAGONFLY = _require.HERO_DRAGONFLY,
+    HERO_MOTH = _require.HERO_MOTH,
     LOOT_SPEED = _require.LOOT_SPEED,
     LOOT_ATTACK_POWER = _require.LOOT_ATTACK_POWER,
-    LOOT_ATTACK_SPEED = _require.LOOT_ATTACK_SPEED;
+    LOOT_ATTACK_SPEED = _require.LOOT_ATTACK_SPEED,
+    LOOT_TRIPLE_SPEED = _require.LOOT_TRIPLE_SPEED,
+    LOOT_TRIPLE_POWER = _require.LOOT_TRIPLE_POWER,
+    LOOT_TRIPLE_RATE = _require.LOOT_TRIPLE_RATE,
+    LOOT_COMBO = _require.LOOT_COMBO,
+    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO;
 
 var _require2 = require('keyboard'),
     isKeyDown = _require2.isKeyDown,
@@ -1390,32 +2196,83 @@ var _require4 = require('sprites'),
     getNewSpriteState = _require4.getNewSpriteState;
 
 var _require5 = require('animations'),
+    beeAnimation = _require5.beeAnimation,
+    beeEnterAnimation = _require5.beeEnterAnimation,
+    beeCatchAnimation = _require5.beeCatchAnimation,
+    beeMeleeAnimation = _require5.beeMeleeAnimation,
+    beePortraitAnimation = _require5.beePortraitAnimation,
     dragonflyAnimation = _require5.dragonflyAnimation,
     dragonflyEnterAnimation = _require5.dragonflyEnterAnimation,
     dragonflyCatchAnimation = _require5.dragonflyCatchAnimation,
-    dragonflyDeathAnimation = _require5.dragonflyDeathAnimation,
-    dragonflyPortraitImage = _require5.dragonflyPortraitImage,
+    dragonflyMeleeAnimation = _require5.dragonflyMeleeAnimation,
+    dragonflyPortraitAnimation = _require5.dragonflyPortraitAnimation,
+    dragonflyIdleAnimation = _require5.dragonflyIdleAnimation,
+    mothAnimation = _require5.mothAnimation,
+    mothEnterAnimation = _require5.mothEnterAnimation,
+    mothCatchAnimation = _require5.mothCatchAnimation,
+    mothMeleeAnimation = _require5.mothMeleeAnimation,
+    mothPortraitAnimation = _require5.mothPortraitAnimation,
     ladybugAnimation = _require5.ladybugAnimation,
-    ladybugAttackAnimation = _require5.ladybugAttackAnimation,
-    blastRectangle = _require5.blastRectangle,
     getHitBox = _require5.getHitBox,
     getFrame = _require5.getFrame;
 
-var heroesData = _defineProperty({}, HERO_DRAGONFLY, {
+var heroesData = (_heroesData = {}, _defineProperty(_heroesData, HERO_BEE, {
+    animation: beeAnimation,
+    enterAnimation: beeEnterAnimation,
+    catchAnimation: beeCatchAnimation,
+    meleeAnimation: beeMeleeAnimation,
+    meleeAttack: ATTACK_STAB,
+    deathEffect: EFFECT_DEAD_BEE,
+    deathSfx: 'sfx/exclamation.mp3',
+    switchEffect: EFFECT_SWITCH_BEE,
+    portraitAnimation: beePortraitAnimation,
+    baseSpeed: 7,
+    meleePower: 2,
+    meleeScaling: 0.25
+}), _defineProperty(_heroesData, HERO_DRAGONFLY, {
     animation: dragonflyAnimation,
     enterAnimation: dragonflyEnterAnimation,
     catchAnimation: dragonflyCatchAnimation,
+    meleeAnimation: dragonflyMeleeAnimation,
+    idleAnimation: dragonflyIdleAnimation,
+    meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_DRAGONFLY,
+    deathSfx: 'sfx/exclamation3.mp3',
     switchEffect: EFFECT_SWITCH_DRAGONFLY,
-    portraitImage: dragonflyPortraitImage
-});
+    portraitAnimation: dragonflyPortraitAnimation,
+    baseSpeed: 8,
+    meleePower: 1,
+    meleeScaling: 0.25
+}), _defineProperty(_heroesData, HERO_MOTH, {
+    animation: mothAnimation,
+    enterAnimation: mothEnterAnimation,
+    catchAnimation: mothCatchAnimation,
+    meleeAnimation: mothMeleeAnimation,
+    meleeAttack: ATTACK_SLASH,
+    deathEffect: EFFECT_DEAD_MOTH,
+    deathSfx: 'sfx/exclamation2.mp3',
+    switchEffect: EFFECT_SWITCH_MOTH,
+    portraitAnimation: mothPortraitAnimation,
+    baseSpeed: 6,
+    meleePower: 1,
+    meleeScaling: 0.5
+}), _heroesData);
 
 var getNewPlayerState = function getNewPlayerState() {
     return {
         score: 0,
-        sprite: getNewSpriteState(_extends({}, dragonflyAnimation.frames[0], { left: -100, top: 150, targetLeft: 100, targetTop: 100, spawnSpeed: MAX_SPEED })),
-        heroes: [HERO_DRAGONFLY, HERO_DRAGONFLY, HERO_DRAGONFLY],
-        invulnerableFor: SPAWN_INV_TIME,
+        powerupPoints: 0,
+        powerupIndex: 0,
+        comboScore: 0,
+        sprite: getNewSpriteState(_extends({}, dragonflyAnimation.frames[0], {
+            left: 160, top: 377,
+            targetLeft: 170, targetTop: 200,
+            spawnSpeed: 7
+        })),
+        heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH],
+        missingHeroes: [],
+        invulnerableFor: 0,
+        spawning: true,
         shotCooldown: 0,
         ladybugShotCooldown: 0,
         powerups: [],
@@ -1431,12 +2288,6 @@ var getNewPlayerState = function getNewPlayerState() {
     };
 };
 
-var addNewPlayerAttack = function addNewPlayerAttack(state, playerIndex, attack) {
-    var newPlayerAttacks = [].concat(_toConsumableArray(state.newPlayerAttacks));
-    newPlayerAttacks.push(attack);
-    return _extends({}, state, { newPlayerAttacks: newPlayerAttacks });
-};
-
 var updatePlayer = function updatePlayer(state, playerIndex, props) {
     var players = [].concat(_toConsumableArray(state.players));
     players[playerIndex] = _extends({}, players[playerIndex], props);
@@ -1449,32 +2300,112 @@ var advanceHero = function advanceHero(state, playerIndex) {
     }
     var player = state.players[playerIndex];
     var _player = player,
+        meleeAttackTime = _player.meleeAttackTime,
+        meleeCooldown = _player.meleeCooldown,
         shotCooldown = _player.shotCooldown,
         invulnerableFor = _player.invulnerableFor,
         ladybugShotCooldown = _player.ladybugShotCooldown;
 
-    if (shotCooldown > 0) {
+    var heroData = heroesData[player.heroes[0]];
+    if (meleeCooldown > 0) {
+        meleeCooldown--;
+    } else if (player.actions.melee) {
+        meleeCooldown = 3 * SHOT_COOLDOWN - player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO;
+        }).length;
+        var powers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
+        }).length;
+        var triplePowers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
+        var meleeAttack = createAttack(heroData.meleeAttack, {
+            damage: heroData.meleePower + triplePowers,
+            top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
+            left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
+            playerIndex: playerIndex
+        });
+        meleeAttack.width *= scale;
+        meleeAttack.height *= scale;
+        meleeAttack.top -= meleeAttack.height / 2;
+        state = addPlayerAttackToState(state, meleeAttack);
+        meleeAttackTime = 0;
+
+        player = state.players[playerIndex];
+    } else if (shotCooldown > 0) {
         shotCooldown--;
     } else if (player.actions.shoot) {
         shotCooldown = SHOT_COOLDOWN - player.powerups.filter(function (powerup) {
-            return powerup === LOOT_ATTACK_SPEED;
+            return powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO;
         }).length;
-        var attackPowerups = player.powerups.filter(function (powerup) {
-            return powerup === LOOT_ATTACK_POWER;
+        var _powers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
         }).length;
-        var scale = 1 + attackPowerups;
-        state = addNewPlayerAttack(state, playerIndex, getNewSpriteState(_extends({}, blastRectangle, {
-            width: blastRectangle.width * scale,
-            height: blastRectangle.height * scale,
-            left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
-            top: player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blastRectangle.height * scale) / 2),
-            vx: 20,
-            delay: 2,
-            playerIndex: playerIndex,
-            sfx: 'sfx/shoot.mp3',
-            damage: 1 + Math.floor(attackPowerups / 2),
-            scale: scale
-        })));
+        var _triplePowers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var tripleRates = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var middleShot = { x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0 };
+        var upperA = { x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1 },
+            lowerA = { x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1 };
+        var upperB = { x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2 },
+            lowerB = { x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2 };
+        var upperC = { x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4 },
+            lowerC = { x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4 };
+        var upperD = { x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6 },
+            lowerD = { x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6 };
+        var upperE = { x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6 },
+            lowerE = { x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6 };
+        var blastPattern = [[middleShot], [upperA, lowerA], [upperB, middleShot, lowerB], [upperC, upperA, lowerA, lowerC], [upperD, upperB, middleShot, lowerB, lowerD], [upperE, upperC, upperA, lowerA, lowerC, lowerE]][tripleRates];
+        var mute = false;
+        var _scale = 1 + _powers + _triplePowers / 2;
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = blastPattern[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var blastOffsets = _step.value;
+
+                var blast = createAttack(ATTACK_BLAST, {
+                    damage: 1 + _triplePowers,
+                    left: player.sprite.left + player.sprite.vx + player.sprite.width,
+                    /*xOffset: blastOffsets.x,
+                    yOffset: blastOffsets.y,
+                    vx: 20,*/
+                    xOffset: ATTACK_OFFSET,
+                    yOffset: 0,
+                    vx: blastOffsets.vx,
+                    vy: blastOffsets.vy,
+                    delay: 2,
+                    playerIndex: playerIndex
+                });
+                blast.width *= _scale;
+                blast.height *= _scale;
+                blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+                // Only play 1 attack sound per frame.
+                if (mute) delete blast.sfx;
+                state = addPlayerAttackToState(state, blast);
+                mute = true;
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
+
         player = state.players[playerIndex];
     }
 
@@ -1484,14 +2415,15 @@ var advanceHero = function advanceHero(state, playerIndex) {
         ladybugShotCooldown = SHOT_COOLDOWN * 1.5;
         for (var i = 0; i < player.ladybugs.length; i++) {
             var ladybug = player.ladybugs[i];
-            state = addNewPlayerAttack(state, playerIndex, getNewSpriteState(_extends({}, ladybugAttackAnimation.frames[0], {
-                left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
-                top: ladybug.top + player.sprite.vy + Math.round((ladybug.height - ladybugAttackAnimation.frames[0].height) / 2) + 6,
-                vx: 15,
-                playerIndex: playerIndex,
+            var orb = createAttack(ATTACK_ORB, {
                 damage: 1,
-                type: 'ladybug'
-            })));
+                left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
+                vx: 15,
+                playerIndex: playerIndex
+            });
+            orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6;
+            state = addPlayerAttackToState(state, orb);
+
             player = state.players[playerIndex];
         }
     }
@@ -1519,7 +2451,8 @@ var advanceHero = function advanceHero(state, playerIndex) {
             targetLeft = targetTop = false;
         }
         return updatePlayer(state, playerIndex, {
-            ladybugShotCooldown: ladybugShotCooldown, invulnerableFor: invulnerableFor, shotCooldown: 1,
+            ladybugShotCooldown: 1, invulnerableFor: invulnerableFor, spawning: true,
+            shotCooldown: 1, meleeCooldown: 1,
             sprite: _extends({}, player.sprite, { left: left, top: top, animationTime: animationTime, targetLeft: targetLeft, targetTop: targetTop })
         });
     }
@@ -1527,18 +2460,21 @@ var advanceHero = function advanceHero(state, playerIndex) {
         return switchHeroes(state, playerIndex);
     }
     var speedPowerups = player.powerups.filter(function (powerup) {
-        return powerup === LOOT_SPEED;
+        return powerup === LOOT_SPEED || powerup === LOOT_COMBO;
     }).length;
-    var maxSpeed = MAX_SPEED + speedPowerups * 3;
-    var accleration = ACCELERATION + speedPowerups / 3;
+    var tripleSpeedPowerups = player.powerups.filter(function (powerup) {
+        return powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO;
+    }).length;
+    var maxSpeed = heroData.baseSpeed + tripleSpeedPowerups * 2;
+    var accleration = ACCELERATION + speedPowerups + tripleSpeedPowerups;
     // Accelerate player based on their input.
     if (player.actions.up) vy -= accleration;
     if (player.actions.down) vy += accleration;
     if (player.actions.left) vx -= accleration;
     if (player.actions.right) vx += accleration;
-    vy *= .9 - speedPowerups * .01;
+    vy *= .9 - tripleSpeedPowerups * .01;
     vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
-    vx *= .9 - speedPowerups * .01;
+    vx *= .9 - tripleSpeedPowerups * .01;
     vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
 
     // Update player position based on their
@@ -1564,19 +2500,31 @@ var advanceHero = function advanceHero(state, playerIndex) {
     }
     var sprite = _extends({}, player.sprite, { left: left, top: top, vx: vx, vy: vy, animationTime: animationTime });
     var ladybugs = updateLadyBugs(player);
+    var sfx = state.sfx;
     var chasingNeedle = player.chasingNeedle,
         catchingNeedleFrames = player.catchingNeedleFrames;
     if (chasingNeedle) {
         chasingNeedle = false;
         catchingNeedleFrames = 6;
+        sfx.push('sfx/needlegrab.mp3');
     } else if (catchingNeedleFrames > 0) {
         catchingNeedleFrames--;
     }
+    if (meleeAttackTime >= 0) {
+        meleeAttackTime += FRAME_LENGTH;
+        var animation = heroData.meleeAnimation;
+        var attackLength = animation.frames.length * animation.frameDuration * FRAME_LENGTH;
+        if (meleeAttackTime >= attackLength) {
+            meleeAttackTime = undefined;
+        }
+    }
     var updatedProps = {
-        shotCooldown: shotCooldown, ladybugShotCooldown: ladybugShotCooldown, invulnerableFor: invulnerableFor, sprite: sprite,
-        ladybugs: ladybugs, chasingNeedle: chasingNeedle, catchingNeedleFrames: catchingNeedleFrames
+        shotCooldown: shotCooldown, meleeCooldown: meleeCooldown, meleeAttackTime: meleeAttackTime,
+        ladybugShotCooldown: ladybugShotCooldown, invulnerableFor: invulnerableFor, sprite: sprite,
+        ladybugs: ladybugs, chasingNeedle: chasingNeedle, catchingNeedleFrames: catchingNeedleFrames,
+        spawning: false
     };
-    return updatePlayer(state, playerIndex, updatedProps);
+    return updatePlayer(_extends({}, state, { sfx: sfx }), playerIndex, updatedProps);
 };
 
 var updateLadyBugs = function updateLadyBugs(player) {
@@ -1625,11 +2573,12 @@ var switchHeroes = function switchHeroes(updatedState, playerIndex) {
         }),
         heroes: heroes,
         invulnerableFor: 25 * FRAME_LENGTH,
+        spawning: true,
         chasingNeedle: true
     });
     player = updatedState.players[playerIndex];
 
-    var sfx = [].concat(_toConsumableArray(updatedState.sfx), ['sfx/exclamation.mp3']);
+    var sfx = [].concat(_toConsumableArray(updatedState.sfx), ['sfx/needledropflip.mp3']);
     return _extends({}, updatedState, { sfx: sfx });
 };
 
@@ -1641,7 +2590,8 @@ var damageHero = function damageHero(updatedState, playerIndex) {
     ladybugs.shift();
 
     // Display the dying character as a single animation effect.
-    var deathEffect = createEffect(heroesData[player.heroes[0]].deathEffect);
+    var deadHeroData = heroesData[player.heroes[0]];
+    var deathEffect = createEffect(deadHeroData.deathEffect);
     deathEffect.left = sprite.left + (sprite.width - deathEffect.width) / 2;
     deathEffect.top = sprite.top + (sprite.height - deathEffect.height) / 2;
     updatedState = addEffectToState(updatedState, deathEffect);
@@ -1651,9 +2601,11 @@ var damageHero = function damageHero(updatedState, playerIndex) {
     updatedState = addEffectToState(updatedState, needleEffect);
 
     var heroes = [].concat(_toConsumableArray(player.heroes));
-    heroes.shift();
+    var missingHeroes = [].concat(_toConsumableArray(player.missingHeroes), [heroes.shift()]);
     var targetLeft = sprite.left,
         targetTop = sprite.top;
+    var powerups = [].concat(_toConsumableArray(player.powerups));
+    powerups.pop();
     var left = -100,
         top = GAME_HEIGHT - 100;
     var dx = left - targetLeft,
@@ -1665,20 +2617,26 @@ var damageHero = function damageHero(updatedState, playerIndex) {
             vx: 0, vy: 0
         }),
         heroes: heroes,
+        missingHeroes: missingHeroes,
         dead: true,
         done: heroes.length <= 0,
         invulnerableFor: SPAWN_INV_TIME,
+        spawning: true,
         chasingNeedle: true,
+        powerupIndex: 0,
+        powerupPoints: 0,
+        comboScore: 0,
+        powerups: powerups,
         ladybugs: ladybugs
     });
     player = updatedState.players[playerIndex];
 
-    var sfx = [].concat(_toConsumableArray(updatedState.sfx));
+    var sfx = [].concat(_toConsumableArray(updatedState.sfx), [deadHeroData.deathSfx]);
     if (player.done) {
         deathCooldown = DEATH_COOLDOWN;
         sfx.push('sfx/death.mp3');
     } else {
-        sfx.push('sfx/exclamation.mp3');
+        sfx.push('sfx/needledropflip.mp3');
     }
     return _extends({}, updatedState, { deathCooldown: deathCooldown, sfx: sfx });
 };
@@ -1701,12 +2659,17 @@ var renderHero = function renderHero(context, player) {
 
     if (done) return;
     var heroData = heroesData[player.heroes[0]];
-    var animation = heroData.animation;
+    var animation = heroData.animation,
+        animationTime = sprite.animationTime;
     if (player.chasingNeedle) {
         animation = heroData.enterAnimation;
     }
     if (player.catchingNeedleFrames > 0) {
         animation = heroData.catchAnimation;
+    }
+    if (player.meleeAttackTime >= 0) {
+        animation = heroData.meleeAnimation;
+        animationTime = player.meleeAttackTime;
     }
     context.save();
     if (invulnerableFor > 1000) {
@@ -1716,7 +2679,7 @@ var renderHero = function renderHero(context, player) {
     } else if (invulnerableFor > 0) {
         context.globalAlpha = .5 + Math.sin(invulnerableFor / 10) * .2;
     }
-    var frame = getFrame(animation, sprite.animationTime);
+    var frame = getFrame(animation, animationTime);
     drawImage(context, frame.image, frame, sprite);
     context.restore();
     if (isKeyDown(KEY_SHIFT)) {
@@ -1727,27 +2690,27 @@ var renderHero = function renderHero(context, player) {
         context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         context.restore();
     }
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
 
     try {
-        for (var _iterator = ladybugs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var ladybug = _step.value;
+        for (var _iterator2 = ladybugs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var ladybug = _step2.value;
 
             renderLadybug(context, ladybug);
         }
     } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
     } finally {
         try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
             }
         } finally {
-            if (_didIteratorError) {
-                throw _iteratorError;
+            if (_didIteratorError2) {
+                throw _iteratorError2;
             }
         }
     }
@@ -1764,17 +2727,22 @@ module.exports = {
     getHeroHitBox: getHeroHitBox,
     damageHero: damageHero,
     renderHero: renderHero,
-    heroesData: heroesData
+    heroesData: heroesData,
+    updatePlayer: updatePlayer
 };
 
 var _require6 = require('world'),
     getGroundHeight = _require6.getGroundHeight;
 
-var _require7 = require('effects'),
-    createEffect = _require7.createEffect,
-    addEffectToState = _require7.addEffectToState;
+var _require7 = require('attacks'),
+    createAttack = _require7.createAttack,
+    addPlayerAttackToState = _require7.addPlayerAttackToState;
 
-},{"Rectangle":1,"animations":2,"draw":4,"effects":5,"gameConstants":7,"keyboard":9,"sprites":13,"world":15}],9:[function(require,module,exports){
+var _require8 = require('effects'),
+    createEffect = _require8.createEffect,
+    addEffectToState = _require8.addEffectToState;
+
+},{"Rectangle":1,"animations":2,"attacks":3,"draw":5,"effects":6,"gameConstants":8,"keyboard":10,"sprites":15,"world":17}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1799,6 +2767,7 @@ var KEY_E = exports.KEY_E = 'E'.charCodeAt(0);
 var KEY_G = exports.KEY_G = 'G'.charCodeAt(0);
 var KEY_R = exports.KEY_R = 'R'.charCodeAt(0);
 var KEY_X = exports.KEY_X = 'X'.charCodeAt(0);
+var KEY_C = exports.KEY_C = 'C'.charCodeAt(0);
 
 var KEY_MAPPINGS = (_KEY_MAPPINGS = {}, _defineProperty(_KEY_MAPPINGS, 'A'.charCodeAt(0), KEY_LEFT), _defineProperty(_KEY_MAPPINGS, 'D'.charCodeAt(0), KEY_RIGHT), _defineProperty(_KEY_MAPPINGS, 'W'.charCodeAt(0), KEY_UP), _defineProperty(_KEY_MAPPINGS, 'S'.charCodeAt(0), KEY_DOWN), _KEY_MAPPINGS);
 
@@ -1808,7 +2777,7 @@ var KEY_MAPPINGS = (_KEY_MAPPINGS = {}, _defineProperty(_KEY_MAPPINGS, 'A'.charC
 // I based this code on examples from:
 // https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
 // Easy to find mappings at: http://html5gamepad.com/
-var GAME_PAD_MAPPINGS = (_GAME_PAD_MAPPINGS = {}, _defineProperty(_GAME_PAD_MAPPINGS, KEY_SPACE, 2), _defineProperty(_GAME_PAD_MAPPINGS, KEY_ENTER, 9), _defineProperty(_GAME_PAD_MAPPINGS, KEY_UP, 12), _defineProperty(_GAME_PAD_MAPPINGS, KEY_DOWN, 13), _defineProperty(_GAME_PAD_MAPPINGS, KEY_LEFT, 14), _defineProperty(_GAME_PAD_MAPPINGS, KEY_RIGHT, 15), _defineProperty(_GAME_PAD_MAPPINGS, KEY_R, 4), _defineProperty(_GAME_PAD_MAPPINGS, KEY_SHIFT, 5), _GAME_PAD_MAPPINGS);
+var GAME_PAD_MAPPINGS = (_GAME_PAD_MAPPINGS = {}, _defineProperty(_GAME_PAD_MAPPINGS, KEY_C, 0), _defineProperty(_GAME_PAD_MAPPINGS, KEY_SPACE, 2), _defineProperty(_GAME_PAD_MAPPINGS, KEY_X, 3), _defineProperty(_GAME_PAD_MAPPINGS, KEY_ENTER, 9), _defineProperty(_GAME_PAD_MAPPINGS, KEY_UP, 12), _defineProperty(_GAME_PAD_MAPPINGS, KEY_DOWN, 13), _defineProperty(_GAME_PAD_MAPPINGS, KEY_LEFT, 14), _defineProperty(_GAME_PAD_MAPPINGS, KEY_RIGHT, 15), _defineProperty(_GAME_PAD_MAPPINGS, KEY_R, 4), _defineProperty(_GAME_PAD_MAPPINGS, KEY_SHIFT, 5), _GAME_PAD_MAPPINGS);
 
 var physicalKeysDown = {};
 var keysDown = {};
@@ -1889,7 +2858,7 @@ var isKeyDown = exports.isKeyDown = function isKeyDown(keyCode) {
     return false;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 var _lootData;
@@ -1918,6 +2887,14 @@ var _require2 = require('gameConstants'),
     LOOT_SPEED = _require2.LOOT_SPEED,
     LOOT_ATTACK_POWER = _require2.LOOT_ATTACK_POWER,
     LOOT_ATTACK_SPEED = _require2.LOOT_ATTACK_SPEED,
+    LOOT_TRIPLE_SPEED = _require2.LOOT_TRIPLE_SPEED,
+    LOOT_TRIPLE_POWER = _require2.LOOT_TRIPLE_POWER,
+    LOOT_TRIPLE_RATE = _require2.LOOT_TRIPLE_RATE,
+    LOOT_COMBO = _require2.LOOT_COMBO,
+    LOOT_TRIPLE_COMBO = _require2.LOOT_TRIPLE_COMBO,
+    EFFECT_RATE_UP = _require2.EFFECT_RATE_UP,
+    EFFECT_SIZE_UP = _require2.EFFECT_SIZE_UP,
+    EFFECT_SPEED_UP = _require2.EFFECT_SPEED_UP,
     HERO_DRAGONFLY = _require2.HERO_DRAGONFLY,
     ENEMY_CARGO_BEETLE = _require2.ENEMY_CARGO_BEETLE;
 
@@ -1927,9 +2904,14 @@ var _require3 = require('animations'),
     powerupDiamondAnimation = _require3.powerupDiamondAnimation,
     powerupTriangleAnimation = _require3.powerupTriangleAnimation,
     powerupSquareAnimation = _require3.powerupSquareAnimation,
+    powerupTripleDiamondAnimation = _require3.powerupTripleDiamondAnimation,
+    powerupTripleSquareAnimation = _require3.powerupTripleSquareAnimation,
+    powerupTripleTriangleAnimation = _require3.powerupTripleTriangleAnimation,
+    powerupComboAnimation = _require3.powerupComboAnimation,
+    powerupTripleComboAnimation = _require3.powerupTripleComboAnimation,
     powerupLadybugAnimation = _require3.powerupLadybugAnimation,
     ladybugAnimation = _require3.ladybugAnimation,
-    lifeAnimation = _require3.lifeAnimation;
+    beePortraitAnimation = _require3.beePortraitAnimation;
 
 var _require4 = require('sounds'),
     playSound = _require4.playSound;
@@ -1949,18 +2931,87 @@ var circleAcceleration = function circleAcceleration(state, loot) {
     return _extends({}, loot, { vx: vx, vy: vy });
 };
 
-var drawGlowing = function drawGlowing(context, loot) {
+var drawNormal = function drawNormal(context, state, loot) {
+    var frame = getFrame(lootData[loot.type].animation, loot.animationTime);
+    drawImage(context, frame.image, frame, loot);
+};
+var drawGlowing = function drawGlowing(context, state, loot) {
     var frame = getFrame(lootData[loot.type].animation, loot.animationTime);
     drawTintedImage(context, frame.image, 'white', .5 + .5 * Math.cos(loot.animationTime / 50), frame, loot);
 };
-
-var updatePlayer = function updatePlayer(state, playerIndex, props) {
-    var players = [].concat(_toConsumableArray(state.players));
-    players[playerIndex] = _extends({}, players[playerIndex], props);
-    return _extends({}, state, { players: players });
+var getCombinedType = function getCombinedType(powerups) {
+    if (powerups.length < 3) return null;
+    var typeA = powerups[powerups.length - 1],
+        typeB = powerups[powerups.length - 2],
+        typeC = powerups[powerups.length - 3];
+    if (typeA === LOOT_ATTACK_POWER && typeB === LOOT_ATTACK_POWER && typeC === LOOT_ATTACK_POWER) {
+        return LOOT_TRIPLE_POWER;
+    }
+    if (typeA === LOOT_ATTACK_SPEED && typeB === LOOT_ATTACK_SPEED && typeC === LOOT_ATTACK_SPEED) {
+        return LOOT_TRIPLE_RATE;
+    }
+    if (typeA === LOOT_SPEED && typeB === LOOT_SPEED && typeC === LOOT_SPEED) {
+        return LOOT_TRIPLE_SPEED;
+    }
+    if (typeA === LOOT_COMBO && typeB === LOOT_COMBO && typeC === LOOT_COMBO) {
+        return LOOT_TRIPLE_COMBO;
+    }
+    var comboArray = [typeA, typeB, typeC];
+    if (comboArray.includes(LOOT_ATTACK_SPEED) && comboArray.includes(LOOT_ATTACK_POWER) && comboArray.includes(LOOT_SPEED)) {
+        return LOOT_COMBO;
+    }
+    if (comboArray.includes(LOOT_TRIPLE_RATE) && comboArray.includes(LOOT_TRIPLE_POWER) && comboArray.includes(LOOT_TRIPLE_SPEED)) {
+        return LOOT_TRIPLE_COMBO;
+    }
+    return null;
 };
 
-var powerupLoot = function powerupLoot(type, animation) {
+var powerupLoot = function powerupLoot(type, animation, effectType) {
+    return {
+        animation: animation,
+        // accelerate: circleAcceleration,
+        collect: function collect(state, playerIndex, loot) {
+            var powerups = [].concat(_toConsumableArray(state.players[playerIndex].powerups), [type]);
+            if (powerups.length > 5) powerups.shift();
+            var comboType = getCombinedType(powerups);
+            if (comboType) {
+                powerups.pop();
+                powerups.pop();
+                powerups.pop();
+                powerups.push(comboType);
+                // The combo can combine again for the triple combo powerup.
+                comboType = getCombinedType(powerups);
+                if (comboType) {
+                    powerups.pop();
+                    powerups.pop();
+                    powerups.pop();
+                    powerups.push(comboType);
+                }
+            }
+            if (effectType) {
+                var powerupText = createEffect(effectType);
+                powerupText.left = loot.left + (loot.width - powerupText.width) / 2;
+                powerupText.top = loot.top + (loot.height - powerupText.height) / 2;
+                state = addEffectToState(state, powerupText);
+            }
+            return updatePlayer(state, playerIndex, { powerups: powerups });
+        },
+        draw: function draw(context, state, loot) {
+            if (getCombinedType([].concat(_toConsumableArray(state.players[0].powerups), [type]))) {
+                drawGlowing(context, state, loot);
+            } else {
+                drawNormal(context, state, loot);
+            }
+        },
+
+        // draw: drawGlowing,
+        sfx: 'sfx/powerup.mp3',
+        scale: 1,
+        props: {}
+    };
+};
+
+var triplePowerupLoot = function triplePowerupLoot(type, animation) {
     return {
         animation: animation,
         // accelerate: circleAcceleration,
@@ -1970,12 +3021,9 @@ var powerupLoot = function powerupLoot(type, animation) {
             return updatePlayer(state, playerIndex, { powerups: powerups });
         },
 
-        // draw: drawGlowing,
         sfx: 'sfx/powerup.mp3',
         scale: 1,
-        props: {
-            radius: 1
-        }
+        props: {}
     };
 };
 
@@ -1989,23 +3037,37 @@ var getNewLadyBug = function getNewLadyBug(playerSprite) {
 var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
     animation: coinAnimation,
     collect: function collect(state, playerIndex, loot) {
+        var comboScore = Math.min(1000, state.players[playerIndex].comboScore + 20);
+        state = updatePlayer(state, playerIndex, { comboScore: comboScore });
         return gainPoints(state, playerIndex, 50);
     },
 
     sfx: 'sfx/coin.mp3',
     scale: 2
 }), _defineProperty(_lootData, LOOT_LIFE, {
-    animation: lifeAnimation,
+    animation: beePortraitAnimation, // This is just used for sizing purposes.
     accelerate: circleAcceleration,
     collect: function collect(state, playerIndex, loot) {
         var heroes = [].concat(_toConsumableArray(state.players[playerIndex].heroes));
-        if (heroes.length < 3) {
-            heroes.push(HERO_DRAGONFLY);
+        var missingHeroes = [].concat(_toConsumableArray(state.players[playerIndex].missingHeroes));
+        if (missingHeroes.length) {
+            heroes.push(missingHeroes.shift());
+        } else {
+            // extra life life loots become coins if the players have max lives.
+            return gainPoints(state, playerIndex, 500);
         }
-        return updatePlayer(state, playerIndex, { heroes: heroes });
+        return updatePlayer(state, playerIndex, { heroes: heroes, missingHeroes: missingHeroes });
+    },
+    draw: function draw(context, state, loot) {
+        // extra life life loots become coins if the players have max lives.
+        var animation = coinAnimation;
+        if (state.players[0].missingHeroes.length) {
+            animation = heroesData[state.players[0].missingHeroes[0]].portraitAnimation;
+        }
+        var frame = getFrame(animation, loot.animationTime);
+        drawTintedImage(context, frame.image, 'white', .5 + .5 * Math.cos(loot.animationTime / 50), frame, loot);
     },
 
-    draw: drawGlowing,
     sfx: 'sfx/heal.mp3',
     scale: 1
 }), _defineProperty(_lootData, LOOT_LADYBUG, {
@@ -2020,7 +3082,7 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
     draw: drawGlowing,
     sfx: 'sfx/powerup.mp3',
     scale: 1
-}), _defineProperty(_lootData, LOOT_ATTACK_POWER, powerupLoot(LOOT_ATTACK_POWER, powerupSquareAnimation)), _defineProperty(_lootData, LOOT_ATTACK_SPEED, powerupLoot(LOOT_ATTACK_SPEED, powerupDiamondAnimation)), _defineProperty(_lootData, LOOT_SPEED, powerupLoot(LOOT_SPEED, powerupTriangleAnimation)), _lootData);
+}), _defineProperty(_lootData, LOOT_ATTACK_POWER, powerupLoot(LOOT_ATTACK_POWER, powerupSquareAnimation, EFFECT_SIZE_UP)), _defineProperty(_lootData, LOOT_ATTACK_SPEED, powerupLoot(LOOT_ATTACK_SPEED, powerupDiamondAnimation, EFFECT_RATE_UP)), _defineProperty(_lootData, LOOT_SPEED, powerupLoot(LOOT_SPEED, powerupTriangleAnimation, EFFECT_SPEED_UP)), _defineProperty(_lootData, LOOT_TRIPLE_SPEED, triplePowerupLoot(LOOT_TRIPLE_SPEED, powerupTripleTriangleAnimation, EFFECT_SPEED_UP)), _defineProperty(_lootData, LOOT_TRIPLE_POWER, triplePowerupLoot(LOOT_TRIPLE_POWER, powerupTripleSquareAnimation, EFFECT_SIZE_UP)), _defineProperty(_lootData, LOOT_TRIPLE_RATE, triplePowerupLoot(LOOT_TRIPLE_RATE, powerupTripleDiamondAnimation, EFFECT_RATE_UP)), _defineProperty(_lootData, LOOT_COMBO, triplePowerupLoot(LOOT_COMBO, powerupComboAnimation)), _defineProperty(_lootData, LOOT_TRIPLE_COMBO, triplePowerupLoot(LOOT_TRIPLE_COMBO, powerupTripleComboAnimation)), _lootData);
 
 var createLoot = function createLoot(type) {
     var frame = lootData[type].animation.frames[0];
@@ -2030,12 +3092,7 @@ var createLoot = function createLoot(type) {
 };
 
 var renderLoot = function renderLoot(context, loot) {
-    if (lootData[loot.type].draw) {
-        lootData[loot.type].draw(context, loot);
-    } else {
-        var frame = getFrame(lootData[loot.type].animation, loot.animationTime);
-        drawImage(context, frame.image, frame, loot);
-    }
+    if (lootData[loot.type].draw) lootData[loot.type].draw(context, state, loot);else drawNormal(context, state, loot);
     if (loot.sfx) {
         playSound(loot.sfx);
         loot.sfx = false;
@@ -2083,7 +3140,9 @@ var getRandomPowerupType = function getRandomPowerupType() {
 5: If they only have 1 ladybug, it drops a ladybug. Otherwise...
 6: Drops a random of the main 3 powerups.*/
 var getAdaptivePowerupType = function getAdaptivePowerupType(state) {
-    if (state.players[0].heroes.length < 3) return LOOT_LIFE;
+    // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
+    if (state.players[0].heroes.length < 2 && Math.random() < .25) return LOOT_LIFE;
+    if (state.players[0].heroes.length < 3 && Math.random() < .25) return LOOT_LIFE;
     if (state.players[0].powerups.length < 2) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 1) return LOOT_LADYBUG;
     if (state.players[0].powerups.length < 4) return getRandomPowerupType();
@@ -2093,17 +3152,43 @@ var getAdaptivePowerupType = function getAdaptivePowerupType(state) {
     return getRandomPowerupType();
 };
 
+var getComboMultiplier = function getComboMultiplier(state, playerIndex) {
+    var comboScore = state.players[playerIndex].comboScore;
+    if (comboScore >= 1000) return 5;
+    if (comboScore >= 600) return 4;
+    if (comboScore >= 400) return 3;
+    if (comboScore >= 200) return 2;
+    if (comboScore >= 100) return 1.5;
+    return 1;
+};
+
+var powerupGoals = [500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000];
+
 var gainPoints = function gainPoints(state, playerIndex, points) {
+    points *= getComboMultiplier(state, playerIndex);
     var score = state.players[playerIndex].score + points;
-    state = updatePlayer(state, playerIndex, { score: score });
-    if (Math.floor(score / POINTS_FOR_POWERUP) > Math.floor((score - points) / POINTS_FOR_POWERUP)) {
+    var powerupPoints = state.players[playerIndex].powerupPoints + points;
+    var powerupIndex = state.players[playerIndex].powerupIndex;
+    if (powerupPoints >= powerupGoals[powerupIndex]) {
+        powerupPoints -= powerupGoals[powerupIndex];
+        powerupIndex = Math.min(powerupIndex + 1, powerupGoals.length - 1);
         var cargoBeetle = createEnemy(ENEMY_CARGO_BEETLE, {
             left: WIDTH + 10,
-            top: GAME_HEIGHT / 2
+            top: GAME_HEIGHT / 6 + Math.floor(Math.random() * 2 * GAME_HEIGHT / 3)
         });
+        cargoBeetle.top -= cargoBeetle.height / 2;
         state = addEnemyToState(state, cargoBeetle);
     }
+    state = updatePlayer(state, playerIndex, { score: score, powerupPoints: powerupPoints, powerupIndex: powerupIndex });
     return state;
+};
+
+var collectLoot = function collectLoot(state, playerIndex, lootIndex) {
+    var loot = state.loot[lootIndex];
+    state = lootData[loot.type].collect(state, playerIndex, loot);
+    state = _extends({}, state, { loot: [].concat(_toConsumableArray(state.loot)) });
+    state.loot[lootIndex] = _extends({}, loot, { done: true });
+    return _extends({}, state, { sfx: [].concat(_toConsumableArray(state.sfx), [lootData[loot.type].sfx]) });
 };
 
 module.exports = {
@@ -2113,7 +3198,10 @@ module.exports = {
     renderLoot: renderLoot,
     gainPoints: gainPoints,
     getRandomPowerupType: getRandomPowerupType,
-    getAdaptivePowerupType: getAdaptivePowerupType
+    getAdaptivePowerupType: getAdaptivePowerupType,
+    getComboMultiplier: getComboMultiplier,
+    collectLoot: collectLoot,
+    powerupGoals: powerupGoals
 };
 
 // Move possible circular imports to after exports.
@@ -2122,7 +3210,93 @@ var _require6 = require('enemies'),
     addEnemyToState = _require6.addEnemyToState,
     createEnemy = _require6.createEnemy;
 
-},{"Rectangle":1,"animations":2,"draw":4,"enemies":6,"gameConstants":7,"sounds":12,"sprites":13}],11:[function(require,module,exports){
+var _require7 = require('heroes'),
+    heroesData = _require7.heroesData,
+    updatePlayer = _require7.updatePlayer;
+
+var _require8 = require('effects'),
+    createEffect = _require8.createEffect,
+    addEffectToState = _require8.addEffectToState;
+
+},{"Rectangle":1,"animations":2,"draw":5,"effects":6,"enemies":7,"gameConstants":8,"heroes":9,"sounds":14,"sprites":15}],12:[function(require,module,exports){
+"use strict";
+
+module.exports = {
+    /**
+     * @param {Number} min  The smallest returned value
+     * @param {Number} max  The largest returned value
+     */
+    range: function range(A, B) {
+        var min = Math.min(A, B);
+        var max = Math.max(A, B);
+        return Math.floor(Math.random() * (max + 1 - min)) + min;
+    },
+
+
+    /**
+     * @param {Array} array  The array of elements to return random element from
+     */
+    element: function element(collection) {
+        if (collection.constructor == Object) {
+            var keys = Object.keys(collection);
+            return collection[this.element(keys)];
+        }
+        if (collection.constructor == Array) {
+            return collection[this.range(0, collection.length - 1)];
+        }
+        console.log("Warning @ Random.element: " + collection + " is neither Array or Object");
+        return null;
+    },
+
+
+    /**
+     * @param {Array} array  The array of elements to return random element from
+     */
+    removeElement: function removeElement(collection) {
+        if (collection.constructor == Object) {
+            var keys = Object.keys(collection);
+            var key = this.element(keys);
+            var value = collection[key];
+            delete collection[key];
+            return value;
+        }
+        if (collection.constructor == Array) {
+            var spliced = collection.splice(this.range(0, collection.length - 1), 1);
+            return spliced[0];
+        }
+        console.log("Warning @ Random.removeElement: " + collection + " is neither Array or Object");
+        return null;
+    },
+
+
+    /**
+     * Shuffles an array.
+     *
+     * Knuth algorithm found at:
+     * http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+     *
+     * @param {Array} array  The array of elements to shuffle
+     */
+    shuffle: function shuffle(array) {
+        array = array.slice();
+        var currentIndex = array.length,
+            temporaryValue,
+            randomIndex;
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
+};
+
+},{}],13:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
@@ -2147,13 +3321,10 @@ var _require3 = require('sounds'),
 
 var _require4 = require('keyboard'),
     isKeyDown = _require4.isKeyDown,
+    KEY_SHIFT = _require4.KEY_SHIFT,
     KEY_R = _require4.KEY_R;
 
 var _require5 = require('animations'),
-    backgroundSky = _require5.backgroundSky,
-    plainsBackground = _require5.plainsBackground,
-    plainsMidground = _require5.plainsMidground,
-    plainsNearground = _require5.plainsNearground,
     blastStartAnimation = _require5.blastStartAnimation,
     blastLoopAnimation = _require5.blastLoopAnimation,
     ladybugAttackAnimation = _require5.ladybugAttackAnimation,
@@ -2163,12 +3334,13 @@ var _require5 = require('animations'),
     startGameImage = _require5.startGameImage,
     optionsImage = _require5.optionsImage,
     startImage = _require5.startImage,
-    dragonflyPortraitImage = _require5.dragonflyPortraitImage,
     gameOverImage = _require5.gameOverImage,
     hudImage = _require5.hudImage,
     powerupBarAnimation = _require5.powerupBarAnimation,
+    comboBarAnimation = _require5.comboBarAnimation,
     getHitBox = _require5.getHitBox,
-    getFrame = _require5.getFrame;
+    getFrame = _require5.getFrame,
+    dragonflyIdleAnimation = _require5.dragonflyIdleAnimation;
 
 var canvas = document.createElement('canvas');
 canvas.width = WIDTH;
@@ -2202,12 +3374,14 @@ var render = function render(state) {
         rewindAlpha = Math.min(1, rewindAlpha + .02);
     }
     context.globalAlpha = rewindAlpha;
-    renderBackground(state.world);
+    renderBackground(context, state);
     context.globalAlpha = 1;
 
     context.save();
     context.translate(0, hudImage.height);
-    state.playerAttacks.map(renderPlayerAttack);
+    state.playerAttacks.map(function (attack) {
+        return renderAttack(context, attack);
+    });
     state.enemies.map(function (enemy) {
         return renderEnemy(context, enemy);
     });
@@ -2217,12 +3391,19 @@ var render = function render(state) {
     state.effects.map(function (effect) {
         return renderEffect(context, effect);
     });
+    state.neutralAttacks.map(function (attack) {
+        return renderAttack(context, attack);
+    });
     // Thinking an attack shuold display on top of other effects so it can be avoided.
-    state.enemyAttacks.map(renderEnemyAttack);
+    state.enemyAttacks.map(function (attack) {
+        return renderAttack(context, attack);
+    });
     state.players.map(function (hero) {
         return renderHero(context, hero);
     });
     context.restore();
+
+    renderForeground(context, state);
 
     context.restore();
     renderHUD(context, state);
@@ -2274,34 +3455,76 @@ var render = function render(state) {
 var renderHUD = function renderHUD(context, state) {
     drawImage(context, hudImage.image, hudImage, hudImage);
     for (var i = 0; i < state.players[0].heroes.length; i++) {
-        var portraitImage = heroesData[state.players[0].heroes[i]].portraitImage;
+        var portraitAnimation = heroesData[state.players[0].heroes[i]].portraitAnimation;
 
-        drawImage(context, portraitImage.image, portraitImage, new Rectangle(portraitImage).moveTo(HUD_PADDING + i * 22, HUD_PADDING));
+        var _frame = getFrame(portraitAnimation, state.world.time);
+        drawImage(context, _frame.image, _frame, new Rectangle(_frame).moveTo(HUD_PADDING + 1 + i * 20, HUD_PADDING));
     }
+
+    context.textBaseline = 'middle';
+    context.textAlign = 'left';
+    context.font = "20px sans-serif";
+    embossText(context, {
+        text: '' + state.players[0].score,
+        left: 665,
+        top: HUD_PADDING + 10,
+        backgroundColor: '#AAA'
+    });
+
+    var _state$players$ = state.players[0],
+        powerupPoints = _state$players$.powerupPoints,
+        powerupIndex = _state$players$.powerupIndex;
+
+    var powerupFrame = Math.floor(powerupBarAnimation.frames.length * (powerupPoints / powerupGoals[powerupIndex]));
+    powerupFrame = Math.min(powerupBarAnimation.frames.length - 1, powerupFrame);
+    var frame = powerupBarAnimation.frames[powerupFrame];
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(190, 8));
+
+    var comboScore = state.players[0].comboScore;
+    var nextCombo = 100;
+    if (comboScore < 100) {
+        nextCombo = 100;
+    } else if (comboScore < 200) {
+        comboScore -= 100;
+        nextCombo = 100;
+    } else if (comboScore < 400) {
+        comboScore -= 200;
+        nextCombo = 200;
+    } else if (comboScore < 600) {
+        comboScore -= 400;
+        nextCombo = 200;
+    } else {
+        comboScore -= 600;
+        nextCombo = 400;
+    }
+
+    var comboFrame = Math.min(comboBarAnimation.frames.length - 1, Math.floor((comboBarAnimation.frames.length - 1) * comboScore / nextCombo));
+    frame = comboBarAnimation.frames[comboFrame];
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(523, 8));
 
     context.textBaseline = 'middle';
     context.textAlign = 'right';
     context.font = "20px sans-serif";
     embossText(context, {
-        text: 'SCORE: ' + state.players[0].score,
-        left: WIDTH - HUD_PADDING - 2,
-        top: HUD_PADDING + dragonflyPortraitImage.height / 2 + 1,
+        text: (isKeyDown(KEY_SHIFT) ? state.players[0].comboScore + ' ' : '') + (getComboMultiplier(state, 0) + 'x'),
+        left: 518,
+        top: HUD_PADDING + 10,
         backgroundColor: '#AAA'
     });
-
-    var powerupFrame = Math.floor(powerupBarAnimation.frames.length * (state.players[0].score % POINTS_FOR_POWERUP) / POINTS_FOR_POWERUP);
-    var frame = powerupBarAnimation.frames[powerupFrame];
-    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(100, 8));
 
     for (var _i = 0; _i < state.players[0].powerups.length; _i++) {
         var powerupType = state.players[0].powerups[_i];
         frame = getFrame(lootData[powerupType].animation, state.players[0].sprite.animationTime);
-        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(210 + 20 * _i, 8));
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(292 + 20 * _i, 8));
     }
 };
 
 var renderTitle = function renderTitle(context, state) {
-    renderBackground(state.world);
+    renderBackground(context, state);
+    renderForeground(context, state);
+    var frame = dragonflyIdleAnimation.frames[0];
+    var sprite = state.players[0].sprite;
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(sprite.left, hudImage.height + sprite.top));
 
     var options = [startGameImage, optionsImage];
     var targets = [new Rectangle(options[0]).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2)];
@@ -2323,107 +3546,32 @@ var renderTitle = function renderTitle(context, state) {
     // renderForeground(state.world);
 };
 
-var renderPlayerAttack = function renderPlayerAttack(attack) {
-    if (attack.type === 'ladybug') {
-        var _frame = getFrame(ladybugAttackAnimation, attack.animationTime);
-        drawImage(context, _frame.image, _frame, attack);
-        return;
-    }
-    var animationTime = attack.animationTime;
-
-    var frameIndex = animationTime / FRAME_LENGTH;
-    var startFrames = blastStartAnimation.frames.length * blastStartAnimation.frameDuration;
-    var animation = blastStartAnimation;
-    if (frameIndex >= startFrames) {
-        animation = blastLoopAnimation;
-        frameIndex -= startFrames;
-    }
-    frameIndex = Math.floor(frameIndex / animation.frameDuration);
-    var frame = animation.frames[frameIndex % animation.frames.length];
-    if (attack.damage === 3) drawTintedImage(context, frame.image, 'blue', .3, frame, attack);else if (attack.damage === 2) drawTintedImage(context, frame.image, 'red', .3, frame, attack);else drawImage(context, frame.image, frame, attack);
-    if (attack.sfx) {
-        playSound(attack.sfx);
-        attack.sfx = false;
-    }
-};
-
-var renderEnemyAttack = function renderEnemyAttack(attack) {
-    var frame = getFrame(bulletAnimation, attack.animationTime);
-    drawImage(context, frame.image, frame, attack);
-};
-
-var renderBackgroundLayer = function renderBackgroundLayer(context, _ref) {
-    var image = _ref.image,
-        x = _ref.x,
-        y = _ref.y;
-
-    var left = x % image.width;
-    var right = (x + WIDTH) % image.width;
-    if (right < left) {
-        var leftWidth = image.width - left;
-        context.drawImage(image.image, left, 0, leftWidth, image.height, 0, y, leftWidth, image.height);
-        context.drawImage(image.image, 0, 0, right, image.height, leftWidth, y, right, image.height);
-    } else {
-        context.drawImage(image.image, left, 0, image.width, image.height, 0, y, image.width, image.height);
-    }
-};
-
-var renderBackground = function renderBackground(world) {
-    // context.fillStyle = 'black';
-    // context.fillRect(0, 0, WIDTH, HEIGHT);
-    var x = world.x,
-        y = world.y,
-        backgroundYFactor = world.backgroundYFactor,
-        backgroundXFactor = world.backgroundXFactor,
-        backgroundXOffset = world.backgroundXOffset,
-        backgroundYOffset = world.backgroundYOffset,
-        midgroundYFactor = world.midgroundYFactor,
-        midgroundXFactor = world.midgroundXFactor,
-        midgroundXOffset = world.midgroundXOffset,
-        midgroundYOffset = world.midgroundYOffset,
-        neargroundYFactor = world.neargroundYFactor,
-        neargroundXFactor = world.neargroundXFactor,
-        neargroundXOffset = world.neargroundXOffset,
-        neargroundYOffset = world.neargroundYOffset;
-
-    renderBackgroundLayer(context, { image: plainsBackground,
-        x: x * backgroundXFactor + (backgroundXOffset || 0),
-        y: y * backgroundYFactor + (backgroundYOffset || 0)
-    });
-    renderBackgroundLayer(context, { image: plainsMidground,
-        x: x * midgroundXFactor + (midgroundXOffset || 0),
-        y: y * midgroundYFactor + (midgroundYOffset || 0)
-    });
-    renderBackgroundLayer(context, { image: plainsNearground,
-        x: x * neargroundXFactor + (neargroundXOffset || 0),
-        y: y * neargroundYFactor + (neargroundYOffset || 0)
-    });
-};
-
-/*const renderForeground = ({x, y, foregroundXFactor, foregroundYFactor, foregroundXOffset, foregroundYOffset}) => {
-    renderBackgroundLayer(context, {image: plainsForeground,
-        x: x * foregroundXFactor + (foregroundXOffset || 0),
-        y: y * foregroundYFactor + (foregroundYOffset || 0),
-    });
-};*/
-
 module.exports = render;
 
-var _require6 = require('heroes'),
-    heroesData = _require6.heroesData,
-    renderHero = _require6.renderHero;
+var _require6 = require('world'),
+    renderBackground = _require6.renderBackground,
+    renderForeground = _require6.renderForeground;
 
-var _require7 = require('loot'),
-    lootData = _require7.lootData,
-    renderLoot = _require7.renderLoot;
+var _require7 = require('heroes'),
+    heroesData = _require7.heroesData,
+    renderHero = _require7.renderHero;
 
-var _require8 = require('enemies'),
-    renderEnemy = _require8.renderEnemy;
+var _require8 = require('loot'),
+    lootData = _require8.lootData,
+    renderLoot = _require8.renderLoot,
+    getComboMultiplier = _require8.getComboMultiplier,
+    powerupGoals = _require8.powerupGoals;
 
-var _require9 = require('effects'),
-    renderEffect = _require9.renderEffect;
+var _require9 = require('enemies'),
+    renderEnemy = _require9.renderEnemy;
 
-},{"Rectangle":1,"animations":2,"draw":4,"effects":5,"enemies":6,"gameConstants":7,"heroes":8,"keyboard":9,"loot":10,"sounds":12}],12:[function(require,module,exports){
+var _require10 = require('effects'),
+    renderEffect = _require10.renderEffect;
+
+var _require11 = require('attacks'),
+    renderAttack = _require11.renderAttack;
+
+},{"Rectangle":1,"animations":2,"attacks":3,"draw":5,"effects":6,"enemies":7,"gameConstants":8,"heroes":9,"keyboard":10,"loot":11,"sounds":14,"world":17}],14:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -2500,14 +3648,14 @@ var playSound = function playSound(source, area) {
         sound.play();
         return;
     }
-    if (sound.instances.size >= 5) return;
+    if (sound.instances.size >= 6) return;
     var newInstance = sound.cloneNode(false);
     newInstance.currentTime = (ifdefor(offset || sound.offset) || 0) / 1000;
     newInstance.volume = Math.min(1, (ifdefor(volume, sound.defaultVolume) || 1) / 50);
     newInstance.play().then(function () {
         var timeoutId;
         if (customDuration || sound.customDuration) {
-            stimeoutId = setTimeout(function () {
+            timeoutId = setTimeout(function () {
                 sound.instances.delete(newInstance);
                 playingSounds.delete(newInstance);
                 newInstance.onended = null;
@@ -2589,7 +3737,9 @@ var muteSounds = function muteSounds() {
     }
 };
 
-['sfx/shoot.mp3+0+2', 'sfx/hit.mp3+200+1', 'sfx/flydeath.mp3+0+5', 'sfx/robedeath.mp3+0+5', 'sfx/hornetdeath.mp3+0+8', 'sfx/coin.mp3', 'sfx/powerup.mp3', 'sfx/startgame.mp3', 'sfx/exclamation.mp3+0+3', 'sfx/heal.mp3+200+5', 'sfx/death.mp3+0+1',
+['sfx/shoot.mp3+0+2', 'sfx/hit.mp3+200+1', 'sfx/flydeath.mp3+0+5', 'sfx/robedeath1.mp3+0+2', 'sfx/hornetdeath.mp3+0+8', 'sfx/coin.mp3', 'sfx/powerup.mp3', 'sfx/startgame.mp3', 'sfx/exclamation.mp3+0+3', 'sfx/exclamation2.mp3+0+3', 'sfx/exclamation3.mp3+0+3', 'sfx/heal.mp3+200+5', 'sfx/death.mp3+0+1', 'sfx/dodge.mp3+200+2', 'sfx/meleehit.mp3+50+6', 'sfx/throwhit.mp3+200+5', 'sfx/needledropflip.mp3+0+3', 'sfx/needlegrab.mp3+0+3',
+// These custom range makes for mediocre explosion sound.
+'sfx/explosion.mp3+0+1',
 // See credits.html for: mobbrobb.
 'bgm/river.mp3+0+1', 'bgm/area.mp3+0+2'].forEach(requireSound);
 
@@ -2675,8 +3825,8 @@ module.exports = {
     stopTrack: stopTrack
 };
 
-},{}],13:[function(require,module,exports){
-'use strict';
+},{}],15:[function(require,module,exports){
+"use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -2688,7 +3838,7 @@ var getNewSpriteState = function getNewSpriteState(base) {
         height: 100,
         vx: 0,
         vy: 0,
-        animation: 'default',
+        animation: false,
         animationTime: 0
     }, base);
 };
@@ -2697,76 +3847,58 @@ module.exports = {
     getNewSpriteState: getNewSpriteState
 };
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var random = require('random');
 
 var _require = require('gameConstants'),
     WIDTH = _require.WIDTH,
     GAME_HEIGHT = _require.GAME_HEIGHT,
     FRAME_LENGTH = _require.FRAME_LENGTH,
     OFFSCREEN_PADDING = _require.OFFSCREEN_PADDING,
-    ATTACK_OFFSET = _require.ATTACK_OFFSET,
     ENEMY_COOLDOWN = _require.ENEMY_COOLDOWN,
     DEATH_COOLDOWN = _require.DEATH_COOLDOWN,
     SPAWN_COOLDOWN = _require.SPAWN_COOLDOWN,
     SPAWN_INV_TIME = _require.SPAWN_INV_TIME,
+    EFFECT_DEFLECT_BULLET = _require.EFFECT_DEFLECT_BULLET,
     ENEMY_FLY = _require.ENEMY_FLY,
+    ENEMY_MONK = _require.ENEMY_MONK,
     ENEMY_HORNET = _require.ENEMY_HORNET,
+    ENEMY_HORNET_SOLDIER = _require.ENEMY_HORNET_SOLDIER,
     ENEMY_FLYING_ANT = _require.ENEMY_FLYING_ANT,
     ENEMY_FLYING_ANT_SOLDIER = _require.ENEMY_FLYING_ANT_SOLDIER,
-    ENEMY_MONK = _require.ENEMY_MONK,
-    ENEMY_CARGO_BEETLE = _require.ENEMY_CARGO_BEETLE;
-
-var _require2 = require('animations'),
-    blastRectangle = _require2.blastRectangle;
+    ENEMY_LOCUST = _require.ENEMY_LOCUST,
+    ENEMY_LOCUST_SOLDIER = _require.ENEMY_LOCUST_SOLDIER,
+    ENEMY_CARGO_BEETLE = _require.ENEMY_CARGO_BEETLE,
+    ENEMY_EXPLOSIVE_BEETLE = _require.ENEMY_EXPLOSIVE_BEETLE;
 
 var Rectangle = require('Rectangle');
 
-var _require3 = require('sprites'),
-    getNewSpriteState = _require3.getNewSpriteState;
+var _require2 = require('sprites'),
+    getNewSpriteState = _require2.getNewSpriteState;
 
-var _require4 = require('world'),
-    getNewWorld = _require4.getNewWorld,
-    advanceWorld = _require4.advanceWorld,
-    getGroundHeight = _require4.getGroundHeight;
-
-var _require5 = require('heroes'),
-    getNewPlayerState = _require5.getNewPlayerState,
-    advanceHero = _require5.advanceHero,
-    getHeroHitBox = _require5.getHeroHitBox,
-    damageHero = _require5.damageHero;
-
-var _require6 = require('enemies'),
-    enemyData = _require6.enemyData,
-    createEnemy = _require6.createEnemy,
-    addEnemyToState = _require6.addEnemyToState,
-    damageEnemy = _require6.damageEnemy,
-    advanceEnemy = _require6.advanceEnemy,
-    getEnemyHitBox = _require6.getEnemyHitBox;
-
-var _require7 = require('loot'),
-    lootData = _require7.lootData,
-    createLoot = _require7.createLoot,
-    advanceLoot = _require7.advanceLoot;
-
-var _require8 = require('effects'),
-    createEffect = _require8.createEffect,
-    advanceEffect = _require8.advanceEffect;
+var _require3 = require('world'),
+    getNewWorld = _require3.getNewWorld,
+    advanceWorld = _require3.advanceWorld,
+    getGroundHeight = _require3.getGroundHeight;
 
 var getNewState = function getNewState() {
-    return {
+    return advanceWorld({
         players: [getNewPlayerState()],
         deathCooldown: 0,
         enemies: [],
         loot: [],
         effects: [],
         enemyCooldown: 0,
-        spawnDuration: 200,
         playerAttacks: [],
+        neutralAttacks: [],
         enemyAttacks: [],
         sfx: [],
         title: true,
@@ -2774,13 +3906,17 @@ var getNewState = function getNewState() {
         paused: false,
         gameover: false,
         world: getNewWorld()
-    };
+    });
 };
 
-var TEST_ENEMY = ENEMY_FLY;
+var TEST_ENEMY = false;
+var TEST_TIME = 0;
 
 var advanceState = function advanceState(state) {
     var updatedState = _extends({}, state);
+    if (state.world.time < TEST_TIME) {
+        state.world.time = TEST_TIME;
+    }
     if (updatedState.title) {
         var titleIndex = updatedState.titleIndex;
         if (updatedState.players[0].actions.start && titleIndex === 0) {
@@ -2792,6 +3928,8 @@ var advanceState = function advanceState(state) {
         if (updatedState.players[0].actions.down) {
             titleIndex = (titleIndex + 1) % 2;
         }
+        //if (updatedState.players[0].actions.down)
+        //return advanceWorld({...updatedState, titleIndex});
         return _extends({}, updatedState, { titleIndex: titleIndex });
     }
     if (state.gameover) {
@@ -2806,27 +3944,29 @@ var advanceState = function advanceState(state) {
             return _extends({}, updatedState, { gameover: true });
         }
     }
-    var paused = state.paused,
-        world = state.world;
+    var _updatedState = updatedState,
+        paused = _updatedState.paused;
 
     if (updatedState.players[0].actions.start) {
         paused = !paused;
         if (!paused) {
-            world.bgm = 'bgm/river.mp3';
+            updatedState = _extends({}, updatedState, { world: _extends({}, updatedState.world, { bgm: 'bgm/river.mp3' }) });
         }
     }
     if (paused) {
-        return _extends({}, state, { paused: paused });
+        return _extends({}, updatedState, { paused: paused });
     }
     updatedState.newPlayerAttacks = [];
     updatedState.newEffects = [];
     updatedState.newLoot = [];
     updatedState.newEnemies = [];
     updatedState.newEnemyAttacks = [];
+    updatedState.newNeutralAttacks = [];
     for (var playerIndex = 0; playerIndex < updatedState.players.length; playerIndex++) {
         updatedState = advanceHero(updatedState, playerIndex);
     }
-    world = advanceWorld(updatedState, world);
+    updatedState = advanceWorld(updatedState);
+    var world = updatedState.world;
 
     var currentPlayerAttacks = updatedState.playerAttacks.map(function (attack) {
         return advanceAttack(updatedState, attack);
@@ -2842,17 +3982,19 @@ var advanceState = function advanceState(state) {
             updatedState = enemyData[enemy.type].shoot(updatedState, _enemyIndex);
         }
     }
-    var _updatedState = updatedState,
-        enemyCooldown = _updatedState.enemyCooldown;
+    var _updatedState2 = updatedState,
+        enemyCooldown = _updatedState2.enemyCooldown;
 
-    var numHornets = updatedState.enemies.filter(function (enemy) {
-        return enemy.type === ENEMY_HORNET;
+    var formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
+    var numFormidable = updatedState.enemies.filter(function (enemy) {
+        return formidableEnemies.includes(enemy.type);
     }).length;
+    var spawnDuration = Math.min(2500, 100 + world.time / 20 + state.players[0].score / 10);
     if (TEST_ENEMY) {
         if (!updatedState.enemies.length) {
             var newEnemy = createEnemy(TEST_ENEMY, {
                 left: WIDTH + 10,
-                top: 100 + (GAME_HEIGHT - 200) * (0.5 + 0.5 * Math.sin(world.time / (1000 - updatedState.spawnDuration / 5)))
+                top: 100 + (GAME_HEIGHT - 200) * (0.5 + 0.5 * Math.sin(world.time / (1000 - spawnDuration / 5)))
             });
             newEnemy.vx = newEnemy.vx || -5;
             newEnemy.top = newEnemy.grounded ? getGroundHeight(updatedState) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
@@ -2860,22 +4002,22 @@ var advanceState = function advanceState(state) {
         }
     } else if (enemyCooldown > 0) {
         enemyCooldown--;
-    } else if (world.time % 5000 < updatedState.spawnDuration - 800 * numHornets) {
+    } else if (world.time % 5000 < spawnDuration - 800 * numFormidable) {
         var newEnemyType = ENEMY_FLY;
         if (world.time > 15000 && Math.random() < 1 / 6) {
             newEnemyType = ENEMY_FLYING_ANT_SOLDIER;
         } else if (world.time > 10000 && Math.random() < 1 / 3) {
             newEnemyType = ENEMY_FLYING_ANT;
         } else if (world.time > 20000 && Math.random() > Math.max(.9, 1 - .1 * updatedState.players[0].score / 3000)) {
-            newEnemyType = ENEMY_HORNET;
+            newEnemyType = random.element(formidableEnemies);
         } else if (getGroundHeight(updatedState) < GAME_HEIGHT && Math.random() < 1 / 10) {
             newEnemyType = ENEMY_MONK;
         }
         var _newEnemy = createEnemy(newEnemyType, {
             left: WIDTH + 10,
-            top: 40 + (GAME_HEIGHT - 80) * (0.5 + 0.5 * Math.sin(world.time / (1000 - updatedState.spawnDuration / 5))),
-            vx: -6 + 3 * (world.time % 5000) / updatedState.spawnDuration
+            top: 40 + (GAME_HEIGHT - 80) * (0.5 + 0.5 * Math.sin(world.time / (1000 - spawnDuration / 5)))
         });
+        _newEnemy.vx = _newEnemy.vx || -6 + 3 * (world.time % 5000) / spawnDuration;
         _newEnemy.top = _newEnemy.grounded ? getGroundHeight(updatedState) - _newEnemy.height : _newEnemy.top - _newEnemy.height / 2;
         updatedState = addEnemyToState(updatedState, _newEnemy);
         switch (_newEnemy.type) {
@@ -2898,10 +4040,11 @@ var advanceState = function advanceState(state) {
         var enemyHitBox = getEnemyHitBox(_enemy);
         for (var j = 0; j < currentPlayerAttacks.length && !_enemy.dead && !_enemy.done; j++) {
             var attack = currentPlayerAttacks[j];
-            if (!attack.done && Rectangle.collision(enemyHitBox, attack)) {
+            if (!attack.done && !attack.hitIds[_enemy.id] && Rectangle.collision(enemyHitBox, attack)) {
                 currentPlayerAttacks[j] = _extends({}, attack, {
-                    damage: attack.damage - _enemy.life,
-                    done: attack.damage - _enemy.life <= 0
+                    damage: attack.piercing ? attack.damage : attack.damage - _enemy.life,
+                    done: !attack.piercing && attack.damage - _enemy.life <= 0,
+                    hitIds: _extends({}, attack.hitIds, _defineProperty({}, _enemy.id, true))
                 });
                 updatedState = damageEnemy(updatedState, i, attack);
                 _enemy = updatedState.enemies[i];
@@ -2937,35 +4080,85 @@ var advanceState = function advanceState(state) {
             }
         }
     }
+    // Player melee attacks can destroy enemy projectiles.
+    for (var _i2 = 0; _i2 < currentPlayerAttacks.length; _i2++) {
+        var _attack2 = currentPlayerAttacks[_i2];
+        if (!_attack2.melee || _attack2.done) continue;
+        for (var _j3 = 0; _j3 < currentEnemyAttacks.length; _j3++) {
+            var enemyAttack = currentEnemyAttacks[_j3];
+            if (Rectangle.collision(_attack2, enemyAttack)) {
+                currentEnemyAttacks[_j3] = _extends({}, enemyAttack, { done: true });
+                var deflectEffect = createEffect(EFFECT_DEFLECT_BULLET);
+                deflectEffect.left = enemyAttack.left + (enemyAttack.width - deflectEffect.width) / 2;
+                deflectEffect.top = enemyAttack.top + (enemyAttack.height - deflectEffect.height) / 2;
+                updatedState = addEffectToState(updatedState, deflectEffect);
+            }
+        }
+    }
     currentEnemyAttacks = currentEnemyAttacks.filter(function (attack) {
         return !attack.done;
     });
+
+    var currentNeutralAttacks = updatedState.neutralAttacks.map(function (attack) {
+        return advanceAttack(updatedState, attack);
+    }).filter(function (attack) {
+        return !attack.done;
+    });
+    for (var _i3 = 0; _i3 < currentNeutralAttacks.length; _i3++) {
+        var _attack3 = currentNeutralAttacks[_i3];
+        for (var _j4 = 0; _j4 < updatedState.players.length; _j4++) {
+            var player = updatedState.players[_j4];
+            var playerKey = 'player' + _j4;
+            if (player.invulnerableFor || _attack3.hitIds[playerKey]) continue;
+            var _playerHitBox = getHeroHitBox(player);
+            if (Rectangle.collision(_playerHitBox, _attack3)) {
+                updatedState = damageHero(updatedState, _j4);
+                currentNeutralAttacks[_i3] = _extends({}, _attack3, {
+                    damage: _attack3.piercing ? _attack3.damage : _attack3.damage - 1,
+                    done: !_attack3.piercing && _attack3.damage - 1 <= 0,
+                    hitIds: _extends({}, _attack3.hitIds, _defineProperty({}, playerKey, true))
+                });
+            }
+        }
+        for (var _j5 = 0; _j5 < updatedState.enemies.length; _j5++) {
+            var _enemy2 = updatedState.enemies[_j5];
+            if (_enemy2.dead || _enemy2.done || _attack3.hitIds[_enemy2.id]) continue;
+            var _enemyHitBox = getEnemyHitBox(_enemy2);
+            if (Rectangle.collision(_enemyHitBox, _attack3)) {
+                currentNeutralAttacks[_i3] = _extends({}, _attack3, {
+                    damage: _attack3.piercing ? _attack3.damage : _attack3.damage - _enemy2.life,
+                    done: !_attack3.piercing && _attack3.damage - _enemy2.life <= 0,
+                    hitIds: _extends({}, _attack3.hitIds, _defineProperty({}, _enemy2.id, true))
+                });
+                updatedState = damageEnemy(updatedState, _j5, _attack3);
+            }
+        }
+    }
 
     updatedState.loot = updatedState.loot.map(function (loot) {
         return advanceLoot(updatedState, loot);
     }).filter(function (loot) {
         return !loot.done;
     });
-    for (var _i2 = 0; _i2 < updatedState.loot.length; _i2++) {
-        var lootDrop = updatedState.loot[_i2];
-        if (lootDrop.done) continue;
-        for (var _j3 = 0; _j3 < updatedState.players.length; _j3++) {
-            if (updatedState.players[_j3].done) continue;
-            if (Rectangle.collision(lootDrop, getHeroHitBox(updatedState.players[_j3]))) {
-                updatedState = lootData[lootDrop.type].collect(updatedState, _j3, lootDrop);
-                updatedState.loot[_i2] = _extends({}, lootDrop, { done: true });
-                updatedState.sfx.push(lootData[lootDrop.type].sfx);
+    for (var _i4 = 0; _i4 < updatedState.loot.length; _i4++) {
+        var loot = updatedState.loot[_i4];
+        if (loot.done) continue;
+        for (var _j6 = 0; _j6 < updatedState.players.length; _j6++) {
+            if (updatedState.players[_j6].done || updatedState.players[_j6].spawning) continue;
+            if (Rectangle.collision(loot, getHeroHitBox(updatedState.players[_j6]))) {
+                updatedState = collectLoot(updatedState, _j6, _i4);
             }
         }
     }
-    updatedState.loot = updatedState.loot.filter(function (lootDrop) {
-        return !lootDrop.done;
+    updatedState.loot = updatedState.loot.filter(function (loot) {
+        return !loot.done;
     });
 
     // Add new enemies/attacks.
     updatedState.enemies = [].concat(_toConsumableArray(updatedState.enemies), _toConsumableArray(updatedState.newEnemies));
     updatedState.playerAttacks = [].concat(_toConsumableArray(currentPlayerAttacks), _toConsumableArray(updatedState.newPlayerAttacks));
     updatedState.enemyAttacks = [].concat(_toConsumableArray(currentEnemyAttacks), _toConsumableArray(updatedState.newEnemyAttacks));
+    updatedState.neutralAttacks = [].concat(_toConsumableArray(currentNeutralAttacks), _toConsumableArray(updatedState.newNeutralAttacks));
     updatedState.effects = updatedState.effects.map(function (effect) {
         return advanceEffect(updatedState, effect);
     }).filter(function (effect) {
@@ -2974,35 +4167,7 @@ var advanceState = function advanceState(state) {
     updatedState.effects = [].concat(_toConsumableArray(updatedState.effects), _toConsumableArray(updatedState.newEffects));
     updatedState.loot = [].concat(_toConsumableArray(updatedState.loot), _toConsumableArray(updatedState.newLoot));
 
-    return _extends({}, updatedState, { enemyCooldown: enemyCooldown, world: world, paused: false });
-};
-
-var advanceAttack = function advanceAttack(state, attack) {
-    var left = attack.left,
-        top = attack.top,
-        width = attack.width,
-        height = attack.height,
-        vx = attack.vx,
-        vy = attack.vy,
-        delay = attack.delay,
-        animationTime = attack.animationTime,
-        playerIndex = attack.playerIndex;
-
-    if (delay > 0) {
-        delay--;
-        var source = state.players[playerIndex].sprite;
-        left = source.left + source.vx + source.width + ATTACK_OFFSET;
-        top = source.top + source.vy + Math.round((source.height - height) / 2);
-    }
-    if (!(delay > 0)) {
-        left += vx;
-        top += vy;
-    }
-    animationTime += FRAME_LENGTH;
-
-    var done = left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING || top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
-
-    return _extends({}, attack, { delay: delay, left: left, top: top, animationTime: animationTime, done: done });
+    return _extends({}, updatedState, { enemyCooldown: enemyCooldown, paused: false });
 };
 
 var applyPlayerActions = function applyPlayerActions(state, playerIndex, actions) {
@@ -3017,14 +4182,82 @@ module.exports = {
     applyPlayerActions: applyPlayerActions
 };
 
-},{"Rectangle":1,"animations":2,"effects":5,"enemies":6,"gameConstants":7,"heroes":8,"loot":10,"sprites":13,"world":15}],15:[function(require,module,exports){
+var _require4 = require('attacks'),
+    advanceAttack = _require4.advanceAttack;
+
+var _require5 = require('heroes'),
+    getNewPlayerState = _require5.getNewPlayerState,
+    advanceHero = _require5.advanceHero,
+    getHeroHitBox = _require5.getHeroHitBox,
+    damageHero = _require5.damageHero;
+
+var _require6 = require('enemies'),
+    enemyData = _require6.enemyData,
+    createEnemy = _require6.createEnemy,
+    addEnemyToState = _require6.addEnemyToState,
+    damageEnemy = _require6.damageEnemy,
+    advanceEnemy = _require6.advanceEnemy,
+    getEnemyHitBox = _require6.getEnemyHitBox;
+
+var _require7 = require('loot'),
+    collectLoot = _require7.collectLoot,
+    advanceLoot = _require7.advanceLoot;
+
+var _require8 = require('effects'),
+    createEffect = _require8.createEffect,
+    addEffectToState = _require8.addEffectToState,
+    advanceEffect = _require8.advanceEffect;
+
+},{"Rectangle":1,"attacks":3,"effects":6,"enemies":7,"gameConstants":8,"heroes":9,"loot":11,"random":12,"sprites":15,"world":17}],17:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH,
-    GAME_HEIGHT = _require.GAME_HEIGHT;
+    GAME_HEIGHT = _require.GAME_HEIGHT,
+    WIDTH = _require.WIDTH,
+    HUD_HEIGHT = _require.HUD_HEIGHT;
+
+var Rectangle = require('Rectangle');
+
+var random = require('random');
+
+var _require2 = require('draw'),
+    drawImage = _require2.drawImage,
+    drawTintedImage = _require2.drawTintedImage,
+    embossText = _require2.embossText;
+
+var _require3 = require('animations'),
+    backgroundSky = _require3.backgroundSky,
+    plainsBackground = _require3.plainsBackground,
+    plainsMidground = _require3.plainsMidground,
+    plainsNearground = _require3.plainsNearground,
+    requireImage = _require3.requireImage,
+    getFrame = _require3.getFrame,
+    createFrames = _require3.createFrames;
+
+var _require4 = require('sprites'),
+    getNewSpriteState = _require4.getNewSpriteState;
+
+var getNewLayer = function getNewLayer(_ref) {
+    var animation = _ref.animation,
+        xFactor = _ref.xFactor,
+        yFactor = _ref.yFactor,
+        yOffset = _ref.yOffset,
+        maxY = _ref.maxY,
+        spriteData = _ref.spriteData;
+    return {
+        sprites: [],
+        animation: animation, spriteData: spriteData,
+        xFactor: xFactor, yFactor: yFactor, yOffset: yOffset,
+        maxY: maxY
+    };
+};
 
 var getNewWorld = function getNewWorld() {
     return {
@@ -3032,15 +4265,66 @@ var getNewWorld = function getNewWorld() {
         y: 0,
         vx: 0,
         vy: 0,
-        groundHeight: 22,
-        backgroundXFactor: .5,
-        backgroundYFactor: 0,
-        neargroundXFactor: 2,
-        neargroundYFactor: 1,
-        neargroundYOffset: 0,
-        midgroundXFactor: 1,
-        midgroundYFactor: 1,
-        midgroundYOffset: 0,
+        groundHeight: 30,
+        background: getNewLayer({
+            xFactor: 0, yFactor: 0.2, yOffset: -100, maxY: 0,
+            animation: { frames: [plainsBg], frameDuration: 1 }
+        }),
+        midgroundA: getNewLayer({
+            xFactor: 0.5, yFactor: 0.5, yOffset: -20,
+            // animation: {frames: [plainsMidground], frameDuration: 1}
+            spriteData: {
+                wheatBunch: { animation: wheatAnimation, scale: 4, next: ['wheatCouple'], offset: [-140, -120] },
+                wheatCouple: { animation: wheatAnimation, scale: 5, next: ['wheat'], offset: [-100, -80] },
+                wheat: { animation: wheatAnimation, scale: 4, next: ['wheatBunch'], offset: [-40, 400] }
+            }
+        }),
+        midgroundB: getNewLayer({
+            xFactor: 0.5, yFactor: 0.5, yOffset: -20,
+            spriteData: {
+                darkGrass: { animation: darkGrass, scale: 1.75, next: ['darkGrass'], offset: [-40, -20] }
+            }
+        }),
+        midgroundC: getNewLayer({
+            xFactor: 0.5, yFactor: 0.5, yOffset: 0,
+            spriteData: {
+                thickGrass: { animation: thickGrass, scale: 1.75, next: ['thickGrass'], offset: [-40, -20] }
+            }
+        }),
+        midgroundD: getNewLayer({
+            xFactor: 0.5, yFactor: 0.5, yOffset: -20,
+            spriteData: {
+                clover: { animation: cloverAnimation, scale: 1, next: ['clover'], offset: [-40, -20, 200] }
+            }
+        }),
+        nearground: _extends({}, getNewLayer({
+            xFactor: 1, yFactor: 0.5, yOffset: -15,
+            spriteData: {
+                dandyA: { animation: dandyAAnimation, onHit: onHitDandy, scale: 2, next: ['dandyB', 'dandyC', 'leaves', 'grassOrBerries'], offset: 80 },
+                dandyB: { animation: dandyBAnimation, onHit: onHitDandy, scale: 2, next: ['leaves'], offset: -20 },
+                dandyC: { animation: dandyCAnimation, onHit: onHitDandy, scale: 2, next: ['dandyA', 'leaves', 'grassOrBerries'], offset: 100 },
+                leaves: { animation: [leavesAnimation, smallCloverAnimation], scale: 2, next: ['dandyA', 'dandyC', 'leaves', 'grassOrBerries'], offset: -20 },
+                grassOrBerries: { animation: [grassAnimation, grass2Animation, grass3Animation, berriesAnimation], scale: 2, next: ['grassOrBerries', 'dandyB', 'leaves'], offset: 0 }
+            }
+        }), {
+            sprites: [getNewSpriteState(_extends({}, townAnimation.frames[0], {
+                top: 263,
+                left: -10,
+                offset: 50,
+                animation: townAnimation,
+                next: ['grassOrBerries']
+            }))]
+        }),
+        foreground: getNewLayer({
+            xFactor: 1, yFactor: 0.5, yOffset: 25,
+            spriteData: {
+                grass: { animation: grassTuft, scale: 1.5, next: ['grass'], offset: [-10, 400, 550, 610] }
+            }
+        }),
+        bgLayerNames: ['background'],
+        mgLayerNames: ['midgroundA', 'midgroundB', 'midgroundC', 'midgroundD'],
+        ngLayerNames: ['nearground'],
+        fgLayerNames: ['foreground'],
         targetX: 1000,
         targetY: 0,
         targetFrames: 50 * 10,
@@ -3048,16 +4332,227 @@ var getNewWorld = function getNewWorld() {
         bgm: 'bgm/area.mp3'
     };
 };
+/*
+Add new background elements
+try switching the BG file to the new static background (John may hate this)
+Adjusting and adding the new midground and foreground elements to spawn at various rates
+If it doesn’t look good, skip the midground assets
+Adding the animated foreground elements that interact with enemys/player
+Tufts of grass
+Dandelions
+*/
+var i = function i(width, height, source) {
+    return { left: 0, top: 0, width: width, height: height, image: requireImage(source) };
+};
+var r = function r(width, height, props) {
+    return _extends({ left: 0, top: 0, width: width, height: height }, props);
+};
+var plainsBg = i(800, 800, 'gfx/scene/plainsbg.png');
+var groundLoop = i(200, 60, 'gfx/scene/groundloop.png');
 
-var advanceWorld = function advanceWorld(state, world) {
-    var x = world.x,
-        y = world.y,
-        vx = world.vx,
-        vy = world.vy,
-        targetX = world.targetX,
-        targetY = world.targetY,
-        targetFrames = world.targetFrames,
-        time = world.time;
+var dandyHitBox = r(36, 36, { left: 7 });
+var dandyRectangle = r(80, 98, { hitBox: dandyHitBox });
+var townAnimation = {
+    frames: [_extends({}, r(300, 300), { image: requireImage('gfx/scene/town.png') })],
+    frameDuration: 1
+};
+var dandyAAnimation = {
+    frames: [_extends({}, dandyRectangle, { image: requireImage('gfx/scene/dandyidleabc.png') }), _extends({}, dandyRectangle, { left: 80, image: requireImage('gfx/scene/dandyidleabc.png') })],
+    frameDuration: 30
+};
+var dandyAPoofAnimation = {
+    frames: createFrames(dandyRectangle, 6, 'gfx/scene/dandya.png'), frameDuration: 8, loop: false
+};
+var dandyBAnimation = {
+    frames: [_extends({}, dandyRectangle, { left: 160, image: requireImage('gfx/scene/dandyidleabc.png') }), _extends({}, dandyRectangle, { left: 240, image: requireImage('gfx/scene/dandyidleabc.png') })],
+    frameDuration: 30
+};
+var dandyBPoofAnimation = {
+    frames: createFrames(dandyRectangle, 6, 'gfx/scene/dandyb.png'), frameDuration: 8, loop: false
+};
+var dandyCAnimation = {
+    frames: [_extends({}, dandyRectangle, { left: 320, image: requireImage('gfx/scene/dandyidleabc.png') }), _extends({}, dandyRectangle, { left: 400, image: requireImage('gfx/scene/dandyidleabc.png') })],
+    frameDuration: 30
+};
+var dandyCPoofAnimation = {
+    frames: createFrames(dandyRectangle, 6, 'gfx/scene/dandyc.png'), frameDuration: 8, loop: false
+};
+var grassTuftRectangle = r(92, 64);
+var grassTuft = {
+    frames: [_extends({}, grassTuftRectangle, { image: requireImage('gfx/scene/tuft.png') }), _extends({}, grassTuftRectangle, { left: 184, image: requireImage('gfx/scene/tuft.png') }), _extends({}, grassTuftRectangle, { left: 92, image: requireImage('gfx/scene/tuft.png') }), _extends({}, grassTuftRectangle, { left: 184, image: requireImage('gfx/scene/tuft.png') })],
+    frameDuration: 20
+};
+
+var onHitDandy = function onHitDandy(state, layerName, spriteIndex) {
+    var world = state.world;
+    var layer = world[layerName];
+    var sprites = [].concat(_toConsumableArray(layer.sprites));
+    var sprite = sprites[spriteIndex];
+    var newAnimation = dandyAPoofAnimation;
+    if (sprite.animation === dandyBAnimation) {
+        newAnimation = dandyBPoofAnimation;
+    } else if (sprite.animation === dandyCAnimation) {
+        newAnimation = dandyCPoofAnimation;
+    }
+    sprites[spriteIndex] = _extends({}, sprite, { animation: newAnimation, onHit: null, animationTime: FRAME_LENGTH * newAnimation.frameDuration });
+    layer = _extends({}, layer, { sprites: sprites });
+    world = _extends({}, world, _defineProperty({}, layerName, layer));
+    return _extends({}, state, { world: world });
+};
+
+var grassAnimation = {
+    frames: [r(122, 52, { 'image': requireImage('gfx/scene/plainsfg1.png') })],
+    frameDuration: 30
+};
+var grass2Animation = {
+    frames: [r(110, 51, { 'image': requireImage('gfx/scene/plainsfg4.png') })],
+    frameDuration: 30
+};
+var grass3Animation = {
+    frames: [r(122, 52, { 'image': requireImage('gfx/scene/plainsfg5.png') })],
+    frameDuration: 30
+};
+var smallCloverAnimation = {
+    frames: [r(69, 38, { 'image': requireImage('gfx/scene/plainsfg6.png') })],
+    frameDuration: 30
+};
+var leavesAnimation = {
+    frames: [r(200, 100, { 'image': requireImage('gfx/scene/plainsfg2.png') })],
+    frameDuration: 30
+};
+var berriesAnimation = {
+    frames: [r(200, 100, { 'image': requireImage('gfx/scene/plainsfg3.png') })],
+    frameDuration: 30
+};
+var cloverAnimation = {
+    frames: [r(318, 86, { 'image': requireImage('gfx/scene/plainsmg4.png') })],
+    frameDuration: 30
+};
+var wheatAnimation = {
+    frames: [r(200, 100, { 'image': requireImage('gfx/scene/plainsmg1.png') })],
+    frameDuration: 30
+};
+var thickGrass = {
+    frames: [r(300, 300, { 'image': requireImage('gfx/scene/plainsmg.png') })],
+    frameDuration: 30
+};
+var darkGrass = {
+    frames: [r(300, 300, { 'image': requireImage('gfx/scene/plainsmg2.png') })],
+    frameDuration: 30
+};
+var lightGrass = {
+    frames: [r(300, 300, { 'image': requireImage('gfx/scene/plainsmg3.png') })],
+    frameDuration: 30
+};
+
+var addElementToLayer = function addElementToLayer(state, layerName) {
+    var world = state.world;
+    var layer = _extends({}, world[layerName]);
+    if (!layer.spriteData) {
+        return state;
+    }
+    var elementsData = layer.spriteData;
+    var newSprite = null,
+        lastSprite = layer.sprites[layer.sprites.length - 1];
+    var safety = 0;
+    while ((!lastSprite || lastSprite.left < WIDTH) && safety++ < 20) {
+        var spriteData = lastSprite ? elementsData[random.element(lastSprite.next)] : random.element(elementsData);
+        if (!spriteData) {
+            throw new Error('missing sprite date from one of: ' + lastSprite.next);
+        }
+        var animation = spriteData.animation,
+            scale = spriteData.scale;
+
+        if (Array.isArray(animation)) {
+            animation = random.element(animation);
+        }
+        var offset = lastSprite ? lastSprite.offset : 0;
+        if (Array.isArray(offset)) {
+            offset = random.element(offset);
+        }
+        if (lastSprite) {
+            offset *= lastSprite.scale || 1;
+            offset += lastSprite.left + lastSprite.width;
+        }
+        newSprite = getNewSpriteState(_extends({}, animation.frames[0], {
+            top: getGroundHeight(state) + layer.yOffset,
+            left: offset
+        }, spriteData, {
+            animation: animation
+        }));
+        newSprite.height *= scale;
+        newSprite.width *= scale;
+        newSprite.top -= newSprite.height;
+        if (!lastSprite) newSprite.left -= newSprite.width / 2; // Start with the first sprite half off of the screen.
+        layer.sprites = [].concat(_toConsumableArray(layer.sprites), [newSprite]);
+        lastSprite = newSprite;
+    }
+    world = _extends({}, world, _defineProperty({}, layerName, layer));
+    return _extends({}, state, { world: world });
+};
+
+var advanceLayer = function advanceLayer(state, layerName) {
+    var layer = _extends({}, state.world[layerName]);
+    var sprites = [].concat(_toConsumableArray(layer.sprites));
+    for (var _i = 0; _i < sprites.length; _i++) {
+        var sprite = sprites[_i];
+        sprites[_i] = _extends({}, sprite, {
+            left: sprite.left + sprite.vx - state.world.vx * layer.xFactor,
+            top: sprite.top + sprite.vy + state.world.vy * layer.yFactor,
+            animationTime: sprite.animationTime + FRAME_LENGTH
+        });
+        if (sprites[_i].onHit) {
+            var frame = getFrame(sprites[_i].animation, sprites[_i].animationTime);
+            var hitBox = new Rectangle(frame.hitBox || frame).scale(sprites[_i].scale).moveTo(sprites[_i].left, sprites[_i].top);
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = state.playerAttacks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var attack = _step.value;
+
+                    if (Rectangle.collision(hitBox, attack)) {
+                        state = sprites[_i].onHit(state, layerName, _i);
+                        layer = _extends({}, state.world[layerName]);
+                        sprites = [].concat(_toConsumableArray(layer.sprites));
+                        break;
+                    }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+        }
+    }
+    sprites = sprites.filter(function (sprite) {
+        return sprite.left + sprite.width > 0;
+    });
+    var world = _extends({}, state.world, _defineProperty({}, layerName, _extends({}, layer, { sprites: sprites })));
+    return _extends({}, state, { world: world });
+};
+
+var advanceWorld = function advanceWorld(state) {
+    var world = state.world;
+    var _world = world,
+        x = _world.x,
+        y = _world.y,
+        vx = _world.vx,
+        vy = _world.vy,
+        targetX = _world.targetX,
+        targetY = _world.targetY,
+        targetFrames = _world.targetFrames,
+        time = _world.time;
 
     x += vx;
     y += vy;
@@ -3068,10 +4563,118 @@ var advanceWorld = function advanceWorld(state, world) {
     var targetVy = (targetY - y) / targetFrames;
     //vy = (targetVy + vy) / 2;
     vy = Math.max((targetVy + vy) / 2, -y);
+    world = _extends({}, world, { x: x, y: y, vx: vx, vy: vy });
+    state = _extends({}, state, { world: world });
+
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+        for (var _iterator2 = world.bgLayerNames[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var layerName = _step2.value;
+
+            state = addElementToLayer(state, layerName);
+            state = advanceLayer(state, layerName);
+        }
+    } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+            }
+        } finally {
+            if (_didIteratorError2) {
+                throw _iteratorError2;
+            }
+        }
+    }
+
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+        for (var _iterator3 = world.mgLayerNames[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var _layerName = _step3.value;
+
+            state = addElementToLayer(state, _layerName);
+            state = advanceLayer(state, _layerName);
+        }
+    } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+            }
+        } finally {
+            if (_didIteratorError3) {
+                throw _iteratorError3;
+            }
+        }
+    }
+
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+        for (var _iterator4 = world.ngLayerNames[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _layerName2 = _step4.value;
+
+            state = addElementToLayer(state, _layerName2);
+            state = advanceLayer(state, _layerName2);
+        }
+    } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                _iterator4.return();
+            }
+        } finally {
+            if (_didIteratorError4) {
+                throw _iteratorError4;
+            }
+        }
+    }
+
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+        for (var _iterator5 = world.fgLayerNames[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var _layerName3 = _step5.value;
+
+            state = addElementToLayer(state, _layerName3);
+            state = advanceLayer(state, _layerName3);
+        }
+    } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                _iterator5.return();
+            }
+        } finally {
+            if (_didIteratorError5) {
+                throw _iteratorError5;
+            }
+        }
+    }
+
+    world = state.world;
 
     // For now just set the targetFrame and destination constantly ahead.
     // Later we can change this depending on the scenario.
-    targetFrames = 50 * 10;
+    targetFrames = 50 * 5;
     targetX = x + 1000;
     if (time % 60000 > 45000) {
         targetY = y;
@@ -3083,17 +4686,202 @@ var advanceWorld = function advanceWorld(state, world) {
         targetY = -100;
     }
     time += FRAME_LENGTH;
-    return _extends({}, world, { x: x, y: y, vx: vx, vy: vy, targetX: targetX, targetY: targetY, targetFrames: targetFrames, time: time });
+    world = _extends({}, world, { targetX: targetX, targetY: targetY, targetFrames: targetFrames, time: time });
+    return _extends({}, state, { world: world });
 };
 
 var getGroundHeight = function getGroundHeight(state) {
-    return GAME_HEIGHT - state.world.groundHeight + state.world.y * state.world.neargroundYFactor;
+    return GAME_HEIGHT - state.world.groundHeight + state.world.y * state.world.nearground.yFactor;
+};
+
+var renderBackgroundLayer = function renderBackgroundLayer(context, _ref2) {
+    var frame = _ref2.frame,
+        x = _ref2.x,
+        y = _ref2.y,
+        maxY = _ref2.maxY;
+
+    x = Math.round(x);
+    y = Math.round(y);
+    if (typeof maxY === 'number') {
+        y = Math.min(maxY, y);
+    }
+    var left = x % frame.width;
+    var right = (x + WIDTH) % frame.width;
+    if (right <= left) {
+        var leftWidth = frame.width - left;
+        context.drawImage(frame.image, left, 0, leftWidth, frame.height, 0, y, leftWidth, frame.height);
+        context.drawImage(frame.image, 0, 0, right, frame.height, leftWidth, y, right, frame.height);
+    } else {
+        context.drawImage(frame.image, left, 0, frame.width, frame.height, 0, y, frame.width, frame.height);
+    }
+};
+var renderBackground = function renderBackground(context, state) {
+    var world = state.world;
+    var x = world.x,
+        y = world.y;
+    var _iteratorNormalCompletion6 = true;
+    var _didIteratorError6 = false;
+    var _iteratorError6 = undefined;
+
+    try {
+        for (var _iterator6 = world.bgLayerNames[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var layerName = _step6.value;
+
+            renderLayer(context, state, layerName);
+        }
+    } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                _iterator6.return();
+            }
+        } finally {
+            if (_didIteratorError6) {
+                throw _iteratorError6;
+            }
+        }
+    }
+
+    context.save();
+    context.translate(0, HUD_HEIGHT);
+    var _iteratorNormalCompletion7 = true;
+    var _didIteratorError7 = false;
+    var _iteratorError7 = undefined;
+
+    try {
+        for (var _iterator7 = world.mgLayerNames[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+            var _layerName4 = _step7.value;
+
+            renderLayer(context, state, _layerName4);
+        }
+    } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion7 && _iterator7.return) {
+                _iterator7.return();
+            }
+        } finally {
+            if (_didIteratorError7) {
+                throw _iteratorError7;
+            }
+        }
+    }
+
+    var groundHeight = getGroundHeight(state);
+    var target = new Rectangle(groundLoop).moveTo(-(x * world.nearground.xFactor % groundLoop.width), groundHeight - groundLoop.height / 2);
+    if (target.top < GAME_HEIGHT) {
+        var safety = 0;
+        while (target.left >= -10000 && target.left < WIDTH && safety++ < 10) {
+            drawImage(context, groundLoop.image, groundLoop, target);
+            target = target.translate(groundLoop.width, 0);
+        }
+    }
+    var _iteratorNormalCompletion8 = true;
+    var _didIteratorError8 = false;
+    var _iteratorError8 = undefined;
+
+    try {
+        for (var _iterator8 = world.ngLayerNames[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+            var _layerName5 = _step8.value;
+
+            renderLayer(context, state, _layerName5);
+        }
+    } catch (err) {
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                _iterator8.return();
+            }
+        } finally {
+            if (_didIteratorError8) {
+                throw _iteratorError8;
+            }
+        }
+    }
+
+    context.restore();
+};
+
+var renderForeground = function renderForeground(context, state) {
+    context.save();
+    context.translate(0, HUD_HEIGHT);
+    var _iteratorNormalCompletion9 = true;
+    var _didIteratorError9 = false;
+    var _iteratorError9 = undefined;
+
+    try {
+        for (var _iterator9 = state.world.fgLayerNames[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+            var layerName = _step9.value;
+
+            renderLayer(context, state, layerName);
+        }
+    } catch (err) {
+        _didIteratorError9 = true;
+        _iteratorError9 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion9 && _iterator9.return) {
+                _iterator9.return();
+            }
+        } finally {
+            if (_didIteratorError9) {
+                throw _iteratorError9;
+            }
+        }
+    }
+
+    context.restore();
+};
+
+var renderLayer = function renderLayer(context, state, layerName) {
+    var layer = state.world[layerName];
+    var frame = void 0;
+    if (layer.animation) {
+        frame = getFrame(layer.animation, state.world.time);
+        renderBackgroundLayer(context, { frame: frame,
+            x: state.world.x * layer.xFactor + (layer.xOffset || 0),
+            y: state.world.y * layer.yFactor + (layer.yOffset || 0)
+        });
+    }
+    var _iteratorNormalCompletion10 = true;
+    var _didIteratorError10 = false;
+    var _iteratorError10 = undefined;
+
+    try {
+        for (var _iterator10 = layer.sprites[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+            var sprite = _step10.value;
+
+            frame = getFrame(sprite.animation, sprite.animationTime);
+            drawImage(context, frame.image, frame, sprite);
+        }
+    } catch (err) {
+        _didIteratorError10 = true;
+        _iteratorError10 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion10 && _iterator10.return) {
+                _iterator10.return();
+            }
+        } finally {
+            if (_didIteratorError10) {
+                throw _iteratorError10;
+            }
+        }
+    }
 };
 
 module.exports = {
     getNewWorld: getNewWorld,
     advanceWorld: advanceWorld,
-    getGroundHeight: getGroundHeight
+    getGroundHeight: getGroundHeight,
+    renderBackground: renderBackground,
+    renderForeground: renderForeground
 };
 
-},{"gameConstants":7}]},{},[3]);
+},{"Rectangle":1,"animations":2,"draw":5,"gameConstants":8,"random":12,"sprites":15}]},{},[4]);
