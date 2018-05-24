@@ -1,5 +1,8 @@
 
 module.exports = {
+    TEST_ITEMS: false,
+    TEST_ENEMY: false,
+
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
     ACCELERATION: 1, SHOT_COOLDOWN: 8, ATTACK_OFFSET: -4,
@@ -7,6 +10,7 @@ module.exports = {
     POINTS_FOR_POWERUP: 1000,
 
     HERO_BEE: 'bee', HERO_DRAGONFLY: 'dragonfly', HERO_MOTH: 'moth',
+    MAX_ENERGY: 20,
 
     ENEMY_FLY: 'fly',
     ENEMY_HORNET: 'hornet',
@@ -40,4 +44,6 @@ module.exports = {
     LOOT_TRIPLE_RATE: 'tripleRate',
     LOOT_COMBO: 'combo',
     LOOT_TRIPLE_COMBO: 'tripleCombo',
+    LOOT_PORTAL: 'portal',
+    LOOT_HELMET: 'helmet',
 };

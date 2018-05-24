@@ -11,6 +11,7 @@ export const KEY_G = 'G'.charCodeAt(0);
 export const KEY_R = 'R'.charCodeAt(0);
 export const KEY_X = 'X'.charCodeAt(0);
 export const KEY_C = 'C'.charCodeAt(0);
+export const KEY_V = 'V'.charCodeAt(0);
 
 const KEY_MAPPINGS = {
     ['A'.charCodeAt(0)]: KEY_LEFT,
@@ -27,6 +28,7 @@ const KEY_MAPPINGS = {
 // Easy to find mappings at: http://html5gamepad.com/
 var GAME_PAD_MAPPINGS = {
     [KEY_C]: 0, // A (bottom button)
+    [KEY_V]: 1, // B (right button)
     [KEY_SPACE]: 2, // X (left button)
     [KEY_X]: 3, // Y (top button)
     [KEY_ENTER]: 9, // START

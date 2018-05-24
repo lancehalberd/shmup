@@ -4,6 +4,8 @@ const {
     FRAME_LENGTH,
 } = require('gameConstants');
 
+const { preloadSounds } = require('sounds');
+
 const {
     getNewState,
     advanceState,
@@ -11,16 +13,18 @@ const {
 } = require('state');
 const render = require('render');
 
-const { isKeyDown, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE, KEY_ENTER, KEY_R, KEY_X, KEY_C } = require('keyboard');
-
-
-
+const { isKeyDown,
+    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE,
+    KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V,
+} = require('keyboard');
 
 const now = () => Date.now();
 
 // Currently we only support a single player.
 const playerIndex = 0;
 
+preloadSounds();
+let preloadedSounds = true;
 let stateQueue = [];
 let state = getNewState();
 
@@ -31,9 +35,15 @@ const update = () => {
         left: isKeyDown(KEY_LEFT), right: isKeyDown(KEY_RIGHT),
         shoot: isKeyDown(KEY_SPACE),
         melee: isKeyDown(KEY_C),
+        special: isKeyDown(KEY_V),
         switch: isKeyDown(KEY_X),
         start: isKeyDown(KEY_ENTER, true),
     });
+
+    if (!preloadedSounds && state.interacted) {
+        preloadSounds();
+        preloadedSounds = true;
+    }
 
     if (stateQueue.length && isKeyDown(KEY_R)) {
         state = stateQueue.shift();

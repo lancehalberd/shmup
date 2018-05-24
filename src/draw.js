@@ -8,7 +8,6 @@ const drawImage = (context, image, source, target) => {
     );
 };
 
-
 const tintCanvas = document.createElement('canvas');
 tintCanvas.width = WIDTH;
 tintCanvas.height = HEIGHT;

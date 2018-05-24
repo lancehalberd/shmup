@@ -11,6 +11,14 @@ const getNewSpriteState = (base) => ({
     ...base,
 });
 
+const getTargetVector = (agent, target) => {
+    return {
+        dx: target.left + (target.width || 0) / 2 - (agent.left + (agent.width || 0) / 2),
+        dy: target.top + (target.height || 0) / 2 - (agent.top + (agent.height || 0) / 2),
+    };
+};
+
 module.exports = {
     getNewSpriteState,
+    getTargetVector,
 };

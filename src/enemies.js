@@ -19,6 +19,7 @@ const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
     getFrame,
+    getAnimationLength,
     getHitBox,
     flyAnimation, flyDeathAnimation,
     hornetAnimation, hornetDeathAnimation,
@@ -476,10 +477,7 @@ const enemyData = {
             return addEnemyAttackToState({...state, enemies}, bullet);
         },
         onDeathEffect(state, enemyIndex) {
-            const enemy = state.enemies[enemyIndex];
-            const enemies = [...state.enemies];
-            enemies[enemyIndex] = {...enemy, ttl: 600, vx: 0, vy: 0};
-            return {...state, enemies};
+            return updateEnemy(state, enemyIndex, {ttl: 600});
         },
         props: {
             life: 2,
@@ -504,16 +502,13 @@ const enemyData = {
         onDeathEffect(state, enemyIndex) {
             const enemy = state.enemies[enemyIndex];
             const loot = createLoot(enemy.lootType || getAdaptivePowerupType(state));
-            const newLoot = [...state.newLoot, getNewSpriteState({
-                ...loot,
-                // These offsets are chosen to match the position of the bucket.
-                left: enemy.left + 50 - loot.width / 2,
-                top: enemy.top + 85 - loot.height / 2,
-            })];
-            return {...state, newLoot};
+            // These offsets are chosen to match the position of the bucket.
+            loot.left = enemy.left + 50 - loot.width / 2;
+            loot.top = enemy.top + 85 - loot.height / 2;
+            return addLootToState(state, loot);
         },
         props: {
-            life: 5,
+            life: 3,
             score: 0,
             speed: 1,
             vx: -3,
@@ -580,34 +575,40 @@ const absMin = (A, B) => {
     return Math.abs(A) < Math.abs(B) ? A : B;
 };
 
-const getTargetVector = (agent, target) => {
-    return {
-        dx: target.left + (target.width || 0) / 2 - (agent.left + (agent.width || 0) / 2),
-        dy: target.top + (target.height || 0) / 2 - (agent.top + (agent.height || 0) / 2),
-    };
-};
-
 const addEnemyToState = (state, enemy) => {
-    return {...state, newEnemies: [...state.newEnemies, enemy] };
+    return {...state, newEnemies: [...(state.newEnemies || []), enemy] };
 }
 
-const getEnemyHitBox = ({type, animationTime, left, top}) => {
-    return new Rectangle(getHitBox(enemyData[type].animation, animationTime)).translate(left, top);
+const getEnemyAnimation = (enemy) => {
+    let animation = enemyData[enemy.type].animation;
+    if (enemy.dead) return enemyData[enemy.type].deathAnimation || animation;
+    if (enemy.attackCooldownFramesLeft > 0) return enemyData[enemy.type].attackAnimation || animation;
+    if (!enemy.spawned) return enemyData[enemy.type].spawnAnimation || animation;
+    return animation;
 };
 
-const damageEnemy = (state, enemyIndex, attack) => {
+const getEnemyHitBox = (enemy) => {
+    let animation = getEnemyAnimation(enemy);
+    return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
+};
+
+const damageEnemy = (state, enemyIndex, attack = {}) => {
     let updatedState = {...state};
     updatedState.enemies = [...updatedState.enemies];
     updatedState.players = [...updatedState.players];
     updatedState.newEffects = [...updatedState.newEffects];
     let enemy = updatedState.enemies[enemyIndex];
     const damage = attack.damage || 1;
-    updatedState.enemies[enemyIndex] = {
-        ...enemy,
-        life: enemy.life - damage,
-        dead: enemy.life <= damage,
-        animationTime: enemy.life <= damage ? 0 : enemy.animationTime,
-    };
+    const enemyIsInvulnerable =
+        enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemyIndex);
+    if (!enemyIsInvulnerable) {
+            updatedState.enemies[enemyIndex] = {
+            ...enemy,
+            life: enemy.life - damage,
+            dead: enemy.life <= damage,
+            animationTime: enemy.life <= damage ? 0 : enemy.animationTime,
+        };
+    }
     if (updatedState.enemies[enemyIndex].dead) {
         if (attack.playerIndex >= 0) {
             let hits = attack.hitIds ? 1 + Object.keys(attack.hitIds).length : 1;
@@ -615,9 +616,6 @@ const damageEnemy = (state, enemyIndex, attack) => {
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });
         }
         updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
-        if (enemyData[enemy.type].onDeathEffect) {
-            updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemyIndex);
-        }
         const explosion = createEffect(EFFECT_EXPLOSION, {
             sfx: enemyData[enemy.type].deathSound,
         });
@@ -647,24 +645,37 @@ const damageEnemy = (state, enemyIndex, attack) => {
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
         if (enemy.grounded && attack.left) {
             updatedState = updateEnemy(updatedState, enemyIndex, {vx: 6, vy: -6});
-            enemy = updatedState.enemies[enemyIndex]
+            enemy = updatedState.enemies[enemyIndex];
         }
         if (Math.random() < enemy.score / 200) {
             const loot = createLoot(LOOT_COIN);
-            updatedState.newLoot.push(getNewSpriteState({
-                ...loot,
-                left: enemy.left + (enemy.width - loot.width ) / 2,
-                top: enemy.top + (enemy.height - loot.height ) / 2,
-            }));
+            loot.left = enemy.left + (enemy.width - loot.width ) / 2;
+            loot.top = enemy.top + (enemy.height - loot.height ) / 2;
+            updatedState = addLootToState(updatedState, loot);
+        }
+        if (enemyData[enemy.type].onDeathEffect) {
+            // This actuall changes the enemy index, so we do it last. In the long term it is probably
+            // better to use the unique enemy id instead of the index.
+            updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemyIndex);
         }
     } else {
-        if (attack.left) {
-            const damage = createEffect(EFFECT_DAMAGE, {
-                sfx: 'sfx/hit.mp3',
-            });
-            damage.left = attack.left + attack.vx + (attack.width - damage.width ) / 2;
-            damage.top = attack.top + attack.vy + (attack.height - damage.height ) / 2;
-            updatedState = addEffectToState(updatedState, damage);
+        if (enemyIsInvulnerable) {
+            updatedState = {...updatedState, sfx: [...updatedState.sfx, 'reflect']};
+        } else {
+
+            if (enemyData[enemy.type].onDamageEffect) {
+                // This actuall changes the enemy index, so we do it last. In the long term it is probably
+                // better to use the unique enemy id instead of the index.
+                updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemyIndex);
+            }
+            if (attack.left) {
+                const damage = createEffect(EFFECT_DAMAGE, {
+                    sfx: 'sfx/hit.mp3',
+                });
+                damage.left = attack.left + attack.vx + (attack.width - damage.width ) / 2;
+                damage.top = attack.top + attack.vy + (attack.height - damage.height ) / 2;
+                updatedState = addEffectToState(updatedState, damage);
+            }
         }
     }
     if (attack.type && attacks[attack.type].hitSfx) {
@@ -674,12 +685,7 @@ const damageEnemy = (state, enemyIndex, attack) => {
 }
 
 const renderEnemy = (context, enemy) => {
-    let animation = enemyData[enemy.type].animation;
-    if (enemy.dead) {
-        animation = enemyData[enemy.type].deathAnimation || animation;
-    } else if (enemy.attackCooldownFramesLeft > 0) {
-        animation = enemyData[enemy.type].attackAnimation || animation;
-    }
+    let animation = getEnemyAnimation(enemy);
     const frame = getFrame(animation, enemy.animationTime);
     context.save();
     if (enemy.dead) {
@@ -692,14 +698,22 @@ const renderEnemy = (context, enemy) => {
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
         context.scale(-1, 1);
         // This draws the image frame so that the center is exactly at the origin.
-        const target = new Rectangle(enemy).moveTo(
+        const target = new Rectangle(frame).moveTo(
             -(hitBox.left + hitBox.width / 2),
             -(hitBox.top + hitBox.height / 2),
         );
         drawImage(context, frame.image, frame, target);
         context.restore();
     } else {
-        drawImage(context, frame.image, frame, enemy);
+        let hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
+        context.save();
+        context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
+        const target = new Rectangle(frame).moveTo(
+            -(hitBox.left + hitBox.width / 2),
+            -(hitBox.top + hitBox.height / 2),
+        );
+        drawImage(context, frame.image, frame, target);
+        context.restore();
     }
    // context.translate(x, y - hitBox.height * yScale / 2);
    // if (rotation) context.rotate(rotation * Math.PI/180);
@@ -716,41 +730,57 @@ const renderEnemy = (context, enemy) => {
 
 const advanceEnemy = (state, enemyIndex) => {
     let enemy = state.enemies[enemyIndex];
+    if (enemy.delay > 0) {
+        return updateEnemy(state, enemyIndex, {delay: enemy.delay - 1});
+    }
     // This is kind of a hack to support fall damage being applied to newly created enemies.
     if (enemy.pendingDamage) {
         state = damageEnemy(state, enemyIndex, {playerIndex: 0, damage: enemy.pendingDamage});
         enemy = state.enemies[enemyIndex];
     }
-    let animation = enemyData[enemy.type].animation;
-    if (enemy.dead && enemyData[enemy.type].deathAnimation) {
-        animation = enemyData[enemy.type].deathAnimation;
-    }
-    const frame = getFrame(animation, enemy.animationTime);
-    const hitBox = frame || frame.hitBox;
 
-    // Grounded enemies should move relative to the ground.
-    if (enemy.grounded) {
+    if (enemy.stationary) {
+        // Stationary enemies are fixed to the nearground (so they move with the nearground).
+        state = updateEnemy(state, enemyIndex, {
+            top: enemy.top - state.world.nearground.yFactor * state.world.vy,
+            left: enemy.left - state.world.nearground.xFactor * state.world.vx,
+        });
+        enemy = state.enemies[enemyIndex];
+    } else if (enemy.grounded) {
+        // Grounded enemies should move relative to the ground.
         state = updateEnemy(state, enemyIndex, {
             left: enemy.left - state.world.nearground.xFactor * state.world.vx,
         });
         enemy = state.enemies[enemyIndex];
     }
 
-    let {left, top, animationTime} = enemy;
+    let {left, top, animationTime, spawned} = enemy;
+    animationTime += FRAME_LENGTH;
+    if (enemyData[enemy.type].spawnAnimation && !spawned && !enemy.dead) {
+        if (enemy.animationTime >= getAnimationLength(enemyData[enemy.type].spawnAnimation)) {
+            animationTime = 0;
+            spawned = true;
+        } else {
+            // Only update the enemies animation time while spawning.
+            return updateEnemy(state, enemyIndex, {animationTime});
+        }
+    }
     left += enemy.vx;
     top += enemy.vy;
+    state = updateEnemy(state, enemyIndex, {left, top, animationTime, spawned});
+    enemy = state.enemies[enemyIndex];
+    const hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
     if (!enemy.dead) {
         top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
     }
-    animationTime += FRAME_LENGTH;
-    state = updateEnemy(state, enemyIndex, {left, top, animationTime});
-
+    state = updateEnemy(state, enemyIndex, {left, top, animationTime, spawned});
     enemy = state.enemies[enemyIndex];
-    if (enemy.dead || enemy.grounded) {
+
+    if ((!enemy.stationary && enemy.dead) || enemy.grounded) {
         // Flying enemies fall when they are dead, grounded enemies always fall unless they are on the ground.
-        const touchingGround = enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state)
+        const touchingGround = (enemy.vy >= 0) && (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state));
         state = updateEnemy(state, enemyIndex, {
-            vy: !touchingGround || !enemy.grounded ? enemy.vy + 1 : 0,
+            vy: (!touchingGround || !enemy.grounded) ? enemy.vy + 1 : 0,
             // Dead bodies shouldn't slide along the ground
             vx: touchingGround && enemy.dead ? enemy.vx * .5 : enemy.vx,
         });
@@ -793,7 +823,7 @@ const advanceEnemy = (state, enemyIndex) => {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         done = (enemy.dead || !enemy.permanent) &&
             (enemy.left + enemy.width < -OFFSCREEN_PADDING || (enemy.vx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
-            enemy.top + enemy.height < -OFFSCREEN_PADDING || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
+            (enemy.vy < 0 && enemy.top + enemy.height < -OFFSCREEN_PADDING) || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
         if (done && !enemy.dead) {
             let comboScore = Math.max(0, state.players[0].comboScore - 50);
             state = updatePlayer(state, 0, { comboScore });
@@ -810,13 +840,14 @@ module.exports = {
     advanceEnemy,
     renderEnemy,
     getEnemyHitBox,
+    updateEnemy,
 };
 
 // Move possible circular imports to after exports.
-const { getNewSpriteState } = require('sprites');
+const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight } = require('world');
 
 const { createEffect, addEffectToState } = require('effects');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
-const { createLoot, getRandomPowerupType, getAdaptivePowerupType, gainPoints } = require('loot');
+const { createLoot, addLootToState, getRandomPowerupType, getAdaptivePowerupType, gainPoints } = require('loot');
 const { updatePlayer } = require('heroes');

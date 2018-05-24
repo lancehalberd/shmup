@@ -12,15 +12,23 @@ function ifdefor(value, defaultValue) {
 }
 
 const requireSound = source => {
-    var offset, volume, customDuration;
-    [source, offset, volume] = source.split('+');
-    if (offset) [offset, customDuration] = offset.split(':');
+    let offset, volume, duration, limit;
+    if (typeof source === 'string') {
+        [source, offset, volume] = source.split('+');
+    } else {
+        offset = source.offset;
+        volume = source.volume;
+        limit = source.limit;
+        source = source.source;
+    }
+    if (offset) [offset, duration] = String(offset).split(':').map(Number);
     if (sounds.has(source)) return sounds.get(source);
-    var newSound = new Audio(source);
+    const newSound = new Audio(source);
     newSound.instances = new Set();
     newSound.offset = offset || 0;
-    newSound.customDuration = customDuration || 0;
+    newSound.customDuration = duration || 0;
     newSound.defaultVolume = volume || 1;
+    newSound.instanceLimit = limit || 5;
     sounds.set(source, newSound);
     return newSound;
 };
@@ -28,28 +36,28 @@ const requireSound = source => {
 const playingSounds = new Set();
 const playSound = (source, area) => {
     if (soundsMuted) return;
-    var offset,volume, customDuration;
+    let offset,volume, duration;
     [source, offset, volume] = source.split('+');
-    if (offset) [offset, customDuration] = offset.split(':');
-    var sound = requireSound(source);
+    if (offset) [offset, duration] = offset.split(':');
+    const sound = requireSound(source);
     // Custom sound objects just have a play and forget method on them.
     if (!(sound instanceof Audio)) {
         sound.play();
         return;
     }
-    if (sound.instances.size >= 6) return;
-    var newInstance = sound.cloneNode(false);
+    if (sound.instances.size >= sound.instanceLimit) return;
+    const newInstance = sound.cloneNode(false);
     newInstance.currentTime = (ifdefor(offset || sound.offset) || 0) / 1000;
     newInstance.volume = Math.min(1, (ifdefor(volume, sound.defaultVolume) || 1) / 50);
     newInstance.play().then(() => {
-        var timeoutId;
-        if (customDuration || sound.customDuration) {
+        let timeoutId;
+        if (duration || sound.customDuration) {
             timeoutId = setTimeout(() => {
                 sound.instances.delete(newInstance);
                 playingSounds.delete(newInstance);
                 newInstance.onended = null;
                 newInstance.pause();
-            }, parseInt(customDuration || sound.customDuration));
+            }, parseInt(duration || sound.customDuration));
         }
         playingSounds.add(newInstance);
         sound.instances.add(newInstance);
@@ -96,36 +104,52 @@ const muteSounds = () => {
     }
 };
 
-[
-    'sfx/shoot.mp3+0+2',
-    'sfx/hit.mp3+200+1',
-    'sfx/flydeath.mp3+0+5',
-    'sfx/robedeath1.mp3+0+2',
-    'sfx/hornetdeath.mp3+0+8',
-    'sfx/coin.mp3',
-    'sfx/powerup.mp3',
-    'sfx/startgame.mp3',
-    'sfx/exclamation.mp3+0+3',
-    'sfx/exclamation2.mp3+0+3',
-    'sfx/exclamation3.mp3+0+3',
-    'sfx/heal.mp3+200+5',
-    'sfx/death.mp3+0+1',
-    'sfx/dodge.mp3+200+2',
-    'sfx/meleehit.mp3+50+6',
-    'sfx/throwhit.mp3+200+5',
-    'sfx/needledropflip.mp3+0+3',
-    'sfx/needlegrab.mp3+0+3',
-    // These custom range makes for mediocre explosion sound.
-    'sfx/explosion.mp3+0+1',
-    // See credits.html for: mobbrobb.
-    'bgm/river.mp3+0+1',
-    'bgm/area.mp3+0+2',
-].forEach(requireSound);
+const preloadSounds = () => {
+    [
+        'sfx/shoot.mp3+0+2',
+        'sfx/hit.mp3+200+1',
+        'sfx/flydeath.mp3+0+5',
+        'sfx/robedeath1.mp3+0+2',
+        'sfx/hornetdeath.mp3+0+8',
+        'sfx/coin.mp3',
+        'sfx/powerup.mp3',
+        'sfx/startgame.mp3',
+        'sfx/exclamation.mp3+0+3',
+        'sfx/exclamation2.mp3+0+3',
+        'sfx/exclamation3.mp3+0+3',
+        'sfx/heal.mp3+200+5',
+        'sfx/death.mp3+0+1',
+        'sfx/dodge.mp3+200+2',
+        'sfx/meleehit.mp3+50+6',
+        'sfx/throwhit.mp3+200+5',
+        'sfx/needledropflip.mp3+0+3',
+        'sfx/needlegrab.mp3+0+3',
+        'sfx/portal.mp3+0+10',
+        'sfx/portaltravel.mp3+0+4',
+        'sfx/explosion.mp3+0+1',
+        'sfx/dash.mp3+0+1',
+        {source: 'sfx/fastlightning.mp3', volume: 3, limit: 1},
+        {source: 'sfx/dash.mp3', volume: 10, limit: 1},
+        {source: 'sfx/special.mp3', volume: 3, limit: 1},
+        // See credits.html for: mobbrobb.
+        'bgm/river.mp3+0+1',
+        'bgm/area.mp3+0+2',
+        'bgm/space.mp3+0+2',
+        'bgm/boss.mp3+0+2',
+    ].forEach(requireSound);
+};
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let audioContext = null;
+
+function getAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+}
 
 function makeDistortionCurve(amount) {
-  var k = typeof amount === 'number' ? amount : 50,
+  let k = typeof amount === 'number' ? amount : 50,
     n_samples = 44100,
     curve = new Float32Array(n_samples),
     deg = Math.PI / 180,
@@ -140,15 +164,16 @@ function makeDistortionCurve(amount) {
 const distortionCurve = makeDistortionCurve(100);
 
 function playBeeps(frequencies, volume, duration, {smooth=false, swell=false, taper=false, distortion=false}) {
+    const audioContext = getAudioContext();
     const oscillator = audioContext.createOscillator();
     oscillator.type = 'square';
     if (smooth) oscillator.frequency.setValueCurveAtTime(frequencies, audioContext.currentTime, duration);
     else {
-        for (var i = 0; i < frequencies.length; i++) {
+        for (let i = 0; i < frequencies.length; i++) {
             oscillator.frequency.setValueAtTime(frequencies[i], audioContext.currentTime + duration * i / frequencies.length);
         }
     }
-    var lastNode = oscillator;
+    let lastNode = oscillator;
     if (distortion) {
         distortion = audioContext.createWaveShaper();
         distortion.curve = distortionCurve;
@@ -157,7 +182,7 @@ function playBeeps(frequencies, volume, duration, {smooth=false, swell=false, ta
         lastNode = distortion;
     }
 
-    gainNode = audioContext.createGain();
+    let gainNode = audioContext.createGain();
     if (swell) {
         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + duration * .1);
@@ -195,4 +220,5 @@ module.exports = {
     playSound,
     playTrack,
     stopTrack,
+    preloadSounds,
 };

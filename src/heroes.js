@@ -13,6 +13,7 @@ const {
     EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
     EFFECT_NEEDLE_FLIP,
     HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
+    MAX_ENERGY,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
@@ -28,41 +29,80 @@ const {
 const { getNewSpriteState } = require('sprites');
 
 const {
+    requireImage, r,
+    createAnimation,
     beeAnimation,
     beeEnterAnimation,
     beeCatchAnimation,
     beeMeleeAnimation,
-    beePortraitAnimation,
     dragonflyAnimation,
     dragonflyEnterAnimation,
     dragonflyCatchAnimation,
     dragonflyMeleeAnimation,
-    dragonflyPortraitAnimation,
     dragonflyIdleAnimation,
     mothAnimation,
     mothEnterAnimation,
     mothCatchAnimation,
     mothMeleeAnimation,
-    mothPortraitAnimation,
     ladybugAnimation,
     getHitBox,
     getFrame,
 } = require('animations');
+/*
+Dragonfly - I don't know how long the dash should be, but I made a little sprite for a trail behind wherever
+she goes. I figure it'll mostly be in a single direction, but the idea is she can dash in that direction and
+anyone she dashes through is hit with a standard melee attack. The dash trail is left behind to show this for half
+a second.
 
+Moth - There is a short animation of her initializing the invisibility, then she goes invisible.
+ At first I thought of doing an outline for the moth, but I thought outlines possibly can be hidden by backgrounds
+ if the color is too similar. So, is it possible for you to simply change the opacity to 50% for any moves the moth
+  does during the invisibility? I can also do it via photoshop, but I did not know if there was a programming method
+  to do it without creating a bunch more files.
+
+Brighten screen during lightning.
+*/
 const heroesData = {
     [HERO_BEE]: {
         animation: beeAnimation,
         enterAnimation: beeEnterAnimation,
         catchAnimation: beeCatchAnimation,
         meleeAnimation: beeMeleeAnimation,
+        specialAnimation: {
+            frames: [
+                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial1.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial2.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial3.png')},
+            ],
+            frameDuration: 6,
+        },
         meleeAttack: ATTACK_STAB,
         deathEffect: EFFECT_DEAD_BEE,
         deathSfx: 'sfx/exclamation.mp3',
         switchEffect: EFFECT_SWITCH_BEE,
-        portraitAnimation: beePortraitAnimation,
+        portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
+        defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
         baseSpeed: 7,
         meleePower: 2,
         meleeScaling: 0.25,
+        hudColor: '#603820',
+        // hudColor: '#E85038'
+        specialCost: 12,
+        applySpecial(state, playerIndex) {
+            const player = state.players[playerIndex];
+            if (player.specialFrames < 6 * 3) {
+                return updatePlayer(state, playerIndex,
+                    {specialFrames: player.specialFrames + 1},
+                );
+            }
+            state = checkToAddLightning(state, {
+                left: player.sprite.left + player.sprite.width - 10,
+                top: player.sprite.top + player.sprite.height / 2,
+            });
+            return updatePlayer(state, playerIndex,
+                {usingSpecial: false, invulnerableFor: 500},
+            );
+        },
     },
     [HERO_DRAGONFLY]: {
         animation: dragonflyAnimation,
@@ -70,28 +110,85 @@ const heroesData = {
         catchAnimation: dragonflyCatchAnimation,
         meleeAnimation: dragonflyMeleeAnimation,
         idleAnimation: dragonflyIdleAnimation,
+        specialAnimation: {
+            frames: [
+                {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial1.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial2.png')},
+            ],
+            frameDuration: 8,
+        },
         meleeAttack: ATTACK_SLASH,
         deathEffect: EFFECT_DEAD_DRAGONFLY,
         deathSfx: 'sfx/exclamation3.mp3',
+        specialSfx: 'sfx/dash.mp3',
         switchEffect: EFFECT_SWITCH_DRAGONFLY,
-        portraitAnimation: dragonflyPortraitAnimation,
+        portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
+        defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),
         baseSpeed: 8,
         meleePower: 1,
         meleeScaling: 0.25,
+        hudColor: '#F03010',
+        specialCost: 8,
+        applySpecial(state, playerIndex) {
+            const player = state.players[playerIndex];
+            for (let i = 0; i < state.enemies.length; i++) {
+                let enemy = state.enemies[i];
+                const enemyHitBox = getEnemyHitBox(enemy);
+                if (enemy && !enemy.done && !enemy.dead &&
+                    Rectangle.collision(enemyHitBox, getHeroHitBox(player))
+                ) {
+                    state = damageEnemy(state, i, {playerIndex});
+                }
+            }
+            if (player.specialFrames <= 20) {
+                return updatePlayer(state, playerIndex,
+                    {specialFrames: player.specialFrames + 1},
+                    {left: player.sprite.left + 15}
+                );
+            }
+            state = useMeleeAttack(state, playerIndex);
+            return updatePlayer(state, playerIndex,
+                {usingSpecial: false, invulnerableFor: 500},
+            );
+        },
     },
     [HERO_MOTH]: {
         animation: mothAnimation,
         enterAnimation: mothEnterAnimation,
         catchAnimation: mothCatchAnimation,
         meleeAnimation: mothMeleeAnimation,
+        specialAnimation: {
+            frames: [
+                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial1.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial2.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial3.png')},
+                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial4.png')},
+            ],
+            frameDuration: 6,
+        },
         meleeAttack: ATTACK_SLASH,
         deathEffect: EFFECT_DEAD_MOTH,
         deathSfx: 'sfx/exclamation2.mp3',
+        specialSfx: 'sfx/special.mp3',
         switchEffect: EFFECT_SWITCH_MOTH,
-        portraitAnimation: mothPortraitAnimation,
+        portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
+        defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
         baseSpeed: 6,
         meleePower: 1,
         meleeScaling: 0.5,
+        hudColor: '#B0B0B0',
+        specialCost: 10,
+        applySpecial(state, playerIndex) {
+            const player = state.players[playerIndex];
+            if (player.specialFrames < 6 * 4) {
+                return updatePlayer(state, playerIndex,
+                    {specialFrames: player.specialFrames + 1},
+                );
+            }
+            return updatePlayer(state, playerIndex,
+                {usingSpecial: false, invulnerableFor: 4000},
+            );
+        },
     },
 };
 
@@ -106,12 +203,15 @@ const getNewPlayerState = () => ({
         spawnSpeed: 7,
     }),
     heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH],
-    missingHeroes: [],
+    [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
+    [HERO_BEE]: {energy: 0, deaths: 0},
+    [HERO_MOTH]: {energy: 0, deaths: 0},
     invulnerableFor: 0,
     spawning: true,
     shotCooldown: 0,
     ladybugShotCooldown: 0,
     powerups: [],
+    relics: {},
     ladybugs: [],
     actions: {
         up: false,
@@ -123,38 +223,92 @@ const getNewPlayerState = () => ({
     },
 });
 
-const updatePlayer = (state, playerIndex, props) => {
+const updatePlayer = (state, playerIndex, props, spriteProps = null) => {
     const players = [...state.players];
+    if (spriteProps) {
+        props.sprite = {...players[playerIndex].sprite, ...spriteProps};
+    }
     players[playerIndex] = {...players[playerIndex], ...props};
     return {...state, players};
+};
+
+const isPlayerInvulnerable = (state, playerIndex) => {
+    const player = state.players[playerIndex];
+    return player.invulnerableFor || player.usingSpecial;
+};
+
+const useMeleeAttack = (state, playerIndex) => {
+    const player = state.players[playerIndex];
+    const heroData = heroesData[player.heroes[0]];
+    const meleeCooldown = 3 * SHOT_COOLDOWN - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
+    const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
+    const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+    const scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
+    const meleeAttack = createAttack(heroData.meleeAttack, {
+        damage: heroData.meleePower + triplePowers,
+        top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
+        left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
+        playerIndex,
+    });
+    meleeAttack.width *= scale;
+    meleeAttack.height *= scale;
+    meleeAttack.top -=  meleeAttack.height / 2;
+    state = addPlayerAttackToState(state, meleeAttack);
+    return updatePlayer(state, playerIndex, {meleeAttackTime: 0, meleeCooldown});
+};
+
+const hasAnotherHero = (state, playerIndex) => {
+    const player = state.players[playerIndex];
+    for (let i = 1; i < player.heroes.length; i++) {
+        if (player[player.heroes[i]].energy >= 0) return true;
+    }
+    return null;
 };
 
 const advanceHero = (state, playerIndex) => {
     if (state.players[playerIndex].done) {
         return state;
     }
+    state = advanceLadybugs(state, playerIndex);
     let player = state.players[playerIndex];
-    let {meleeAttackTime, meleeCooldown, shotCooldown, invulnerableFor, ladybugShotCooldown} = player;
-    const heroData = heroesData[player.heroes[0]];
-    if (meleeCooldown > 0) {
-        meleeCooldown--;
+    // Restore energy for all heroes each frame.
+    for (const heroType of player.heroes) {
+        if (player[heroType].energy < MAX_ENERGY &&
+            (heroType !== player.heroes[0] || (!player.invulnerableFor && !player.usingSpecial))
+        ) {
+            state = updatePlayer(state, playerIndex,
+                {[heroType]: {...player[heroType], energy: player[heroType].energy + 0.02}}
+            );
+        }
+    }
+    let {shotCooldown, invulnerableFor, specialCooldownFrames} = player;
+    const heroType = player.heroes[0];
+    const heroData = heroesData[heroType];
+    if (player.usingSpecial) {
+        state = updatePlayer(state, playerIndex, {}, {animationTime: player.sprite.animationTime + FRAME_LENGTH});
+        return heroData.applySpecial(state, playerIndex);
+    }
+    // If the player runs out of energy from using a special move, they automatically switch out
+    // after using it.
+    if (player[player.heroes[0]].energy < 0 && !player.invulnerableFor) {
+        return switchHeroes(state, playerIndex);
+    }
+    if (player.actions.special && heroData.applySpecial && !player.sprite.targetLeft
+        && !player.invulnerableFor
+        // You can use a special when you don't have enough energy *if* another hero is available.
+        && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))
+    ) {
+        if (heroData.specialSfx) state = {...state, sfx: [...state.sfx, heroData.specialSfx]};
+        return updatePlayer(state, playerIndex, {
+            usingSpecial: true, specialFrames: 0,
+            [heroType]: {...player[heroType], energy: player[heroType].energy - heroData.specialCost},
+        }, {animationTime: 0});
+    }
+    if (player.meleeCooldown > 0) {
+        state = updatePlayer(state, playerIndex, {meleeCooldown: player.meleeCooldown - 1});
+        player = state.players[playerIndex];
     } else if (player.actions.melee) {
-        meleeCooldown = 3 * SHOT_COOLDOWN - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
-        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-        const scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
-        const meleeAttack = createAttack(heroData.meleeAttack, {
-            damage: heroData.meleePower + triplePowers,
-            top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
-            left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
-            playerIndex,
-        });
-        meleeAttack.width *= scale;
-        meleeAttack.height *= scale;
-        meleeAttack.top -=  meleeAttack.height / 2;
-        state = addPlayerAttackToState(state, meleeAttack);
-        meleeAttackTime = 0;
-
+        state = useMeleeAttack(state, playerIndex);
         player = state.players[playerIndex];
     } else if (shotCooldown > 0) {
         shotCooldown--;
@@ -205,25 +359,6 @@ const advanceHero = (state, playerIndex) => {
         player = state.players[playerIndex];
     }
 
-    if (ladybugShotCooldown > 0) {
-        ladybugShotCooldown--;
-    } else if (player.actions.shoot && player.ladybugs.length) {
-        ladybugShotCooldown = SHOT_COOLDOWN * 1.5;
-        for (let i = 0; i < player.ladybugs.length; i++) {
-            const ladybug = player.ladybugs[i];
-            const orb = createAttack(ATTACK_ORB, {
-                damage: 1,
-                left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
-                vx: 15,
-                playerIndex,
-            });
-            orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6
-            state = addPlayerAttackToState(state, orb);
-
-            player = state.players[playerIndex];
-        }
-    }
-
     let {top, left, vx, vy, width, height, animationTime, targetLeft, targetTop} = player.sprite;
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
@@ -238,9 +373,8 @@ const advanceHero = (state, playerIndex) => {
         }
         return updatePlayer(state, playerIndex, {
             ladybugShotCooldown: 1, invulnerableFor, spawning: true,
-            shotCooldown: 1, meleeCooldown: 1,
-            sprite: {...player.sprite, left, top, animationTime, targetLeft, targetTop},
-        });
+            shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
+        }, {left, top, animationTime, targetLeft, targetTop});
     }
     if (player.actions.switch) {
         return switchHeroes(state, playerIndex);
@@ -281,7 +415,6 @@ const advanceHero = (state, playerIndex) => {
         vx = 0;
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
-    const ladybugs = updateLadyBugs(player);
     let sfx = state.sfx;
     let chasingNeedle = player.chasingNeedle, catchingNeedleFrames = player.catchingNeedleFrames;
     if (chasingNeedle) {
@@ -291,6 +424,7 @@ const advanceHero = (state, playerIndex) => {
     } else if(catchingNeedleFrames > 0) {
         catchingNeedleFrames--;
     }
+    let meleeAttackTime = player.meleeAttackTime;
     if (meleeAttackTime >= 0) {
         meleeAttackTime += FRAME_LENGTH;
         const animation = heroData.meleeAnimation;
@@ -300,17 +434,35 @@ const advanceHero = (state, playerIndex) => {
         }
     }
     const updatedProps = {
-        shotCooldown, meleeCooldown, meleeAttackTime,
-        ladybugShotCooldown, invulnerableFor, sprite,
-        ladybugs, chasingNeedle, catchingNeedleFrames,
+        shotCooldown, meleeAttackTime,
+        specialCooldownFrames,
+        invulnerableFor, sprite,
+        chasingNeedle, catchingNeedleFrames,
         spawning: false,
     };
     return updatePlayer({...state, sfx}, playerIndex, updatedProps);
 };
 
-const updateLadyBugs = (player) => {
+const advanceLadybugs = (state, playerIndex) => {
+    const player = state.players[playerIndex];
     const sprite = player.sprite;
     const ladybugs = [...player.ladybugs];
+    let ladybugShotCooldown = player.ladybugShotCooldown;
+    if (ladybugShotCooldown > 0) {
+        ladybugShotCooldown--;
+    } else if (player.actions.shoot && player.ladybugs.length) {
+        ladybugShotCooldown = SHOT_COOLDOWN * 1.5;
+        for (const ladybug of ladybugs) {
+            const orb = createAttack(ATTACK_ORB, {
+                damage: 1,
+                left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
+                vx: 15,
+                playerIndex,
+            });
+            orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6
+            state = addPlayerAttackToState(state, orb);
+        }
+    }
     for (let i = 0; i < ladybugs.length; i++) {
         const delta = [[-5, -32], [-5, 32], [52, -16], [52, 16]][i % 4];
         const tx = sprite.left + sprite.width / 2 - ladybugAnimation.frames[0].width / 2 + delta[0];
@@ -322,10 +474,13 @@ const updateLadyBugs = (player) => {
             animationTime: ladybugs[i].animationTime + FRAME_LENGTH,
         };
     }
-    return ladybugs;
-}
+    return updatePlayer(state, playerIndex, {ladybugShotCooldown, ladybugs});
+};
 
 const switchHeroes = (updatedState, playerIndex) => {
+    if (!hasAnotherHero(updatedState, playerIndex)) {
+        return updatedState;
+    }
     let player = updatedState.players[playerIndex];
     const sprite = player.sprite;
 
@@ -341,22 +496,25 @@ const switchHeroes = (updatedState, playerIndex) => {
 
     const heroes = [...player.heroes];
     heroes.push(heroes.shift());
+    // If the first hero has no energy, switch to the next hero.
+    if (player[heroes[0]].energy < 0) {
+        heroes.push(heroes.shift());
+    }
     const targetLeft = sprite.left, targetTop = sprite.top;
     const left = -100, top = GAME_HEIGHT - 100;
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
-        sprite: {
-            ...sprite,
+            heroes,
+            invulnerableFor: 25 * FRAME_LENGTH,
+            spawning: true,
+            chasingNeedle: true,
+        }, {
             ...heroesData[player.heroes[0]].animation.frames[0],
             left, top, targetLeft, targetTop, spawnSpeed,
             vx: 0, vy: 0,
-        },
-        heroes,
-        invulnerableFor: 25 * FRAME_LENGTH,
-        spawning: true,
-        chasingNeedle: true,
-    });
+        }
+    );
     player = updatedState.players[playerIndex];
 
     const sfx = [...updatedState.sfx, 'sfx/needledropflip.mp3'];
@@ -376,13 +534,28 @@ const damageHero = (updatedState, playerIndex) => {
     deathEffect.left = sprite.left + (sprite.width - deathEffect.width ) / 2;
     deathEffect.top = sprite.top + (sprite.height - deathEffect.height ) / 2;
     updatedState = addEffectToState(updatedState, deathEffect);
+    // Increment deaths for the current hero, and set energy negative based on
+    // the total number of deaths (this is reset on continue or completing a level).
+    const deaths = player[player.heroes[0]].deaths + 1;
+    updatedState = updatePlayer(updatedState, playerIndex, {
+        [player.heroes[0]]: {...player[player.heroes[0]], energy: -10 - 10 * (deaths - 1), deaths},
+    });
     const needleEffect = createEffect(EFFECT_NEEDLE_FLIP);
     needleEffect.left = sprite.left + (sprite.width - needleEffect.width ) / 2;
     needleEffect.top = sprite.top + (sprite.height - needleEffect.height ) / 2;
     updatedState = addEffectToState(updatedState, needleEffect);
 
     const heroes = [...player.heroes];
-    const missingHeroes = [...player.missingHeroes, heroes.shift()];
+    let done = false;
+    heroes.push(heroes.shift());
+    // If the first hero has no energy, switch to the next hero.
+    if (player[heroes[0]].energy < 0) {
+        heroes.push(heroes.shift());
+    }
+    // If the last hero still has no energy, it is game over.
+    if (player[heroes[0]].energy < 0) {
+        done = true;
+    }
     const targetLeft = sprite.left, targetTop = sprite.top;
     const powerups = [...player.powerups];
     powerups.pop();
@@ -390,16 +563,10 @@ const damageHero = (updatedState, playerIndex) => {
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
-        sprite: {
-            ...sprite,
-            ...heroesData[player.heroes[0]].animation.frames[0],
-            left, top, targetLeft, targetTop, spawnSpeed,
-            vx: 0, vy: 0,
-        },
         heroes,
-        missingHeroes,
         dead: true,
-        done: heroes.length <= 0,
+        usingSpecial: false,
+        done,
         invulnerableFor: SPAWN_INV_TIME,
         spawning: true,
         chasingNeedle: true,
@@ -408,6 +575,10 @@ const damageHero = (updatedState, playerIndex) => {
         comboScore: 0,
         powerups,
         ladybugs,
+    }, {
+        ...heroesData[player.heroes[0]].animation.frames[0],
+        left, top, targetLeft, targetTop, spawnSpeed,
+        vx: 0, vy: 0,
     });
     player = updatedState.players[playerIndex];
 
@@ -433,6 +604,9 @@ const renderHero = (context, player) => {
     if (done) return;
     const heroData = heroesData[player.heroes[0]];
     let animation = heroData.animation, animationTime = sprite.animationTime;
+    if (player.usingSpecial) {
+        animation = heroData.specialAnimation;
+    }
     if (player.chasingNeedle) {
         animation = heroData.enterAnimation;
     }
@@ -480,11 +654,87 @@ module.exports = {
     renderHero,
     heroesData,
     updatePlayer,
+    isPlayerInvulnerable,
 };
 
 
 const { getGroundHeight } = require('world');
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { createEffect, addEffectToState } = require('effects');
+const { effects, createEffect, addEffectToState } = require('effects');
+
+const EFFECT_LIGHTNING = 'lightning';
+effects[EFFECT_LIGHTNING] = {
+    animation: {
+        frames: [
+            {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
+            {...r(50, 10), image: requireImage('gfx/attacks/chain2.png')},
+            {...r(50, 10), image: requireImage('gfx/attacks/chain3.png')},
+            {...r(50, 10), image: requireImage('gfx/attacks/chain4.png')},
+        ],
+        frameDuration: 4,
+    },
+    advanceEffect: (state, effectIndex) => {
+        const effect = state.effects[effectIndex];
+        if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
+            const center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
+            const left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
+            const top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
+            state = checkToAddLightning(state, {...effect, left, top});
+        }
+        return state;
+    },
+    props: {
+        loops: 1,
+        damage: 5,
+        charges: 8,
+        branchChance: .9,
+        rotation: 0,
+        sfx: 'sfx/fastlightning.mp3',
+    },
+};
+
+const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchChance = 0, rotation = 0}) => {
+    const addLightning = (rotation, branchChance) => {
+        const lightning = createEffect(EFFECT_LIGHTNING, {
+            left, top,
+            charges: charges - 1,
+            rotation,
+            branchChance,
+            xScale: 2, yScale: 2,
+        });
+        lightning.width *= 2;
+        lightning.height *= 2;
+        lightning.left -= lightning.width / 2;
+        lightning.left += Math.cos(rotation) * lightning.width / 2;
+        lightning.top -= lightning.height / 2;
+        lightning.top += Math.sin(rotation) * lightning.width / 2;
+        state = addEffectToState(state, lightning);
+    }
+    const targetRotations = [];
+    for (let i = 0; i < state.enemies.length; i++) {
+        const enemy = state.enemies[i];
+        if (enemy.done || enemy.dead || enemy.left + enemy.width / 2 <= left) continue;
+        const dx = enemy.left + enemy.width / 2 - left,
+            dy = enemy.top + enemy.height / 2 - top;
+        if (Math.sqrt(dx * dx + dy * dy) < 200) {
+            targetRotations.push(Math.atan2(dy, dx));
+            state = damageEnemy(state, i, {playerIndex: 0, damage});
+        }
+    }
+    if (targetRotations.length) {
+        const branchChance = targetRotations.length > 1 ? 0 : branchChance + 0.2;
+        for (var enemyRotation of targetRotations) {
+            addLightning(enemyRotation, branchChance);
+        }
+    } else if (Math.random() < branchChance) {
+        addLightning(rotation - (Math.PI / 12), 0);
+        addLightning(rotation + (Math.PI / 13), 0);
+    } else {
+        addLightning(rotation, branchChance + 0.2);
+    }
+    return state;
+}
+
+const { getEnemyHitBox, damageEnemy } = require('enemies');
 

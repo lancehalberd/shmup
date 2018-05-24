@@ -1,21 +1,27 @@
 const { drawImage, drawTintedImage } = require('draw');
 
+const random = require('random');
 const Rectangle = require('Rectangle');
 
 const {
+    TEST_ITEMS,
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
-    POINTS_FOR_POWERUP,
+    POINTS_FOR_POWERUP, MAX_ENERGY,
+    HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
     LOOT_COIN, LOOT_LIFE, LOOT_LADYBUG,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE,
     LOOT_COMBO, LOOT_TRIPLE_COMBO,
+    LOOT_PORTAL,
+    LOOT_HELMET,
     EFFECT_RATE_UP, EFFECT_SIZE_UP, EFFECT_SPEED_UP,
-    HERO_DRAGONFLY,
     ENEMY_CARGO_BEETLE,
 } = require('gameConstants');
 
 const {
     getFrame,
+    createAnimation,
+    r,
     coinAnimation,
     powerupDiamondAnimation,
     powerupTriangleAnimation,
@@ -34,15 +40,17 @@ const {
     playSound
 } = require('sounds');
 
-const { getNewSpriteState } = require('sprites');
+const { getNewSpriteState, getTargetVector } = require('sprites');
 
-const circleAcceleration = (state, loot) => {
-    let {vx, vy, seed} = loot;
-    const theta = loot.animationTime / 300;
-    const radius = loot.radius || 2;
+const helmetAnimation = createAnimation('gfx/items/helmet.png', r(17, 18));
+
+const circleAcceleration = (state, lootIndex) => {
+    let {vx, vy, seed, animationTime, radius} = state.loot[lootIndex];
+    const theta = animationTime / 300;
+    radius = radius || 2;
     vx = radius * Math.cos(theta);
     vy = radius * Math.sin(theta);
-    return {...loot, vx, vy};
+    return updateLoot(state, lootIndex, {vx, vy});
 };
 
 const drawNormal = (context, state, loot) => {
@@ -118,8 +126,8 @@ const powerupLoot = (type, animation, effectType) => ({
     },
     // draw: drawGlowing,
     sfx: 'sfx/powerup.mp3',
-    scale: 1,
     props: {
+        scale: 1,
     },
 });
 
@@ -132,8 +140,8 @@ const triplePowerupLoot = (type, animation) => ({
         return updatePlayer(state, playerIndex, {powerups});
     },
     sfx: 'sfx/powerup.mp3',
-    scale: 1,
     props: {
+        scale: 1,
     },
 });
 
@@ -145,42 +153,49 @@ const getNewLadyBug = (playerSprite) => {
     });
 };
 
+const portalAnimation = createAnimation('gfx/scene/portal/portal.png', r(50, 80), {rows: 6, duration: 8}, {loopFrame: 3});
+
 const lootData = {
     [LOOT_COIN]: {
         animation: coinAnimation,
+        accelerate: (state, lootIndex) => {
+            if (!state.players[0].relics[LOOT_HELMET]) {
+                return state;
+            }
+            const {dx, dy} = getTargetVector(state.loot[lootIndex], state.players[0].sprite);
+            const mag = Math.sqrt(dx*dx+dy*dy);
+            if (mag > 200) return state;
+            return updateLoot(state, lootIndex, {vx: 20 * dx / mag, vy: 20 * dy / mag});
+        },
         collect(state, playerIndex, loot) {
-            let comboScore = Math.min(1000, state.players[playerIndex].comboScore + 20);
+            let comboScore = Math.min(1000, state.players[playerIndex].comboScore + loot.comboPoints);
             state = updatePlayer(state, playerIndex, { comboScore });
-            return gainPoints(state, playerIndex, 50);
+            return gainPoints(state, playerIndex, loot.points);
         },
         sfx: 'sfx/coin.mp3',
-        scale: 2,
+        props: {
+            scale: 2,
+            comboPoints: 20,
+            points: 50,
+        },
     },
     [LOOT_LIFE]: {
-        animation: beePortraitAnimation, // This is just used for sizing purposes.
+        animation: createAnimation('gfx/items/goldenheart.png', r(17, 18)),
         accelerate: circleAcceleration,
         collect(state, playerIndex, loot) {
-            const heroes = [...state.players[playerIndex].heroes];
-            const missingHeroes = [...state.players[playerIndex].missingHeroes];
-            if (missingHeroes.length) {
-                heroes.push(missingHeroes.shift());
-            } else {
-                // extra life life loots become coins if the players have max lives.
-                return gainPoints(state, playerIndex, 500);
-            }
-            return updatePlayer(state, playerIndex, {heroes, missingHeroes});
+            const player = state.players[playerIndex];
+            // Set all heroes to max energy. This revives them if they were defeated.
+            return updatePlayer(state, playerIndex, {
+                [HERO_BEE]: {...player[HERO_BEE], energy: MAX_ENERGY},
+                [HERO_DRAGONFLY]: {...player[HERO_DRAGONFLY], energy: MAX_ENERGY},
+                [HERO_MOTH]: {...player[HERO_MOTH], energy: MAX_ENERGY},
+            });
         },
-        draw(context, state, loot) {
-            // extra life life loots become coins if the players have max lives.
-            let animation = coinAnimation;
-            if (state.players[0].missingHeroes.length) {
-                animation = heroesData[state.players[0].missingHeroes[0]].portraitAnimation;
-            }
-            const frame = getFrame(animation, loot.animationTime);
-            drawTintedImage(context, frame.image, 'white', .5 + .5 * Math.cos(loot.animationTime / 50), frame, loot);
-        },
+        draw: drawGlowing,
         sfx: 'sfx/heal.mp3',
-        scale: 1,
+        props: {
+            scale: 1,
+        },
     },
     [LOOT_LADYBUG]: {
         animation: powerupLadybugAnimation,
@@ -195,7 +210,24 @@ const lootData = {
         },
         draw: drawGlowing,
         sfx: 'sfx/powerup.mp3',
-        scale: 1,
+        props: {
+            scale: 1,
+        },
+    },
+    [LOOT_HELMET]: {
+        animation: helmetAnimation,
+        accelerate: circleAcceleration,
+        collect(state, playerIndex, loot) {
+            const props = {
+                relics: {...state.players[playerIndex].relics, [loot.type]: true},
+            };
+            return updatePlayer(state, playerIndex, props);
+        },
+        draw: drawGlowing,
+        sfx: 'sfx/powerup.mp3',
+        props: {
+            scale: 2,
+        },
     },
     [LOOT_ATTACK_POWER]: powerupLoot(LOOT_ATTACK_POWER, powerupSquareAnimation, EFFECT_SIZE_UP),
     [LOOT_ATTACK_SPEED]: powerupLoot(LOOT_ATTACK_SPEED, powerupDiamondAnimation, EFFECT_RATE_UP),
@@ -205,14 +237,41 @@ const lootData = {
     [LOOT_TRIPLE_RATE]: triplePowerupLoot(LOOT_TRIPLE_RATE, powerupTripleDiamondAnimation, EFFECT_RATE_UP),
     [LOOT_COMBO]: triplePowerupLoot(LOOT_COMBO, powerupComboAnimation),
     [LOOT_TRIPLE_COMBO]: triplePowerupLoot(LOOT_TRIPLE_COMBO, powerupTripleComboAnimation),
+    [LOOT_PORTAL]: {
+        animation: portalAnimation,
+        accelerate: (state, lootIndex) => {
+            // play the portal sfx periodically while it is on the screen.
+            if (state.loot[lootIndex].animationTime % 2000 === 0) {
+                return {...state, sfx: [...state.sfx, 'sfx/portal.mp3+0+5']};
+            }
+            return state;
+        },
+        collect(state, playerIndex, loot) {
+            return enterStarWorld(state);
+        },
+        spawnSfx: 'sfx/portal.mp3',
+        sfx: 'sfx/portaltravel.mp3',
+        props: {
+            scale: 1,
+        },
+    },
+};
+const createLoot = (type, props) => {
+    const lootInfo = lootData[type];
+    const frame = lootInfo.animation.frames[0];
+    return getNewSpriteState({
+        ...new Rectangle(frame).scale((props && props.scale) || (lootInfo.props && lootInfo.props.scale) || 1),
+        type,
+        ...lootInfo.props,
+        ...props,
+    });
 };
 
-const createLoot = (type) => {
-    const frame = lootData[type].animation.frames[0];
-    return {
-        ...new Rectangle(frame).scale(lootData[type].scale || 1),
-        type,
-    };
+const addLootToState = (state, loot) => {
+    if (lootData[loot.type].spawnSfx) {
+        return {...state, newLoot: [...state.newLoot, loot], sfx: [...state.sfx, lootData[loot.type].spawnSfx]};
+    }
+    return {...state, newLoot: [...state.newLoot, loot]};
 };
 
 const renderLoot = (context, loot) => {
@@ -224,20 +283,40 @@ const renderLoot = (context, loot) => {
     }
 };
 
-const advanceLoot = (state, loot) => {
-    let { left, top, width, height, vx, vy, delay, duration, animationTime, type } = loot;
+const updateLoot = (state, lootIndex, props) => {
+    const loot = [...state.loot];
+    loot[lootIndex] = {...loot[lootIndex], ...props};
+    return {...state, loot};
+};
+
+const advanceLoot = (state, lootIndex) => {
+    let { left, top, width, height, vx, vy, delay, duration, animationTime, type } = state.loot[lootIndex];
     let data = lootData[type];
-    const animation = data.animation;
     left += vx - state.world.vx;
     top += vy + state.world.vy;
     animationTime += FRAME_LENGTH;
+    const done = left + width < 0;
+    state = updateLoot(state, lootIndex, {left, top, animationTime, done});
     if (data.accelerate) {
-        loot = data.accelerate(state, loot);
+        state = data.accelerate(state, lootIndex);
     }
+    return state;
+};
 
-    const done = left + width < 0;;
-
-    return {...loot, left, top, animationTime, done};
+const advanceAllLoot = (state) => {
+    for (let i = 0; i < state.loot.length; i++) {
+        state = advanceLoot(state, i);
+        const loot = state.loot[i];
+        if (loot.done) continue;
+        for (let j = 0; j < state.players.length; j++) {
+            if (state.players[j].done || state.players[j].spawning) continue;
+            if (Rectangle.collision(loot, getHeroHitBox(state.players[j]))) {
+                state = collectLoot(state, j, i);
+            }
+        }
+    }
+    state.loot = state.loot.filter(loot => !loot.done);
+    return state;
 };
 
 const getRandomPowerupType = () => {
@@ -254,15 +333,17 @@ const getRandomPowerupType = () => {
 5: If they only have 1 ladybug, it drops a ladybug. Otherwise...
 6: Drops a random of the main 3 powerups.*/
 const getAdaptivePowerupType = (state) => {
+    if (TEST_ITEMS) return random.element(TEST_ITEMS);
+    //if (!state.players[0].relics[LOOT_HELMET]) return LOOT_HELMET;
+    if (getComboMultiplier(state, 0) === 5) return LOOT_PORTAL;
     // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
-    if (state.players[0].heroes.length < 2 && Math.random() < .25) return LOOT_LIFE;
-    if (state.players[0].heroes.length < 3 && Math.random() < .25) return LOOT_LIFE;
-    if (state.players[0].powerups.length < 2) return getRandomPowerupType();
+    if (state.players[0].powerups.length < 1) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 1) return LOOT_LADYBUG;
-    if (state.players[0].powerups.length < 4) return getRandomPowerupType();
+    if (state.players[0].powerups.length < 3) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 2) return LOOT_LADYBUG;
     if (state.players[0].powerups.length < 5) return getRandomPowerupType();
     if (state.players[0].ladybugs.length < 3) return LOOT_LADYBUG;
+    if (Math.random() < 1 / 10) return LOOT_LIFE;
     return getRandomPowerupType();
 };
 
@@ -299,16 +380,21 @@ const gainPoints = (state, playerIndex, points) => {
 
 const collectLoot = (state, playerIndex, lootIndex) => {
     const loot = state.loot[lootIndex];
-    state = lootData[loot.type].collect(state, playerIndex, loot);
+    const lootInfo = lootData[loot.type];
+    state = lootInfo.collect(state, playerIndex, loot);
     state = {...state, loot: [...state.loot]};
     state.loot[lootIndex] = {...loot, done: true};
-    return {...state, sfx: [...state.sfx, lootData[loot.type].sfx]};
+    if (lootInfo.sfx) {
+        state = {...state, sfx: [...state.sfx, lootData[loot.type].sfx]};
+    }
+    return state;
 };
 
 module.exports = {
     lootData,
     createLoot,
-    advanceLoot,
+    addLootToState,
+    advanceAllLoot,
     renderLoot,
     gainPoints,
     getRandomPowerupType,
@@ -316,11 +402,14 @@ module.exports = {
     getComboMultiplier,
     collectLoot,
     powerupGoals,
+    helmetAnimation,
 };
 
 // Move possible circular imports to after exports.
 const { addEnemyToState, createEnemy } = require('enemies');
 
-const { heroesData, updatePlayer } = require('heroes');
+const { heroesData, updatePlayer, getHeroHitBox } = require('heroes');
 
 const { createEffect, addEffectToState } = require('effects');
+
+const { enterStarWorld } = require('areas/stars');

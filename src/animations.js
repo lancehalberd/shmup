@@ -1,6 +1,8 @@
 
 const { FRAME_LENGTH } = require('gameConstants');
 
+const Rectangle = require('Rectangle');
+
 const assetVersion = assetVersion || 0.4;
 const images = {};
 function loadImage(source, callback) {
@@ -32,8 +34,24 @@ const rectangleToFrames = (rectangle, image, numberOfFrames) => {
     return frames;
 };
 
+const i = (width, height, source) => ({left: 0, top: 0, width, height, image: requireImage(source)});
 const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props});
 
+const createAnimation = (source, rectangle, {x = 0, y = 0, rows = 1, cols = 1, duration = 8, frameMap} = {}, props) => {
+    let frames = [];
+    const image = requireImage(source);
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            frames[row * cols + col] = {...rectangle, left: rectangle.width * (x + col), top: rectangle.height * (y + row), image};
+        }
+    }
+    // Say an animation has 3 frames, but you want to order them 0, 1, 2, 1, then pass frameMap = [0, 1, 2, 1],
+    // to remap the order of the frames accordingly.
+    if (frameMap) {
+       frames = frameMap.map(originalIndex => frames[originalIndex]);
+    }
+    return {frames, frameDuration: duration, ...props};
+};
 const createFrames = (rect, count, source, offset = 0) => {
     const frames = [];
     const image = requireImage(source);
@@ -43,6 +61,16 @@ const createFrames = (rect, count, source, offset = 0) => {
     return frames;
 };
 
+const createVerticalFrames = (rect, count, source, offset = 0) => {
+    const frames = [];
+    const image = requireImage(source);
+    for (let i = 0; i < count; i++) {
+        frames[i] = {...rect, top: rect.height * (offset + i), image}
+    }
+    return frames;
+};
+
+const allAnimations = {};
 
 const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
 const beeRectangle = r(88, 56, {hitBox: beeHitBox});
@@ -433,7 +461,7 @@ const monkAnimation = {
 };
 const monkAttackAnimation = {
     frames: [
-        {...r(42, 50), image: requireImage('gfx/enemies/robeAttack.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/robeAttack.png')},
     ],
     frameDuration: 5,
 };
@@ -631,11 +659,17 @@ const getFrame = (animation, animationTime) => {
     if (animation.loop === false) { // You can set this to prevent an animation from looping.
         frameIndex = Math.min(frameIndex, animation.frames.length - 1);
     }
+    if (animation.loopFrame && frameIndex >= animation.frames.length) {
+        frameIndex -= animation.loopFrame;
+        frameIndex %= (animation.frames.length - animation.loopFrame);
+        frameIndex += animation.loopFrame;
+    }
     return animation.frames[frameIndex % animation.frames.length];
 };
+const getAnimationLength = (animation) => animation.frames.length * animation.frameDuration;
 const getHitBox = (animation, animationTime) => {
     const frame = getFrame(animation, animationTime);
-    return frame.hitBox || frame;
+    return new Rectangle(frame.hitBox || frame);
 };
 
 const plainsBackground = r(1200, 600, {image: requireImage('gfx/scene/plains_bg.png')});
@@ -651,48 +685,15 @@ const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png')});
 
 const startImage = r(58, 30, {image: requireImage('gfx/start.png')});
 
-const hudImage = r(800, 36, {image: requireImage('gfx/hud/newhud.png')});
-
-
-const powerupBarRectangle = r(100, 19);
-const powerupBarAnimation = {
-    frames: [
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup0.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup1.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup2.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup3.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup4.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup5.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup6.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup7.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup8.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup9.png')},
-        {...powerupBarRectangle, image: requireImage('gfx/hud/powerup10.png')},
-    ],
-    frameDuration: 5
-};
-
-const comboBarRectangle = r(100, 19);
-const comboBarAnimation = {
-    frames: [
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo0.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo1.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo2.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo3.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo4.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo5.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo6.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo7.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo8.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo9.png')},
-        {...comboBarRectangle, image: requireImage('gfx/hud/combo10.png')},
-    ],
-    frameDuration: 5
-};
-
 module.exports = {
+    requireImage,
+    r, i,
+    allAnimations,
     getFrame,
+    getAnimationLength,
+    createAnimation,
     createFrames,
+    createVerticalFrames,
     getHitBox,
     backgroundSky,
     plainsBackground,
@@ -762,8 +763,4 @@ module.exports = {
     optionsImage,
     startImage,
     gameOverImage,
-    hudImage,
-    powerupBarAnimation,
-    comboBarAnimation,
-    requireImage,
 };

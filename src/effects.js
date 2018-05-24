@@ -1,5 +1,7 @@
 const { drawImage } = require('draw');
 
+const Rectangle = require('Rectangle');
+
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
     EFFECT_DAMAGE, EFFECT_EXPLOSION, EFFECT_DUST,
@@ -12,7 +14,9 @@ const {
 } = require('gameConstants');
 
 const {
+    allAnimations,
     getFrame,
+    getHitBox,
     damageAnimation,
     dustAnimation,
     explosionAnimation,
@@ -27,6 +31,7 @@ const {
     sizeTextAnimation,
     speedTextAnimation,
     deflectAnimation,
+    createVerticalFrames, r, i,
 } = require('animations');
 
 const {
@@ -109,37 +114,74 @@ const addEffectToState = (state, effect) => {
     return {...state, newEffects: [...state.newEffects, effect] };
 };
 
+const updateEffect = (state, effectIndex, props) => {
+    const effects = [...state.effects];
+    effects[effectIndex] = {...effects[effectIndex], ...props};
+    return {...state, effects};
+};
+
 const renderEffect = (context, effect) => {
     const frame = getFrame(effects[effect.type].animation, effect.animationTime);
-    drawImage(context, frame.image, frame, effect);
+    if ((effect.xScale || 1) === 1 && (effect.yScale || 1) === 1 && (effect.rotation || 0) === 0) {
+        drawImage(context, frame.image, frame, effect);
+    } else {
+        let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
+        // This moves the origin to where we want the center of the enemies hitBox to be.
+        context.save();
+        context.translate(effect.left + hitBox.left + hitBox.width / 2, effect.top + hitBox.top + hitBox.height / 2);
+        context.scale(effect.xScale || 1, effect.yScale || 1);
+        if (effect.rotation) context.rotate(effect.rotation);
+        // This draws the image frame so that the center is exactly at the origin.
+        const target = new Rectangle(frame).moveTo(
+            -(hitBox.left + hitBox.width / 2),
+            -(hitBox.top + hitBox.height / 2),
+        );
+        drawImage(context, frame.image, frame, target);
+        context.restore();
+    }
     if (effect.sfx) {
         playSound(effect.sfx);
         effect.sfx = false;
     }
 };
 
-const advanceEffect = (state, effect) => {
-    let { left, top, width, height, vx, vy, delay, duration, animationTime, type } = effect;
-    const animation = effects[type].animation;
+const advanceEffect = (state, effectIndex) => {
+    const effectInfo = effects[state.effects[effectIndex].type];
+    if (effectInfo.advanceEffect) {
+        state = effectInfo.advanceEffect(state, effectIndex);
+    }
+    let { left, top, width, height, vx, vy, delay, duration, animationTime,
+        relativeToGround, loops,
+    } = state.effects[effectIndex];
+    const animation = effectInfo.animation;
     left += vx;
     top += vy;
-    if (effect.relativeToGround) {
+    if (relativeToGround) {
         left -= state.world.nearground.xFactor * state.world.vx;
         top += state.world.nearground.yFactor * state.world.vy;
     }
     animationTime += FRAME_LENGTH;
 
-    const done = animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (effect.loops || 1) ||
+    const done = animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (loops || 1) ||
         left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
         top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
 
-    return {...effect, left, top, animationTime, done};
+    return updateEffect(state, effectIndex, {left, top, animationTime, done});
 };
 
+const advanceAllEffects = (state) => {
+    for (let i = 0; i < state.effects.length; i++) {
+        state = advanceEffect(state, i);
+    }
+    state.effects = state.effects.filter(effect => !effect.done);
+    return state;
+};
 
 module.exports = {
+    effects,
     createEffect,
     addEffectToState,
-    advanceEffect,
+    advanceAllEffects,
     renderEffect,
+    updateEffect,
 };
