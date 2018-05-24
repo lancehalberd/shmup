@@ -61,6 +61,7 @@ const setEvent = (state, event) => {
     return {...state, world: {...state.world, eventTime: -FRAME_LENGTH, event}};
 };
 const FIELD_DURATION = 120000;
+const FIELD_EASY_DURATION = 30000;
 
 allWorlds[WORLD_FIELD] = {
     initialEvent: 'nothing',
@@ -106,6 +107,7 @@ allWorlds[WORLD_FIELD] = {
         flies: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 4 - numFormidable;
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
             if (eventTime === 0) {
                 let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
                 for (let i = 0; i < baseNumber; i++) {
@@ -113,7 +115,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 2000
+            eventTime -= spacing;
             if (eventTime === 0) {
                 let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
                 for (let i = 0; i < baseNumber; i++) {
@@ -121,7 +123,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 2000
+            eventTime -= spacing;
             if (eventTime === 0) {
                 const mode = random.range(0, 1);
                 for (let i = 0; i < 2 * baseNumber; i++) {
@@ -130,12 +132,13 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flyingAnts', 'monks']));
             }
         },
         monks: (state, eventTime) => {
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
                 let left = WIDTH;
@@ -145,7 +148,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flyingAnts']));
             }
@@ -153,13 +156,14 @@ allWorlds[WORLD_FIELD] = {
         flyingAnts: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 2 - numFormidable;
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber - 1; i++) {
                     state = spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
                 }
                 return state;
             }
-            eventTime -= 2000
+            eventTime -= spacing
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber; i++) {
                     const enemyType = random.element([ENEMY_FLYING_ANT]);
@@ -167,7 +171,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['hornet', 'locust']));
             }
@@ -180,7 +184,8 @@ allWorlds[WORLD_FIELD] = {
                 numFormidable++;
                 return state;
             }
-            eventTime -= 4000;
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 4000 : 2000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flies', 'monks']));
             }
@@ -193,7 +198,8 @@ allWorlds[WORLD_FIELD] = {
                 numFormidable += 2;
                 return state;
             }
-            eventTime -= 2000;
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
@@ -212,8 +218,8 @@ allWorlds[WORLD_FIELD] = {
         const targetX = world.x + 1000;
         let targetY = world.y;
         if (world.time % 60000 > 45000) targetY = world.y;
-        else if (time % 60000 > 30000) targetY = 400;
-        else if (time % 60000 > 15000) targetY = world.y;
+        else if (world.time % 60000 > 30000) targetY = 400;
+        else if (world.time % 60000 > 15000) targetY = world.y;
         else targetY = -100;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};

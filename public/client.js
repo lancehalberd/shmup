@@ -784,6 +784,7 @@ var setEvent = function setEvent(state, event) {
     return _extends({}, state, { world: _extends({}, state.world, { eventTime: -FRAME_LENGTH, event: event }) });
 };
 var FIELD_DURATION = 120000;
+var FIELD_EASY_DURATION = 30000;
 
 allWorlds[WORLD_FIELD] = {
     initialEvent: 'nothing',
@@ -831,6 +832,7 @@ allWorlds[WORLD_FIELD] = {
                 return formidableEnemies.includes(enemy.type);
             }).length;
             var baseNumber = 4 - numFormidable;
+            var spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
             if (eventTime === 0) {
                 var top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
                 for (var i = 0; i < baseNumber; i++) {
@@ -838,7 +840,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 2000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 var _top3 = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
                 for (var _i = 0; _i < baseNumber; _i++) {
@@ -846,7 +848,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 2000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 var mode = random.range(0, 1);
                 for (var _i2 = 0; _i2 < 2 * baseNumber; _i2++) {
@@ -855,12 +857,13 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flyingAnts', 'monks']));
             }
         },
         monks: function monks(state, eventTime) {
+            var spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 var top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
                 var left = WIDTH;
@@ -870,7 +873,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flyingAnts']));
             }
@@ -880,13 +883,14 @@ allWorlds[WORLD_FIELD] = {
                 return formidableEnemies.includes(enemy.type);
             }).length;
             var baseNumber = 2 - numFormidable;
+            var spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 for (var i = 0; i < baseNumber - 1; i++) {
                     state = spawnEnemy(state, ENEMY_FLYING_ANT, { left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2 });
                 }
                 return state;
             }
-            eventTime -= 2000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 for (var _i3 = 0; _i3 < baseNumber; _i3++) {
                     var enemyType = random.element([ENEMY_FLYING_ANT]);
@@ -894,7 +898,7 @@ allWorlds[WORLD_FIELD] = {
                 }
                 return state;
             }
-            eventTime -= 3000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['hornet', 'locust']));
             }
@@ -909,7 +913,8 @@ allWorlds[WORLD_FIELD] = {
                 numFormidable++;
                 return state;
             }
-            eventTime -= 4000;
+            var spacing = state.world.time < FIELD_EASY_DURATION ? 4000 : 2000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['flies', 'monks']));
             }
@@ -924,7 +929,8 @@ allWorlds[WORLD_FIELD] = {
                 numFormidable += 2;
                 return state;
             }
-            eventTime -= 2000;
+            var spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
+            eventTime -= spacing;
             if (eventTime === 0) {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
@@ -942,7 +948,7 @@ allWorlds[WORLD_FIELD] = {
         var targetFrames = 50 * 5;
         var targetX = world.x + 1000;
         var targetY = world.y;
-        if (world.time % 60000 > 45000) targetY = world.y;else if (time % 60000 > 30000) targetY = 400;else if (time % 60000 > 15000) targetY = world.y;else targetY = -100;
+        if (world.time % 60000 > 45000) targetY = world.y;else if (world.time % 60000 > 30000) targetY = 400;else if (world.time % 60000 > 15000) targetY = world.y;else targetY = -100;
         var time = world.time + FRAME_LENGTH;
         world = _extends({}, world, { targetX: targetX, targetY: targetY, targetFrames: targetFrames, time: time });
         state = _extends({}, state, { world: world });
