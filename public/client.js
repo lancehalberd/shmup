@@ -4952,6 +4952,7 @@ var render = function render(state) {
         context.fillStyle = 'black';
         context.fillRect(0, 0, WIDTH, HEIGHT);
         drawImage(context, gameOverImage.image, gameOverImage, new Rectangle(gameOverImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2));
+        renderHUD(context, state);
         return;
     }
     context.save();
@@ -5000,7 +5001,6 @@ var render = function render(state) {
     renderForeground(context, state);
 
     context.restore();
-    renderHUD(context, state);
 
     if (state.deathCooldown > 0) stopTrack();
     if (state.deathCooldown > 0 && state.deathCooldown < 500) {
@@ -5010,6 +5010,8 @@ var render = function render(state) {
         context.fillRect(0, 0, WIDTH, HEIGHT);
         context.restore();
     }
+    // Render HUD on top of the screen fading to black.
+    renderHUD(context, state);
     if (state.paused) {
         stopTrack();
         context.save();
