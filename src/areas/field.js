@@ -91,7 +91,7 @@ allWorlds[WORLD_FIELD] = {
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, 'powerup');
             }
         },
@@ -100,7 +100,7 @@ allWorlds[WORLD_FIELD] = {
                 return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2});
             }
             eventTime -= 3000;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, 'flies');
             }
         },
@@ -133,7 +133,7 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flyingAnts', 'monks']));
             }
         },
@@ -149,7 +149,7 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flyingAnts']));
             }
         },
@@ -172,7 +172,7 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['hornet', 'locust']));
             }
         },
@@ -186,7 +186,7 @@ allWorlds[WORLD_FIELD] = {
             }
             let spacing = state.world.time < FIELD_EASY_DURATION ? 4000 : 2000;
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flies', 'monks']));
             }
         },
@@ -200,7 +200,7 @@ allWorlds[WORLD_FIELD] = {
             }
             let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
         },
