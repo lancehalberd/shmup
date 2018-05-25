@@ -37,12 +37,17 @@ const rectangleToFrames = (rectangle, image, numberOfFrames) => {
 const i = (width, height, source) => ({left: 0, top: 0, width, height, image: requireImage(source)});
 const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props});
 
-const createAnimation = (source, rectangle, {x = 0, y = 0, rows = 1, cols = 1, duration = 8, frameMap} = {}, props) => {
+const createAnimation = (source, rectangle, {x = 0, y = 0, rows = 1, cols = 1, top = 0, left = 0, duration = 8, frameMap} = {}, props) => {
     let frames = [];
     const image = requireImage(source);
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
-            frames[row * cols + col] = {...rectangle, left: rectangle.width * (x + col), top: rectangle.height * (y + row), image};
+            frames[row * cols + col] = {
+                ...rectangle,
+                left: left + rectangle.width * (x + col),
+                top: top + rectangle.height * (y + row),
+                image
+            };
         }
     }
     // Say an animation has 3 frames, but you want to order them 0, 1, 2, 1, then pass frameMap = [0, 1, 2, 1],
@@ -255,17 +260,6 @@ const mothPortraitAnimation = {
     frameDuration: 5
 };
 
-const ladybugRectangle = r(25, 20);
-const ladybugAnimation = {
-    frames: [
-        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug1.png')},
-        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug2.png')},
-        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug3.png')},
-        {...ladybugRectangle, image: requireImage('gfx/heroes/ladybug4.png')},
-    ],
-    frameDuration: 3,
-};
-
 const needleFlipRectangle = r(88, 56);
 const needleFlipAnimation = {
     frames: [
@@ -314,17 +308,6 @@ const stabAnimation = {
         {...stabRectangle, image: requireImage('gfx/attacks/stab4.png')},
     ],
     frameDuration: 3,
-};
-
-const ladybugAttackRectangle = r(10, 10);
-const ladybugAttackAnimation = {
-    frames: [
-        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot1.png')},
-        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot2.png')},
-        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot3.png')},
-        {...ladybugAttackRectangle, image: requireImage('gfx/attacks/lbshot4.png')},
-    ],
-    frameDuration: 2,
 };
 
 const bulletRectangle = r(14, 15);
@@ -645,15 +628,6 @@ const rateTextAnimation = {
     frameDuration,
 };
 
-
-const powerupLadybugAnimation = {
-    frames: [
-        {...r(30, 15), image: requireImage('gfx/items/ladybugicon.png')},
-    ],
-    frameDuration: 8
-};
-
-
 const getFrame = (animation, animationTime) => {
     let frameIndex = Math.floor(animationTime / (FRAME_LENGTH * (animation.frameDuration || 1)));
     if (animation.loop === false) { // You can set this to prevent an animation from looping.
@@ -722,13 +696,11 @@ module.exports = {
     mothDeathAnimation,
     mothPortraitAnimation,
     needleFlipAnimation,
-    ladybugAnimation,
     requireImage,
     blastStartAnimation,
     blastLoopAnimation,
     slashAnimation,
     stabAnimation,
-    ladybugAttackAnimation,
     bulletAnimation,
     deflectAnimation,
     damageAnimation,
@@ -747,7 +719,6 @@ module.exports = {
     rateTextAnimation,
     sizeTextAnimation,
     speedTextAnimation,
-    powerupLadybugAnimation,
     flyAnimation, flyDeathAnimation,
     hornetAnimation, hornetDeathAnimation,
     hornetSoldierAnimation, hornetSoldierDeathAnimation,

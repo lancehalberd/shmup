@@ -123,7 +123,7 @@ const advanceWorld = (state) => {
         vy = Math.max((targetVy + vy) / 2, -y);
     } else {
         vx = (targetX - x);
-        vy = (targetY - y);
+        vy = Math.max((targetY - y), -y);
     }
     world = {...world, x, y, vx, vy, transitionFrames, targetFrames};
     state = {...state, world};

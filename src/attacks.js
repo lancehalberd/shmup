@@ -2,8 +2,9 @@ const { drawImage, drawTintedImage } = require('draw');
 
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING, ATTACK_OFFSET,
-    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB, ATTACK_BULLET, ATTACK_ORB, ATTACK_DEFEATED_ENEMY,
-    ATTACK_EXPLOSION
+    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB, ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
+    ATTACK_ORB, ATTACK_LASER,
+    ATTACK_EXPLOSION,
 } = require('gameConstants');
 
 const {
@@ -11,17 +12,44 @@ const {
 } = require('sounds');
 
 const {
+    requireImage, r,
     getFrame,
     blastStartAnimation,
     blastLoopAnimation,
     slashAnimation,
     stabAnimation,
-    ladybugAttackAnimation,
     bulletAnimation,
     hugeExplosionAnimation,
 } = require('animations');
 
 const { getNewSpriteState } = require('sprites');
+
+
+const orbRectangle = r(10, 10);
+const orbAnimation = {
+    frames: [
+        {...orbRectangle, image: requireImage('gfx/attacks/lbshot1.png')},
+        {...orbRectangle, image: requireImage('gfx/attacks/lbshot2.png')},
+        {...orbRectangle, image: requireImage('gfx/attacks/lbshot3.png')},
+        {...orbRectangle, image: requireImage('gfx/attacks/lbshot4.png')},
+    ],
+    frameDuration: 2,
+};
+
+const laserRectangle = r(20, 7);
+const laserStartAnimation = {
+    frames: [
+        {...laserRectangle, image: requireImage('gfx/attacks/r1.png')},
+        {...laserRectangle, image: requireImage('gfx/attacks/r2.png')},
+    ],
+    frameDuration: 3,
+};
+const laserAnimation = {
+    frames: [
+        {...laserRectangle, image: requireImage('gfx/attacks/r3.png')},
+    ],
+    frameDuration: 3,
+};
 
 const attacks = {
     [ATTACK_BLAST]: {
@@ -53,7 +81,15 @@ const attacks = {
         animation: bulletAnimation,
     },
     [ATTACK_ORB]: {
-        animation: ladybugAttackAnimation,
+        animation: orbAnimation,
+    },
+    [ATTACK_LASER]: {
+        startAnimation: laserStartAnimation,
+        animation: laserAnimation,
+        props: {
+            damage: 2,
+            piercing: true,
+        },
     },
     [ATTACK_DEFEATED_ENEMY]: {
         // The animation will be the enemy death animation.

@@ -290,7 +290,10 @@ const forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginb
 allWorlds[WORLD_FIELD_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
-        if (world.time < 500 && ['nearground','foreground'].some(layerName => world[layerName].sprites.length)) {
+        if (world.time < 500 &&
+            (['nearground','foreground'].some(layerName => world[layerName].sprites.length) ||
+                world.y > 0)
+        ) {
             world = {
                 ...world,
                 targetFrames: 50 * 5 / 2,
@@ -509,7 +512,7 @@ const transitionToFieldBoss = (state) => {
         type: WORLD_FIELD_BOSS,
         time: 0,
         targetFrames: 50 * 5,
-        targetY: 0,
+        targetY: -100,
     };
     for (const layerName of layerNamesToClear) {
         const sprites = updatedWorld[layerName].sprites.filter(sprite => sprite.left < WIDTH);

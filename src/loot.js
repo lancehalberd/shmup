@@ -8,7 +8,8 @@ const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
     POINTS_FOR_POWERUP, MAX_ENERGY,
     HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
-    LOOT_COIN, LOOT_LIFE, LOOT_LADYBUG,
+    LOOT_COIN, LOOT_LIFE,
+    LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE,
     LOOT_COMBO, LOOT_TRIPLE_COMBO,
@@ -31,8 +32,6 @@ const {
     powerupTripleTriangleAnimation,
     powerupComboAnimation,
     powerupTripleComboAnimation,
-    powerupLadybugAnimation,
-    ladybugAnimation,
     beePortraitAnimation,
 } = require('animations');
 
@@ -145,13 +144,33 @@ const triplePowerupLoot = (type, animation) => ({
     },
 });
 
-const getNewLadyBug = (playerSprite) => {
-    return getNewSpriteState({
-        ...ladybugAnimation.frames[0],
-        left: playerSprite.left + playerSprite.width / 2 - ladybugAnimation.frames[0].width / 2,
-        top: playerSprite.top + playerSprite.height / 2 - ladybugAnimation.frames[0].height / 2,
-    });
-};
+function ladybugPowerup(animation, color) {
+    return {
+        animation,
+        accelerate: circleAcceleration,
+        collect: collectLadybug,
+        draw: drawGlowing,
+        sfx: 'sfx/powerup.mp3',
+        props: {
+            scale: 1,
+            color,
+        },
+    }
+}
+function collectLadybug(state, playerIndex, loot) {
+    const ladybugs = [
+        ...state.players[playerIndex].ladybugs,
+        getNewSpriteState({
+            ...ladybugAnimation.frames[0],
+            type: loot.type,
+            color: loot.color,
+            left: loot.left + loot.width / 2 - ladybugAnimation.frames[0].width / 2,
+            top: loot.top + loot.height / 2 - ladybugAnimation.frames[0].height / 2,
+        }),
+    ];
+    if (ladybugs.length > 3) ladybugs.shift();
+    return updatePlayer(state, playerIndex, {ladybugs});
+}
 
 const portalAnimation = createAnimation('gfx/scene/portal/portal.png', r(50, 80), {rows: 6, duration: 8}, {loopFrame: 3});
 
@@ -197,23 +216,9 @@ const lootData = {
             scale: 1,
         },
     },
-    [LOOT_LADYBUG]: {
-        animation: powerupLadybugAnimation,
-        accelerate: circleAcceleration,
-        collect(state, playerIndex, loot) {
-            const ladybugs = [
-                ...state.players[playerIndex].ladybugs,
-                getNewLadyBug(state.players[playerIndex].sprite),
-            ];
-            if (ladybugs.length > 3) ladybugs.shift();
-            return updatePlayer(state, playerIndex, {ladybugs});
-        },
-        draw: drawGlowing,
-        sfx: 'sfx/powerup.mp3',
-        props: {
-            scale: 1,
-        },
-    },
+    [LOOT_NORMAL_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugicon.png', r(30, 15)), 'red'),
+    [LOOT_LIGHTNING_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugblue.png', r(30, 15)), '#4860A0'),
+    [LOOT_PENETRATING_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugorange.png', r(30, 15)), '#FFB008'),
     [LOOT_HELMET]: {
         animation: helmetAnimation,
         accelerate: circleAcceleration,
@@ -319,11 +324,8 @@ const advanceAllLoot = (state) => {
     return state;
 };
 
-const getRandomPowerupType = () => {
-    if (Math.random() < 1 / 3) return LOOT_ATTACK_POWER;
-    if (Math.random() < 1 / 2) return LOOT_SPEED;
-    return LOOT_ATTACK_SPEED;
-};
+const powerupTypes = [LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED, LOOT_SPEED];
+const ladybugTypes = [LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG];
 
 /*
 1: If they are missing a character, it always drops an extra character. Otherwise...
@@ -337,14 +339,15 @@ const getAdaptivePowerupType = (state) => {
     //if (!state.players[0].relics[LOOT_HELMET]) return LOOT_HELMET;
     if (getComboMultiplier(state, 0) === 5) return LOOT_PORTAL;
     // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
-    if (state.players[0].powerups.length < 1) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 1) return LOOT_LADYBUG;
-    if (state.players[0].powerups.length < 3) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 2) return LOOT_LADYBUG;
-    if (state.players[0].powerups.length < 5) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 3) return LOOT_LADYBUG;
+    if (state.players[0].powerups.length < 1) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 1) return random.element(ladybugTypes);
+    if (state.players[0].powerups.length < 3) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 2) return random.element(ladybugTypes);
+    if (state.players[0].powerups.length < 5) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 3) return random.element(ladybugTypes);
     if (Math.random() < 1 / 10) return LOOT_LIFE;
-    return getRandomPowerupType();
+    if (Math.random() < 1 / 5) return random.element(ladybugTypes);
+    return random.element(powerupTypes);
 };
 
 const getComboMultiplier = (state, playerIndex) => {
@@ -397,18 +400,18 @@ module.exports = {
     advanceAllLoot,
     renderLoot,
     gainPoints,
-    getRandomPowerupType,
     getAdaptivePowerupType,
     getComboMultiplier,
     collectLoot,
     powerupGoals,
     helmetAnimation,
+    ladybugTypes,
 };
 
 // Move possible circular imports to after exports.
 const { addEnemyToState, createEnemy } = require('enemies');
 
-const { heroesData, updatePlayer, getHeroHitBox } = require('heroes');
+const { heroesData, updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
 
 const { createEffect, addEffectToState } = require('effects');
 

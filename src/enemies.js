@@ -643,7 +643,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
         }
 
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
-        if (enemy.grounded && attack.left) {
+        if (enemy.grounded && attack.type !== 'fall') {
             updatedState = updateEnemy(updatedState, enemyIndex, {vx: 6, vy: -6});
             enemy = updatedState.enemies[enemyIndex];
         }
@@ -678,7 +678,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
             }
         }
     }
-    if (attack.type && attacks[attack.type].hitSfx) {
+    if (attack.type && attacks[attack.type] && attacks[attack.type].hitSfx) {
         updatedState = {...updatedState, sfx: [...updatedState.sfx, attacks[attack.type].hitSfx]};
     }
     return updatedState;
@@ -735,7 +735,7 @@ const advanceEnemy = (state, enemyIndex) => {
     }
     // This is kind of a hack to support fall damage being applied to newly created enemies.
     if (enemy.pendingDamage) {
-        state = damageEnemy(state, enemyIndex, {playerIndex: 0, damage: enemy.pendingDamage});
+        state = damageEnemy(state, enemyIndex, {playerIndex: 0, damage: enemy.pendingDamage, type: 'fall'});
         enemy = state.enemies[enemyIndex];
     }
 
@@ -849,5 +849,5 @@ const { getGroundHeight } = require('world');
 
 const { createEffect, addEffectToState } = require('effects');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
-const { createLoot, addLootToState, getRandomPowerupType, getAdaptivePowerupType, gainPoints } = require('loot');
+const { createLoot, addLootToState, getAdaptivePowerupType, gainPoints } = require('loot');
 const { updatePlayer } = require('heroes');

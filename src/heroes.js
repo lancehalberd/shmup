@@ -6,7 +6,8 @@ const {
     SHOT_COOLDOWN, ATTACK_OFFSET,
     SPAWN_INV_TIME,
     ACCELERATION,
-    ATTACK_BLAST, ATTACK_ORB, ATTACK_SLASH, ATTACK_STAB,
+    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB,
+    ATTACK_ORB, ATTACK_LASER,
     EFFECT_EXPLOSION,
     EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE,
     EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
@@ -16,6 +17,7 @@ const {
     MAX_ENERGY,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
+    LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
 } = require('gameConstants');
 
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
@@ -24,6 +26,7 @@ const Rectangle = require('Rectangle');
 
 const {
     drawImage,
+    drawTintedImage,
 } = require('draw');
 
 const { getNewSpriteState } = require('sprites');
@@ -44,7 +47,6 @@ const {
     mothEnterAnimation,
     mothCatchAnimation,
     mothMeleeAnimation,
-    ladybugAnimation,
     getHitBox,
     getFrame,
 } = require('animations');
@@ -209,7 +211,6 @@ const getNewPlayerState = () => ({
     invulnerableFor: 0,
     spawning: true,
     shotCooldown: 0,
-    ladybugShotCooldown: 0,
     powerups: [],
     relics: {},
     ladybugs: [],
@@ -372,7 +373,7 @@ const advanceHero = (state, playerIndex) => {
             targetLeft = targetTop = false;
         }
         return updatePlayer(state, playerIndex, {
-            ladybugShotCooldown: 1, invulnerableFor, spawning: true,
+            invulnerableFor, spawning: true,
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
         }, {left, top, animationTime, targetLeft, targetTop});
     }
@@ -447,34 +448,61 @@ const advanceLadybugs = (state, playerIndex) => {
     const player = state.players[playerIndex];
     const sprite = player.sprite;
     const ladybugs = [...player.ladybugs];
-    let ladybugShotCooldown = player.ladybugShotCooldown;
-    if (ladybugShotCooldown > 0) {
-        ladybugShotCooldown--;
-    } else if (player.actions.shoot && player.ladybugs.length) {
-        ladybugShotCooldown = SHOT_COOLDOWN * 1.5;
-        for (const ladybug of ladybugs) {
-            const orb = createAttack(ATTACK_ORB, {
-                damage: 1,
-                left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
-                vx: 15,
-                playerIndex,
-            });
-            orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6
-            state = addPlayerAttackToState(state, orb);
-        }
-    }
     for (let i = 0; i < ladybugs.length; i++) {
+        const ladybug = ladybugs[i];
         const delta = [[-5, -32], [-5, 32], [52, -16], [52, 16]][i % 4];
-        const tx = sprite.left + sprite.width / 2 - ladybugAnimation.frames[0].width / 2 + delta[0];
-        const ty = sprite.top + sprite.height / 2 - ladybugAnimation.frames[0].height / 2 + delta[1];
+        let factor = 1;
+        if (ladybug.type === LOOT_LIGHTNING_LADYBUG) factor = 2;
+        const tx = sprite.left + sprite.width / 2 - ladybug.width / 2 + factor * delta[0];
+        const ty = sprite.top + sprite.height / 2 - ladybug.height / 2 + factor * delta[1];
+        let shotCooldown = ladybug.shotCooldown || 0;
+        if (shotCooldown > 0) {
+            shotCooldown--;
+        } else if (player.actions.shoot && !player.spawning) {
+            if (ladybug.type === LOOT_PENETRATING_LADYBUG) {
+                shotCooldown = 2 * SHOT_COOLDOWN;
+                const laser = createAttack(ATTACK_LASER, {
+                    left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
+                    vx: 25,
+                    playerIndex,
+                });
+                laser.width *= 2;
+                laser.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - laser.height) / 2) + 6
+                state = addPlayerAttackToState(state, laser);
+            } else if (ladybug.type === LOOT_LIGHTNING_LADYBUG) {
+                shotCooldown = 0.5 * SHOT_COOLDOWN;
+                state = checkToAddLightning(state,
+                    {
+                        type: EFFECT_FAST_LIGHTNING,
+                        charges: 0, damage: 1,
+                        left: ladybug.left + ladybug.width / 2 + player.sprite.vx,
+                        top: ladybug.top + ladybug.height / 2 + player.sprite.vy,
+                        rotation: Math.random() * 2 * Math.PI,
+                        scale: 1,
+                        vx: player.sprite.vx,
+                        vy: player.sprite.vy,
+                    });
+            } else {
+                shotCooldown = 1.5 * SHOT_COOLDOWN;
+                const orb = createAttack(ATTACK_ORB, {
+                    damage: 1,
+                    left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
+                    vx: 15,
+                    playerIndex,
+                });
+                orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6
+                state = addPlayerAttackToState(state, orb);
+            }
+        }
         ladybugs[i] = {
             ...ladybugs[i],
+            shotCooldown,
             left: (ladybugs[i].left + tx) / 2,
             top: (ladybugs[i].top + ty) / 2,
             animationTime: ladybugs[i].animationTime + FRAME_LENGTH,
         };
     }
-    return updatePlayer(state, playerIndex, {ladybugShotCooldown, ladybugs});
+    return updatePlayer(state, playerIndex, {ladybugs});
 };
 
 const switchHeroes = (updatedState, playerIndex) => {
@@ -641,8 +669,12 @@ const renderHero = (context, player) => {
     }
 };
 
+const ladybugAnimation = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 20, cols: 4, duration: 4});
+const ladybugAnimationTint = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 0, cols: 4, duration: 4});
 const renderLadybug = (context, ladybug) => {
-    const frame = getFrame(ladybugAnimation, ladybug.animationTime);
+    let frame = getFrame(ladybugAnimationTint, ladybug.animationTime);
+    drawTintedImage(context, frame.image, ladybug.color, 1, frame, ladybug);
+    frame = getFrame(ladybugAnimation, ladybug.animationTime);
     drawImage(context, frame.image, frame, ladybug);
 };
 
@@ -655,6 +687,7 @@ module.exports = {
     heroesData,
     updatePlayer,
     isPlayerInvulnerable,
+    ladybugAnimation,
 };
 
 
@@ -663,27 +696,29 @@ const { getGroundHeight } = require('world');
 const { createAttack, addPlayerAttackToState } = require('attacks');
 const { effects, createEffect, addEffectToState } = require('effects');
 
+const lightningFrames = [
+    {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
+    {...r(50, 10), image: requireImage('gfx/attacks/chain2.png')},
+    {...r(50, 10), image: requireImage('gfx/attacks/chain3.png')},
+    {...r(50, 10), image: requireImage('gfx/attacks/chain4.png')},
+];
+function advanceLightning(state, effectIndex) {
+    const effect = state.effects[effectIndex];
+    if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
+        const center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
+        const left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
+        const top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
+        state = checkToAddLightning(state, {...effect, left, top});
+    }
+    return state;
+}
 const EFFECT_LIGHTNING = 'lightning';
 effects[EFFECT_LIGHTNING] = {
     animation: {
-        frames: [
-            {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
-            {...r(50, 10), image: requireImage('gfx/attacks/chain2.png')},
-            {...r(50, 10), image: requireImage('gfx/attacks/chain3.png')},
-            {...r(50, 10), image: requireImage('gfx/attacks/chain4.png')},
-        ],
+        frames: lightningFrames,
         frameDuration: 4,
     },
-    advanceEffect: (state, effectIndex) => {
-        const effect = state.effects[effectIndex];
-        if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
-            const center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
-            const left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
-            const top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
-            state = checkToAddLightning(state, {...effect, left, top});
-        }
-        return state;
-    },
+    advanceEffect: advanceLightning,
     props: {
         loops: 1,
         damage: 5,
@@ -693,18 +728,34 @@ effects[EFFECT_LIGHTNING] = {
         sfx: 'sfx/fastlightning.mp3',
     },
 };
+const EFFECT_FAST_LIGHTNING = 'fastLightning';
+effects[EFFECT_FAST_LIGHTNING] = {
+    animation: {
+        frames: lightningFrames,
+        frameDuration: 1,
+    },
+    advanceEffect: advanceLightning,
+    props: {
+        loops: 1,
+        damage: 1,
+        charges: 0,
+        branchChance: 0,
+        rotation: 0,
+    },
+};
 
-const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchChance = 0, rotation = 0}) => {
+const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchChance = 0, rotation = 0, scale = 2, vx = 0, vy = 0, type = EFFECT_LIGHTNING}) => {
     const addLightning = (rotation, branchChance) => {
-        const lightning = createEffect(EFFECT_LIGHTNING, {
+        const lightning = createEffect(type, {
             left, top,
             charges: charges - 1,
             rotation,
             branchChance,
-            xScale: 2, yScale: 2,
+            xScale: scale, yScale: scale,
+            vx, vy,
         });
-        lightning.width *= 2;
-        lightning.height *= 2;
+        lightning.width *= scale;
+        lightning.height *= scale;
         lightning.left -= lightning.width / 2;
         lightning.left += Math.cos(rotation) * lightning.width / 2;
         lightning.top -= lightning.height / 2;
@@ -714,12 +765,17 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     const targetRotations = [];
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.enemies[i];
-        if (enemy.done || enemy.dead || enemy.left + enemy.width / 2 <= left) continue;
-        const dx = enemy.left + enemy.width / 2 - left,
-            dy = enemy.top + enemy.height / 2 - top;
-        if (Math.sqrt(dx * dx + dy * dy) < 200) {
+        if (enemy.done || enemy.dead) continue;
+        // The large lightning attack can only hit enemies in front of each bolt.
+        if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
+        const hitBox = getEnemyHitBox(enemy);
+        const dx = hitBox.left + hitBox.width / 2 - left,
+            dy = hitBox.top + hitBox.height / 2 - top;
+        const radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;
+        if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
             targetRotations.push(Math.atan2(dy, dx));
             state = damageEnemy(state, i, {playerIndex: 0, damage});
+            state = {...state, sfx: [...state.sfx, 'sfx/hit.mp3']};
         }
     }
     if (targetRotations.length) {

@@ -1,3 +1,5 @@
+const random = require('random');
+
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     LOOT_COIN, LOOT_HELMET, LOOT_COMBO,
@@ -103,7 +105,7 @@ const advanceStarWorld = (state) => {
     }
     time -= 3000;
     if (!time) {
-        const type = (multiplier >= 3) ? LOOT_COMBO : LOOT_LADY_BUG;
+        const type = (multiplier >= 3) ? LOOT_COMBO : random.element(ladybugTypes);
         const loot = createLoot(type, {left: WIDTH, top: GAME_HEIGHT / 2, scale: 2});
         loot.top -= loot.height / 2;
         state = addLootToState(state, loot);
@@ -179,6 +181,6 @@ const { clearSprites } = require('world');
 
 const { getFieldWorld } = require('areas/field');
 
-const {createLoot, addLootToState, getComboMultiplier} = require('loot');
+const {createLoot, addLootToState, getComboMultiplier, ladybugTypes} = require('loot');
 
 const { updatePlayer } = require('heroes');

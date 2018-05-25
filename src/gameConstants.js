@@ -2,6 +2,8 @@
 module.exports = {
     TEST_ITEMS: false,
     TEST_ENEMY: false,
+    /*TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
+    TEST_ENEMY: 'cargoBeetle',*/
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
@@ -23,7 +25,8 @@ module.exports = {
     ENEMY_LOCUST: 'locust',
     ENEMY_LOCUST_SOLDIER: 'locustSoldier',
 
-    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet', ATTACK_ORB: 'orb',
+    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet',
+    ATTACK_LASER: 'laser', ATTACK_ORB: 'orb',
     ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 
     EFFECT_DAMAGE: 'damage', EFFECT_EXPLOSION: 'explosion', EFFECT_DUST: 'dust',
@@ -35,7 +38,9 @@ module.exports = {
     EFFECT_DEFLECT_BULLET: 'deflect',
     LOOT_COIN: 'coin',
     LOOT_LIFE: 'life',
-    LOOT_LADYBUG: 'ladybug',
+    LOOT_NORMAL_LADYBUG: 'normalLadybug',
+    LOOT_LIGHTNING_LADYBUG: 'lightningLadybug',
+    LOOT_PENETRATING_LADYBUG: 'penetratingLadybug',
     LOOT_SPEED: 'speed',
     LOOT_ATTACK_POWER: 'power',
     LOOT_ATTACK_SPEED: 'attackSpeed',

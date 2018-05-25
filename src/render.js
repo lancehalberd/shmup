@@ -28,11 +28,6 @@ const { isKeyDown, KEY_SHIFT, KEY_R } = require('keyboard');
 const {
     requireImage,
     r, createAnimation,
-    blastStartAnimation,
-    blastLoopAnimation,
-    ladybugAttackAnimation,
-    bulletAnimation,
-    explosionAnimation,
     selectNeedleImage,
     startGameImage,
     optionsImage,
