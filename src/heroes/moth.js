@@ -78,21 +78,21 @@ heroesData[HERO_MOTH] = {
         const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
         const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
         const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
-        const scale = 1.5 + powers / 2 + triplePowers / 4;
+        const scale = 1.5 + triplePowers / 2;
         // This maxes out at 13 bullets.
-        const numBullets = 3 + 3 * triplePowers;
+        const numBullets = 3 + 2 * powers;
         // This is between ~PI/4 and PI/2
         const minAngle = - Math.PI / 6 - numBullets * Math.PI / 96;
         const angleBetween = 2 * -minAngle / 3;
         for (let i = 0; i < numBullets; i++) {
             const theta = minAngle + angleBetween * ((i % 3) + Math.random());
-            const vx = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.cos(theta);
-            const vy = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.sin(theta);
+            const vx = (3 * tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.cos(theta);
+            const vy = (3 * tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.sin(theta);
             let type = ATTACK_SPRAY_RIGHT
             if (theta > Math.PI / 12) type = ATTACK_SPRAY_DOWN;
             else if (theta < -Math.PI / 12) type = ATTACK_SPRAY_UP;
             const blast = createAttack(type, {
-                damage: 1,
+                damage: 1 + triplePowers,
                 left: player.sprite.left + player.sprite.vx + player.sprite.width,
                 xOffset: ATTACK_OFFSET,
                 yOffset: 0,
