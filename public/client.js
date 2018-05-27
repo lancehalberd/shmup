@@ -3373,10 +3373,9 @@ var _require10 = require('heroes'),
 module.exports = {
     TEST_ITEMS: false,
     TEST_ENEMY: false,
-    /*TEST_ITEMS: ['tripleCombo', 'combo'],
-    TEST_ENEMY: 'cargoBeetle',*/
-    /*TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
-    TEST_ENEMY: 'cargoBeetle',*/
+    //TEST_ITEMS: ['tripleCombo', 'combo'],
+    //TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
+    //TEST_ENEMY: 'cargoBeetle',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
@@ -4405,20 +4404,20 @@ heroesData[HERO_MOTH] = {
         var tripleRates = player.powerups.filter(function (powerup) {
             return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
         }).length;
-        var scale = 1.5 + powers / 2 + triplePowers / 4;
+        var scale = 1.5 + triplePowers / 2;
         // This maxes out at 13 bullets.
-        var numBullets = 3 + 3 * triplePowers;
+        var numBullets = 3 + 2 * powers;
         // This is between ~PI/4 and PI/2
         var minAngle = -Math.PI / 6 - numBullets * Math.PI / 96;
         var angleBetween = 2 * -minAngle / 3;
         for (var i = 0; i < numBullets; i++) {
             var theta = minAngle + angleBetween * (i % 3 + Math.random());
-            var vx = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.cos(theta);
-            var vy = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.sin(theta);
+            var vx = (3 * tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.cos(theta);
+            var vy = (3 * tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.sin(theta);
             var type = ATTACK_SPRAY_RIGHT;
             if (theta > Math.PI / 12) type = ATTACK_SPRAY_DOWN;else if (theta < -Math.PI / 12) type = ATTACK_SPRAY_UP;
             var blast = createAttack(type, {
-                damage: 1,
+                damage: 1 + triplePowers,
                 left: player.sprite.left + player.sprite.vx + player.sprite.width,
                 xOffset: ATTACK_OFFSET,
                 yOffset: 0,
