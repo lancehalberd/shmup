@@ -3751,7 +3751,7 @@ var advanceLadybugs = function advanceLadybugs(state, playerIndex) {
                     vx: 25,
                     playerIndex: playerIndex
                 });
-                laser.width *= 2;
+                laser.width *= 3;
                 laser.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - laser.height) / 2) + 6;
                 state = addPlayerAttackToState(state, laser);
             } else if (ladybug.type === LOOT_LIGHTNING_LADYBUG) {
@@ -4351,7 +4351,7 @@ var _require3 = require('heroes'),
     heroesData = _require3.heroesData,
     updatePlayer = _require3.updatePlayer;
 
-var mothHitBox = { left: 10, top: 10, width: 65, height: 42 };
+var mothHitBox = { left: 27, top: 10, width: 48, height: 40 };
 var mothRectangle = r(88, 56, { hitBox: mothHitBox });
 var mothAnimation = {
     frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth4.png') })],

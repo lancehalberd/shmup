@@ -12,7 +12,7 @@ const {
 } = require('animations');
 const { heroesData, updatePlayer } = require('heroes');
 
-const mothHitBox = {left: 10, top: 10, width: 65, height: 42};
+const mothHitBox = {left: 27, top: 10, width: 48, height: 40};
 const mothRectangle = r(88, 56, {hitBox: mothHitBox});
 const mothAnimation = {
     frames: [

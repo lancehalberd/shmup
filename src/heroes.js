@@ -266,7 +266,7 @@ const advanceLadybugs = (state, playerIndex) => {
                     vx: 25,
                     playerIndex,
                 });
-                laser.width *= 2;
+                laser.width *= 3;
                 laser.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - laser.height) / 2) + 6
                 state = addPlayerAttackToState(state, laser);
             } else if (ladybug.type === LOOT_LIGHTNING_LADYBUG) {
