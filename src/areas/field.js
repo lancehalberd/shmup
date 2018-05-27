@@ -1,17 +1,14 @@
 
 const {
-    TEST_ENEMY, FRAME_LENGTH, GAME_HEIGHT, WIDTH, HUD_HEIGHT,
-    ENEMY_COOLDOWN,
+    TEST_ENEMY, FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ENEMY_FLY, ENEMY_MONK,
     ENEMY_HORNET, ENEMY_HORNET_SOLDIER,
-    ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
+    ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
     ATTACK_BULLET,
 } = require('gameConstants');
-const Rectangle = require('Rectangle');
 const random = require('random');
-const { drawImage, drawTintedImage, embossText } = require('draw');
 const { requireImage, createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds } = require('world');
@@ -37,7 +34,7 @@ const berriesAnimation = createAnimation('gfx/scene/plainsfg3.png', r(200, 100))
 const wheatAnimation = createAnimation('gfx/scene/plainsmg1.png', r(200, 100));
 const thickGrass = createAnimation('gfx/scene/plainsmg.png', r(300, 300));
 const darkGrass = createAnimation('gfx/scene/plainsmg2.png', r(300, 300));
-const lightGrass = createAnimation('gfx/scene/plainsmg3.png', r(300, 300));
+// const lightGrass = createAnimation('gfx/scene/plainsmg3.png', r(300, 300));
 
 
 const WORLD_FIELD = 'field';
@@ -140,7 +137,6 @@ allWorlds[WORLD_FIELD] = {
         monks: (state, eventTime) => {
             let spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
                 let left = WIDTH;
                 for (let i = 0; i < random.range(1, 2); i++) {
                     state = spawnEnemy(state, ENEMY_MONK, {left, top : GAME_HEIGHT});
@@ -204,7 +200,7 @@ allWorlds[WORLD_FIELD] = {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
         },
-        bossPrep: (state, eventTime) => {
+        bossPrep: (state) => {
             if (state.enemies.length === 0) {
                 return transitionToFieldBoss(state);
             }
@@ -347,7 +343,6 @@ allWorlds[WORLD_FIELD_BOSS] = {
             newEnemy.left -= newEnemy.width / 2;
             newEnemy.top -= newEnemy.height / 2;
             state = addEnemyToState(state, newEnemy);
-            world = {...world, spawnedLargeTurret: time};
             const smallTurrets = [
                 [-125, 110], [-35, 130], [-130, 160],
                 [-40, 200], [-125, 240], [-35, 245],
@@ -363,9 +358,6 @@ allWorlds[WORLD_FIELD_BOSS] = {
             }
         }
         const turrets = state.enemies.filter(enemy => enemy.type === ENEMY_SMALL_TURRET);
-        if (time > 2500 && !world.spawnedLargeTurret && turrets.length <= 2) {
-            const treeSprite = world.nearground.sprites[0];
-        }
         if (time > 2500) {
             if (state.enemies.filter(enemy => enemy.type === ENEMY_LARGE_TURRET).length === 0) {
                 return enterStarWorldEnd(state);

@@ -1,6 +1,4 @@
 const {
-    WIDTH,
-    HEIGHT,
     FRAME_LENGTH,
 } = require('gameConstants');
 
@@ -17,8 +15,6 @@ const { isKeyDown,
     KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE,
     KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V,
 } = require('keyboard');
-
-const now = () => Date.now();
 
 // Currently we only support a single player.
 const playerIndex = 0;
@@ -69,6 +65,6 @@ const renderLoop = () => {
         console.log(e);
         debugger;
     }
-}
+};
 renderLoop();
 

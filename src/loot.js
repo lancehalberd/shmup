@@ -5,8 +5,8 @@ const Rectangle = require('Rectangle');
 
 const {
     TEST_ITEMS,
-    FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
-    POINTS_FOR_POWERUP, MAX_ENERGY,
+    FRAME_LENGTH, WIDTH, GAME_HEIGHT,
+    MAX_ENERGY,
     HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
     LOOT_COIN, LOOT_LIFE,
     LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
@@ -32,19 +32,14 @@ const {
     powerupTripleTriangleAnimation,
     powerupComboAnimation,
     powerupTripleComboAnimation,
-    beePortraitAnimation,
 } = require('animations');
-
-const {
-    playSound
-} = require('sounds');
 
 const { getNewSpriteState, getTargetVector } = require('sprites');
 
 const helmetAnimation = createAnimation('gfx/items/helmet.png', r(17, 18));
 
 const circleAcceleration = (state, lootIndex) => {
-    let {vx, vy, seed, animationTime, radius} = state.loot[lootIndex];
+    let {vx, vy, animationTime, radius} = state.loot[lootIndex];
     const theta = animationTime / 300;
     radius = radius || 2;
     vx = radius * Math.cos(theta);
@@ -124,7 +119,7 @@ const powerupLoot = (type, animation, effectType) => ({
         }
     },
     // draw: drawGlowing,
-    sfx: 'sfx/powerup.mp3',
+    collectSfx: 'sfx/powerup.mp3',
     props: {
         scale: 1,
     },
@@ -133,12 +128,12 @@ const powerupLoot = (type, animation, effectType) => ({
 const triplePowerupLoot = (type, animation) => ({
     animation,
     // accelerate: circleAcceleration,
-    collect(state, playerIndex, loot) {
+    collect(state, playerIndex) {
         let powerups = [...state.players[playerIndex].powerups, type];
         if (powerups.length > 5) powerups.shift();
         return updatePlayer(state, playerIndex, {powerups});
     },
-    sfx: 'sfx/powerup.mp3',
+    collectSfx: 'sfx/powerup.mp3',
     props: {
         scale: 1,
     },
@@ -150,7 +145,7 @@ function ladybugPowerup(animation, color) {
         accelerate: circleAcceleration,
         collect: collectLadybug,
         draw: drawGlowing,
-        sfx: 'sfx/powerup.mp3',
+        collectSfx: 'sfx/powerup.mp3',
         props: {
             scale: 1,
             color,
@@ -191,7 +186,7 @@ const lootData = {
             state = updatePlayer(state, playerIndex, { comboScore });
             return gainPoints(state, playerIndex, loot.points);
         },
-        sfx: 'sfx/coin.mp3',
+        collectSfx: 'sfx/coin.mp3',
         props: {
             scale: 2,
             comboPoints: 20,
@@ -201,7 +196,7 @@ const lootData = {
     [LOOT_LIFE]: {
         animation: createAnimation('gfx/items/goldenheart.png', r(17, 18)),
         accelerate: circleAcceleration,
-        collect(state, playerIndex, loot) {
+        collect(state, playerIndex) {
             const player = state.players[playerIndex];
             // Set all heroes to max energy. This revives them if they were defeated.
             return updatePlayer(state, playerIndex, {
@@ -211,7 +206,7 @@ const lootData = {
             });
         },
         draw: drawGlowing,
-        sfx: 'sfx/heal.mp3',
+        collectSfx: 'sfx/heal.mp3',
         props: {
             scale: 1,
         },
@@ -229,7 +224,7 @@ const lootData = {
             return updatePlayer(state, playerIndex, props);
         },
         draw: drawGlowing,
-        sfx: 'sfx/powerup.mp3',
+        collectSfx: 'sfx/powerup.mp3',
         props: {
             scale: 2,
         },
@@ -247,17 +242,17 @@ const lootData = {
         accelerate: (state, lootIndex) => {
             // play the portal sfx periodically while it is on the screen.
             if (state.loot[lootIndex].animationTime % 2000 === 0) {
-                return {...state, sfx: [...state.sfx, 'sfx/portal.mp3+0+5']};
+                return {...state, sfx: {...state.sfx, 'sfx/portal.mp3+0+5': true}};
             }
             return state;
         },
-        collect(state, playerIndex, loot) {
+        collect(state) {
             return enterStarWorld(state);
         },
-        spawnSfx: 'sfx/portal.mp3',
-        sfx: 'sfx/portaltravel.mp3',
+        collectSfx: 'sfx/portaltravel.mp3',
         props: {
             scale: 1,
+            sfx: 'sfx/portal.mp3',
         },
     },
 };
@@ -273,19 +268,14 @@ const createLoot = (type, props) => {
 };
 
 const addLootToState = (state, loot) => {
-    if (lootData[loot.type].spawnSfx) {
-        return {...state, newLoot: [...state.newLoot, loot], sfx: [...state.sfx, lootData[loot.type].spawnSfx]};
-    }
-    return {...state, newLoot: [...state.newLoot, loot]};
+    let sfx = state.sfx;
+    if (loot.sfx) sfx = {...sfx, [loot.sfx]: true};
+    return {...state, newLoot: [...state.newLoot, loot], sfx};
 };
 
-const renderLoot = (context, loot) => {
+const renderLoot = (context, state, loot) => {
     if (lootData[loot.type].draw) lootData[loot.type].draw(context, state, loot);
     else drawNormal(context, state, loot);
-    if (loot.sfx) {
-        playSound(loot.sfx);
-        loot.sfx = false;
-    }
 };
 
 const updateLoot = (state, lootIndex, props) => {
@@ -295,7 +285,7 @@ const updateLoot = (state, lootIndex, props) => {
 };
 
 const advanceLoot = (state, lootIndex) => {
-    let { left, top, width, height, vx, vy, delay, duration, animationTime, type } = state.loot[lootIndex];
+    let { left, top, width, vx, vy, animationTime, type } = state.loot[lootIndex];
     let data = lootData[type];
     left += vx - state.world.vx;
     top += vy + state.world.vy;
@@ -387,8 +377,8 @@ const collectLoot = (state, playerIndex, lootIndex) => {
     state = lootInfo.collect(state, playerIndex, loot);
     state = {...state, loot: [...state.loot]};
     state.loot[lootIndex] = {...loot, done: true};
-    if (lootInfo.sfx) {
-        state = {...state, sfx: [...state.sfx, lootData[loot.type].sfx]};
+    if (lootInfo.collectSfx) {
+        state = {...state, sfx: {...state.sfx, [lootInfo.collectSfx]: true}};
     }
     return state;
 };
@@ -411,7 +401,7 @@ module.exports = {
 // Move possible circular imports to after exports.
 const { addEnemyToState, createEnemy } = require('enemies');
 
-const { heroesData, updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
+const { updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
 
 const { createEffect, addEffectToState } = require('effects');
 

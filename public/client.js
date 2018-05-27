@@ -159,12 +159,9 @@ module.exports = Rectangle;
 },{}],2:[function(require,module,exports){
 'use strict';
 
-var _module$exports;
-
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* globals Image */
 var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH;
 
@@ -215,15 +212,6 @@ try {
     }
 }
 
-var rectangleToFrames = function rectangleToFrames(rectangle, image, numberOfFrames) {
-    var frames = [];
-    for (var _i = 0; _i < numberOfFrames; _i++) {
-        frames[_i] = rectangle.moveTo(_i * rectangle.width, 0);
-        frames[_i].image = image;
-    }
-    return frames;
-};
-
 var i = function i(width, height, source) {
     return { left: 0, top: 0, width: width, height: height, image: requireImage(source) };
 };
@@ -241,6 +229,10 @@ var createAnimation = function createAnimation(source, rectangle) {
         rows = _ref$rows === undefined ? 1 : _ref$rows,
         _ref$cols = _ref.cols,
         cols = _ref$cols === undefined ? 1 : _ref$cols,
+        _ref$top = _ref.top,
+        top = _ref$top === undefined ? 0 : _ref$top,
+        _ref$left = _ref.left,
+        left = _ref$left === undefined ? 0 : _ref$left,
         _ref$duration = _ref.duration,
         duration = _ref$duration === undefined ? 8 : _ref$duration,
         frameMap = _ref.frameMap;
@@ -251,7 +243,11 @@ var createAnimation = function createAnimation(source, rectangle) {
     var image = requireImage(source);
     for (var row = 0; row < rows; row++) {
         for (var col = 0; col < cols; col++) {
-            frames[row * cols + col] = _extends({}, rectangle, { left: rectangle.width * (x + col), top: rectangle.height * (y + row), image: image });
+            frames[row * cols + col] = _extends({}, rectangle, {
+                left: left + rectangle.width * (x + col),
+                top: top + rectangle.height * (y + row),
+                image: image
+            });
         }
     }
     // Say an animation has 3 frames, but you want to order them 0, 1, 2, 1, then pass frameMap = [0, 1, 2, 1],
@@ -268,8 +264,8 @@ var createFrames = function createFrames(rect, count, source) {
 
     var frames = [];
     var image = requireImage(source);
-    for (var _i2 = 0; _i2 < count; _i2++) {
-        frames[_i2] = _extends({}, rect, { left: rect.width * (offset + _i2), image: image });
+    for (var _i = 0; _i < count; _i++) {
+        frames[_i] = _extends({}, rect, { left: rect.width * (offset + _i), image: image });
     }
     return frames;
 };
@@ -279,116 +275,13 @@ var createVerticalFrames = function createVerticalFrames(rect, count, source) {
 
     var frames = [];
     var image = requireImage(source);
-    for (var _i3 = 0; _i3 < count; _i3++) {
-        frames[_i3] = _extends({}, rect, { top: rect.height * (offset + _i3), image: image });
+    for (var _i2 = 0; _i2 < count; _i2++) {
+        frames[_i2] = _extends({}, rect, { top: rect.height * (offset + _i2), image: image });
     }
     return frames;
 };
 
 var allAnimations = {};
-
-var beeHitBox = { left: 10, top: 12, width: 60, height: 40 };
-var beeRectangle = r(88, 56, { hitBox: beeHitBox });
-var beeAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee4.png') })],
-    frameDuration: 3
-};
-var beeEnterAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeflyin1.png') })],
-    frameDuration: 3
-};
-var beeCatchAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeflyin2.png') })],
-    frameDuration: 3
-};
-var beeSwitchAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch4.png') })],
-    frameDuration: 6
-};
-var beeMeleeAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem4.png') })],
-    frameDuration: 3
-};
-var beeDeathAnimation = {
-    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie4.png') })],
-    frameDuration: 6
-};
-var beePortraitAnimation = {
-    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/bee/beeportrait.png') })],
-    frameDuration: 5
-};
-
-var dragonflyHitBox = { left: 10, top: 15, width: 70, height: 30 };
-var dragonflyRectangle = r(88, 56, { hitBox: dragonflyHitBox });
-var dragonflyAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly4.png') })],
-    frameDuration: 3
-};
-var dragonflyEnterAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyflyin1.png') })],
-    frameDuration: 3
-};
-var dragonflyCatchAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyflyin2.png') })],
-    frameDuration: 3
-};
-var dragonflySwitchAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png') })],
-    frameDuration: 6
-};
-var dragonflyMeleeAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym4.png') })],
-    frameDuration: 3
-};
-var dragonflyDeathAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png') })],
-    frameDuration: 6
-};
-var dragonflyIdleAnimation = {
-    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyidle.png') })],
-    frameDuration: 6
-};
-var dragonflyPortraitAnimation = {
-    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/dragonfly/dragonflyportrait.png') })],
-    frameDuration: 5
-};
-
-var mothHitBox = { left: 10, top: 10, width: 65, height: 42 };
-var mothRectangle = r(88, 56, { hitBox: mothHitBox });
-var mothAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth4.png') })],
-    frameDuration: 3
-};
-var mothEnterAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothflyin1.png') })],
-    frameDuration: 3
-};
-var mothCatchAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothflyin2.png') })],
-    frameDuration: 3
-};
-var mothSwitchAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch4.png') })],
-    frameDuration: 6
-};
-var mothMeleeAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm4.png') })],
-    frameDuration: 3
-};
-var mothDeathAnimation = {
-    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie4.png') })],
-    frameDuration: 6
-};
-var mothPortraitAnimation = {
-    frames: [_extends({}, r(17, 18), { image: requireImage('gfx/heroes/moth/mothportrait.png') })],
-    frameDuration: 5
-};
-
-var ladybugRectangle = r(25, 20);
-var ladybugAnimation = {
-    frames: [_extends({}, ladybugRectangle, { image: requireImage('gfx/heroes/ladybug1.png') }), _extends({}, ladybugRectangle, { image: requireImage('gfx/heroes/ladybug2.png') }), _extends({}, ladybugRectangle, { image: requireImage('gfx/heroes/ladybug3.png') }), _extends({}, ladybugRectangle, { image: requireImage('gfx/heroes/ladybug4.png') })],
-    frameDuration: 3
-};
 
 var needleFlipRectangle = r(88, 56);
 var needleFlipAnimation = {
@@ -416,12 +309,6 @@ var stabRectangle = r(45, 45);
 var stabAnimation = {
     frames: [_extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab1.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab2.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab3.png') }), _extends({}, stabRectangle, { image: requireImage('gfx/attacks/stab4.png') })],
     frameDuration: 3
-};
-
-var ladybugAttackRectangle = r(10, 10);
-var ladybugAttackAnimation = {
-    frames: [_extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot1.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot2.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot3.png') }), _extends({}, ladybugAttackRectangle, { image: requireImage('gfx/attacks/lbshot4.png') })],
-    frameDuration: 2
 };
 
 var bulletRectangle = r(14, 15);
@@ -613,11 +500,6 @@ var rateTextAnimation = {
     frameDuration: frameDuration
 };
 
-var powerupLadybugAnimation = {
-    frames: [_extends({}, r(30, 15), { image: requireImage('gfx/items/ladybugicon.png') })],
-    frameDuration: 8
-};
-
 var getFrame = function getFrame(animation, animationTime) {
     var frameIndex = Math.floor(animationTime / (FRAME_LENGTH * (animation.frameDuration || 1)));
     if (animation.loop === false) {
@@ -652,7 +534,7 @@ var gameOverImage = r(82, 30, { image: requireImage('gfx/gameover.png') });
 
 var startImage = r(58, 30, { image: requireImage('gfx/start.png') });
 
-module.exports = (_module$exports = {
+module.exports = {
     requireImage: requireImage,
     r: r, i: i,
     allAnimations: allAnimations,
@@ -666,33 +548,47 @@ module.exports = (_module$exports = {
     plainsBackground: plainsBackground,
     plainsMidground: plainsMidground,
     plainsNearground: plainsNearground,
-    beeAnimation: beeAnimation,
-    beeEnterAnimation: beeEnterAnimation,
-    beeCatchAnimation: beeCatchAnimation,
-    beeSwitchAnimation: beeSwitchAnimation,
-    beeMeleeAnimation: beeMeleeAnimation,
-    beeDeathAnimation: beeDeathAnimation,
-    beePortraitAnimation: beePortraitAnimation,
-    dragonflyAnimation: dragonflyAnimation,
-    dragonflyEnterAnimation: dragonflyEnterAnimation,
-    dragonflyCatchAnimation: dragonflyCatchAnimation,
-    dragonflySwitchAnimation: dragonflySwitchAnimation,
-    dragonflyMeleeAnimation: dragonflyMeleeAnimation,
-    dragonflyIdleAnimation: dragonflyIdleAnimation,
-    dragonflyDeathAnimation: dragonflyDeathAnimation,
-    dragonflyPortraitAnimation: dragonflyPortraitAnimation,
-    mothAnimation: mothAnimation,
-    mothEnterAnimation: mothEnterAnimation,
-    mothCatchAnimation: mothCatchAnimation,
-    mothSwitchAnimation: mothSwitchAnimation,
-    mothMeleeAnimation: mothMeleeAnimation,
-    mothDeathAnimation: mothDeathAnimation,
-    mothPortraitAnimation: mothPortraitAnimation,
     needleFlipAnimation: needleFlipAnimation,
-    ladybugAnimation: ladybugAnimation
-}, _defineProperty(_module$exports, 'requireImage', requireImage), _defineProperty(_module$exports, 'blastStartAnimation', blastStartAnimation), _defineProperty(_module$exports, 'blastLoopAnimation', blastLoopAnimation), _defineProperty(_module$exports, 'slashAnimation', slashAnimation), _defineProperty(_module$exports, 'stabAnimation', stabAnimation), _defineProperty(_module$exports, 'ladybugAttackAnimation', ladybugAttackAnimation), _defineProperty(_module$exports, 'bulletAnimation', bulletAnimation), _defineProperty(_module$exports, 'deflectAnimation', deflectAnimation), _defineProperty(_module$exports, 'damageAnimation', damageAnimation), _defineProperty(_module$exports, 'explosionAnimation', explosionAnimation), _defineProperty(_module$exports, 'hugeExplosionAnimation', hugeExplosionAnimation), _defineProperty(_module$exports, 'dustAnimation', dustAnimation), _defineProperty(_module$exports, 'coinAnimation', coinAnimation), _defineProperty(_module$exports, 'powerupDiamondAnimation', powerupDiamondAnimation), _defineProperty(_module$exports, 'powerupTriangleAnimation', powerupTriangleAnimation), _defineProperty(_module$exports, 'powerupSquareAnimation', powerupSquareAnimation), _defineProperty(_module$exports, 'powerupTripleDiamondAnimation', powerupTripleDiamondAnimation), _defineProperty(_module$exports, 'powerupTripleSquareAnimation', powerupTripleSquareAnimation), _defineProperty(_module$exports, 'powerupTripleTriangleAnimation', powerupTripleTriangleAnimation), _defineProperty(_module$exports, 'powerupComboAnimation', powerupComboAnimation), _defineProperty(_module$exports, 'powerupTripleComboAnimation', powerupTripleComboAnimation), _defineProperty(_module$exports, 'rateTextAnimation', rateTextAnimation), _defineProperty(_module$exports, 'sizeTextAnimation', sizeTextAnimation), _defineProperty(_module$exports, 'speedTextAnimation', speedTextAnimation), _defineProperty(_module$exports, 'powerupLadybugAnimation', powerupLadybugAnimation), _defineProperty(_module$exports, 'flyAnimation', flyAnimation), _defineProperty(_module$exports, 'flyDeathAnimation', flyDeathAnimation), _defineProperty(_module$exports, 'hornetAnimation', hornetAnimation), _defineProperty(_module$exports, 'hornetDeathAnimation', hornetDeathAnimation), _defineProperty(_module$exports, 'hornetSoldierAnimation', hornetSoldierAnimation), _defineProperty(_module$exports, 'hornetSoldierDeathAnimation', hornetSoldierDeathAnimation), _defineProperty(_module$exports, 'locustAnimation', locustAnimation), _defineProperty(_module$exports, 'locustDeathAnimation', locustDeathAnimation), _defineProperty(_module$exports, 'locustSoldierAnimation', locustSoldierAnimation), _defineProperty(_module$exports, 'locustSoldierDeathAnimation', locustSoldierDeathAnimation), _defineProperty(_module$exports, 'flyingAntAnimation', flyingAntAnimation), _defineProperty(_module$exports, 'flyingAntDeathAnimation', flyingAntDeathAnimation), _defineProperty(_module$exports, 'flyingAntSoldierAnimation', flyingAntSoldierAnimation), _defineProperty(_module$exports, 'flyingAntSoldierDeathAnimation', flyingAntSoldierDeathAnimation), _defineProperty(_module$exports, 'monkAnimation', monkAnimation), _defineProperty(_module$exports, 'monkDeathAnimation', monkDeathAnimation), _defineProperty(_module$exports, 'monkAttackAnimation', monkAttackAnimation), _defineProperty(_module$exports, 'cargoBeetleAnimation', cargoBeetleAnimation), _defineProperty(_module$exports, 'cargoBeetleDeathAnimation', cargoBeetleDeathAnimation), _defineProperty(_module$exports, 'explosiveBeetleAnimation', explosiveBeetleAnimation), _defineProperty(_module$exports, 'explosiveBeetleDeathAnimation', explosiveBeetleDeathAnimation), _defineProperty(_module$exports, 'selectNeedleImage', selectNeedleImage), _defineProperty(_module$exports, 'startGameImage', startGameImage), _defineProperty(_module$exports, 'optionsImage', optionsImage), _defineProperty(_module$exports, 'startImage', startImage), _defineProperty(_module$exports, 'gameOverImage', gameOverImage), _module$exports);
+    blastStartAnimation: blastStartAnimation,
+    blastLoopAnimation: blastLoopAnimation,
+    slashAnimation: slashAnimation,
+    stabAnimation: stabAnimation,
+    bulletAnimation: bulletAnimation,
+    deflectAnimation: deflectAnimation,
+    damageAnimation: damageAnimation,
+    explosionAnimation: explosionAnimation,
+    hugeExplosionAnimation: hugeExplosionAnimation,
+    dustAnimation: dustAnimation,
+    coinAnimation: coinAnimation,
+    powerupDiamondAnimation: powerupDiamondAnimation,
+    powerupTriangleAnimation: powerupTriangleAnimation,
+    powerupSquareAnimation: powerupSquareAnimation,
+    powerupTripleDiamondAnimation: powerupTripleDiamondAnimation,
+    powerupTripleSquareAnimation: powerupTripleSquareAnimation,
+    powerupTripleTriangleAnimation: powerupTripleTriangleAnimation,
+    powerupComboAnimation: powerupComboAnimation,
+    powerupTripleComboAnimation: powerupTripleComboAnimation,
+    rateTextAnimation: rateTextAnimation,
+    sizeTextAnimation: sizeTextAnimation,
+    speedTextAnimation: speedTextAnimation,
+    flyAnimation: flyAnimation, flyDeathAnimation: flyDeathAnimation,
+    hornetAnimation: hornetAnimation, hornetDeathAnimation: hornetDeathAnimation,
+    hornetSoldierAnimation: hornetSoldierAnimation, hornetSoldierDeathAnimation: hornetSoldierDeathAnimation,
+    locustAnimation: locustAnimation, locustDeathAnimation: locustDeathAnimation,
+    locustSoldierAnimation: locustSoldierAnimation, locustSoldierDeathAnimation: locustSoldierDeathAnimation,
+    flyingAntAnimation: flyingAntAnimation, flyingAntDeathAnimation: flyingAntDeathAnimation,
+    flyingAntSoldierAnimation: flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation: flyingAntSoldierDeathAnimation,
+    monkAnimation: monkAnimation, monkDeathAnimation: monkDeathAnimation, monkAttackAnimation: monkAttackAnimation,
+    cargoBeetleAnimation: cargoBeetleAnimation, cargoBeetleDeathAnimation: cargoBeetleDeathAnimation,
+    explosiveBeetleAnimation: explosiveBeetleAnimation, explosiveBeetleDeathAnimation: explosiveBeetleDeathAnimation,
+    selectNeedleImage: selectNeedleImage,
+    startGameImage: startGameImage,
+    optionsImage: optionsImage,
+    startImage: startImage,
+    gameOverImage: gameOverImage
+};
 
-},{"Rectangle":1,"gameConstants":10}],3:[function(require,module,exports){
+},{"Rectangle":1,"gameConstants":11}],3:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -706,41 +602,32 @@ var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH,
     GAME_HEIGHT = _require.GAME_HEIGHT,
     WIDTH = _require.WIDTH,
-    HUD_HEIGHT = _require.HUD_HEIGHT,
-    ENEMY_COOLDOWN = _require.ENEMY_COOLDOWN,
     ENEMY_FLY = _require.ENEMY_FLY,
     ENEMY_MONK = _require.ENEMY_MONK,
     ENEMY_HORNET = _require.ENEMY_HORNET,
     ENEMY_HORNET_SOLDIER = _require.ENEMY_HORNET_SOLDIER,
     ENEMY_FLYING_ANT = _require.ENEMY_FLYING_ANT,
-    ENEMY_FLYING_ANT_SOLDIER = _require.ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST = _require.ENEMY_LOCUST,
     ENEMY_LOCUST_SOLDIER = _require.ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE = _require.ENEMY_CARGO_BEETLE,
     ENEMY_EXPLOSIVE_BEETLE = _require.ENEMY_EXPLOSIVE_BEETLE,
     ATTACK_BULLET = _require.ATTACK_BULLET;
 
-var Rectangle = require('Rectangle');
 var random = require('random');
 
-var _require2 = require('draw'),
-    drawImage = _require2.drawImage,
-    drawTintedImage = _require2.drawTintedImage,
-    embossText = _require2.embossText;
+var _require2 = require('animations'),
+    requireImage = _require2.requireImage,
+    createAnimation = _require2.createAnimation,
+    r = _require2.r;
 
-var _require3 = require('animations'),
-    requireImage = _require3.requireImage,
-    createAnimation = _require3.createAnimation,
-    r = _require3.r;
+var _require3 = require('sprites'),
+    getNewSpriteState = _require3.getNewSpriteState,
+    getTargetVector = _require3.getTargetVector;
 
-var _require4 = require('sprites'),
-    getNewSpriteState = _require4.getNewSpriteState,
-    getTargetVector = _require4.getTargetVector;
-
-var _require5 = require('world'),
-    getGroundHeight = _require5.getGroundHeight,
-    getNewLayer = _require5.getNewLayer,
-    allWorlds = _require5.allWorlds;
+var _require4 = require('world'),
+    getGroundHeight = _require4.getGroundHeight,
+    getNewLayer = _require4.getNewLayer,
+    allWorlds = _require4.allWorlds;
 
 var plainsBg = createAnimation('gfx/scene/plainsbg.png', r(800, 800));
 var groundAnimation = createAnimation('gfx/scene/groundloop.png', r(200, 60));
@@ -763,7 +650,8 @@ var berriesAnimation = createAnimation('gfx/scene/plainsfg3.png', r(200, 100));
 var wheatAnimation = createAnimation('gfx/scene/plainsmg1.png', r(200, 100));
 var thickGrass = createAnimation('gfx/scene/plainsmg.png', r(300, 300));
 var darkGrass = createAnimation('gfx/scene/plainsmg2.png', r(300, 300));
-var lightGrass = createAnimation('gfx/scene/plainsmg3.png', r(300, 300));
+// const lightGrass = createAnimation('gfx/scene/plainsmg3.png', r(300, 300));
+
 
 var WORLD_FIELD = 'field';
 var WORLD_FIELD_BOSS = 'fieldBoss';
@@ -814,7 +702,7 @@ allWorlds[WORLD_FIELD] = {
                 return spawnEnemy(state, ENEMY_FLY, { left: WIDTH, top: _top2 });
             }
             eventTime -= 2000;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, 'powerup');
             }
         },
@@ -823,7 +711,7 @@ allWorlds[WORLD_FIELD] = {
                 return spawnEnemy(state, ENEMY_CARGO_BEETLE, { left: WIDTH, top: GAME_HEIGHT / 2 });
             }
             eventTime -= 3000;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, 'flies');
             }
         },
@@ -858,14 +746,13 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flyingAnts', 'monks']));
             }
         },
         monks: function monks(state, eventTime) {
             var spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
-                var top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
                 var left = WIDTH;
                 for (var i = 0; i < random.range(1, 2); i++) {
                     state = spawnEnemy(state, ENEMY_MONK, { left: left, top: GAME_HEIGHT });
@@ -874,7 +761,7 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flyingAnts']));
             }
         },
@@ -899,7 +786,7 @@ allWorlds[WORLD_FIELD] = {
                 return state;
             }
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['hornet', 'locust']));
             }
         },
@@ -915,7 +802,7 @@ allWorlds[WORLD_FIELD] = {
             }
             var spacing = state.world.time < FIELD_EASY_DURATION ? 4000 : 2000;
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['flies', 'monks']));
             }
         },
@@ -931,11 +818,11 @@ allWorlds[WORLD_FIELD] = {
             }
             var spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
             eventTime -= spacing;
-            if (eventTime === 0) {
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
         },
-        bossPrep: function bossPrep(state, eventTime) {
+        bossPrep: function bossPrep(state) {
             if (state.enemies.length === 0) {
                 return transitionToFieldBoss(state);
             }
@@ -1015,9 +902,9 @@ var forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginbas
 allWorlds[WORLD_FIELD_BOSS] = {
     advanceWorld: function advanceWorld(state) {
         var world = state.world;
-        if (world.time < 500 && ['nearground', 'foreground'].some(function (layerName) {
+        if (world.time < 500 && (['nearground', 'foreground'].some(function (layerName) {
             return world[layerName].sprites.length;
-        })) {
+        }) || world.y > 0)) {
             world = _extends({}, world, {
                 targetFrames: 50 * 5 / 2,
                 targetX: world.x + 1000,
@@ -1065,7 +952,6 @@ allWorlds[WORLD_FIELD_BOSS] = {
             newEnemy.left -= newEnemy.width / 2;
             newEnemy.top -= newEnemy.height / 2;
             state = addEnemyToState(state, newEnemy);
-            world = _extends({}, world, { spawnedLargeTurret: time });
             var smallTurrets = [[-125, 110], [-35, 130], [-130, 160], [-40, 200], [-125, 240], [-35, 245]];
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
@@ -1101,9 +987,6 @@ allWorlds[WORLD_FIELD_BOSS] = {
         var turrets = state.enemies.filter(function (enemy) {
             return enemy.type === ENEMY_SMALL_TURRET;
         });
-        if (time > 2500 && !world.spawnedLargeTurret && turrets.length <= 2) {
-            var _treeSprite = world.nearground.sprites[0];
-        }
         if (time > 2500) {
             if (state.enemies.filter(function (enemy) {
                 return enemy.type === ENEMY_LARGE_TURRET;
@@ -1117,10 +1000,10 @@ allWorlds[WORLD_FIELD_BOSS] = {
             }
             var minMonkTime = 4000 + 1000 * turrets.length;
             if (turrets.length <= 4 && time - (world.lastMonkTime || 0) >= minMonkTime && Math.random() > 0.9) {
-                var _treeSprite2 = world.nearground.sprites[0];
+                var _treeSprite = world.nearground.sprites[0];
                 var _newEnemy = createEnemy(ENEMY_GROUND_MONK, {
-                    left: _treeSprite2.left + _treeSprite2.width - 270,
-                    top: _treeSprite2.top + _treeSprite2.height - 36,
+                    left: _treeSprite.left + _treeSprite.width - 270,
+                    top: _treeSprite.top + _treeSprite.height - 36,
                     // Normally monks walk slowly left to right to keep up with scrolling,
                     // but when the screen is still, the need to walk right to left to
                     // approach the player.
@@ -1133,8 +1016,8 @@ allWorlds[WORLD_FIELD_BOSS] = {
             }
             var minStickTime = 3000 + 1000 * turrets.length;
             if (time - (world.lastStickTime || 0) >= minStickTime && Math.random() > 0.9) {
-                var _treeSprite3 = world.nearground.sprites[0];
-                var spawnX = Math.random() * 400 + _treeSprite3.left + 50;
+                var _treeSprite2 = world.nearground.sprites[0];
+                var spawnX = Math.random() * 400 + _treeSprite2.left + 50;
 
                 // Add a dust cloud to signify something happened when the enemy hit the ground.
                 var leaf = createEffect(EFFECT_LEAF, { top: Math.random() * -30, left: spawnX - 20 - Math.random() * 40, vy: -2 + Math.random() * 4 });
@@ -1254,7 +1137,7 @@ var transitionToFieldBoss = function transitionToFieldBoss(state) {
         type: WORLD_FIELD_BOSS,
         time: 0,
         targetFrames: 50 * 5,
-        targetY: 0
+        targetY: -100
     });
     var _iteratorNormalCompletion2 = true;
     var _didIteratorError2 = false;
@@ -1308,11 +1191,11 @@ module.exports = {
     getFieldWorld: getFieldWorld, getFieldWorldStart: getFieldWorldStart
 };
 
-var _require6 = require('enemies'),
-    enemyData = _require6.enemyData,
-    createEnemy = _require6.createEnemy,
-    addEnemyToState = _require6.addEnemyToState,
-    updateEnemy = _require6.updateEnemy;
+var _require5 = require('enemies'),
+    enemyData = _require5.enemyData,
+    createEnemy = _require5.createEnemy,
+    addEnemyToState = _require5.addEnemyToState,
+    updateEnemy = _require5.updateEnemy;
 
 var smallTurretRectangle = r(41, 41);
 var ENEMY_SMALL_TURRET = 'smallTurret';
@@ -1528,18 +1411,18 @@ enemyData[ENEMY_STICK_3] = _extends({}, enemyData[ENEMY_STICK_1], {
     animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24))
 });
 
-var _require7 = require('areas/stars'),
-    enterStarWorldEnd = _require7.enterStarWorldEnd;
+var _require6 = require('areas/stars'),
+    enterStarWorldEnd = _require6.enterStarWorldEnd;
 
-var _require8 = require('attacks'),
-    createAttack = _require8.createAttack,
-    addEnemyAttackToState = _require8.addEnemyAttackToState;
+var _require7 = require('attacks'),
+    createAttack = _require7.createAttack,
+    addEnemyAttackToState = _require7.addEnemyAttackToState;
 
-var _require9 = require('effects'),
-    createEffect = _require9.createEffect,
-    effects = _require9.effects,
-    addEffectToState = _require9.addEffectToState,
-    updateEffect = _require9.updateEffect;
+var _require8 = require('effects'),
+    createEffect = _require8.createEffect,
+    effects = _require8.effects,
+    addEffectToState = _require8.addEffectToState,
+    updateEffect = _require8.updateEffect;
 
 var EFFECT_LEAF = 'leaf';
 effects[EFFECT_LEAF] = {
@@ -1582,10 +1465,12 @@ effects[EFFECT_DOOR_DAMAGE] = {
     }
 };
 
-},{"Rectangle":1,"animations":2,"areas/stars":4,"attacks":5,"draw":7,"effects":8,"enemies":9,"gameConstants":10,"random":14,"sprites":17,"world":19}],4:[function(require,module,exports){
+},{"animations":2,"areas/stars":4,"attacks":5,"effects":8,"enemies":10,"gameConstants":11,"random":18,"sprites":21,"world":23}],4:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var random = require('random');
 
 var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH,
@@ -1596,21 +1481,18 @@ var _require = require('gameConstants'),
     LOOT_COMBO = _require.LOOT_COMBO;
 
 var _require2 = require('animations'),
-    requireImage = _require2.requireImage,
     createAnimation = _require2.createAnimation,
     r = _require2.r;
 
-var _require3 = require('sprites'),
-    getNewSpriteState = _require3.getNewSpriteState;
-
-var _require4 = require('world'),
-    getNewLayer = _require4.getNewLayer,
-    allWorlds = _require4.allWorlds;
+var _require3 = require('world'),
+    getNewLayer = _require3.getNewLayer,
+    allWorlds = _require3.allWorlds;
 
 var WORLD_STARS = 'stars';
 
 var stars1 = createAnimation('gfx/scene/portal/portal1.png', r(200, 200));
-var stars2 = createAnimation('gfx/scene/portal/portal2.png', r(200, 200));
+// TODO: Ask Jon to fix black in this image and add it back.
+// const stars2 = createAnimation('gfx/scene/portal/portal2.png', r(200, 200));
 var stars3 = createAnimation('gfx/scene/portal/portal3.png', r(200, 200));
 
 var advanceStarWorld = function advanceStarWorld(state) {
@@ -1704,7 +1586,7 @@ var advanceStarWorld = function advanceStarWorld(state) {
     }
     time -= 3000;
     if (!time) {
-        var type = multiplier >= 3 ? LOOT_COMBO : LOOT_LADY_BUG;
+        var type = multiplier >= 3 ? LOOT_COMBO : random.element(ladybugTypes);
         var loot = createLoot(type, { left: WIDTH, top: GAME_HEIGHT / 2, scale: 2 });
         loot.top -= loot.height / 2;
         state = addLootToState(state, loot);
@@ -1778,26 +1660,27 @@ module.exports = {
     getStarWorld: getStarWorld, enterStarWorld: enterStarWorld, enterStarWorldEnd: enterStarWorldEnd
 };
 
-var _require5 = require('world'),
-    clearSprites = _require5.clearSprites;
+var _require4 = require('world'),
+    clearSprites = _require4.clearSprites;
 
-var _require6 = require('areas/field'),
-    getFieldWorld = _require6.getFieldWorld;
+var _require5 = require('areas/field'),
+    getFieldWorld = _require5.getFieldWorld;
 
-var _require7 = require('loot'),
-    createLoot = _require7.createLoot,
-    addLootToState = _require7.addLootToState,
-    getComboMultiplier = _require7.getComboMultiplier;
+var _require6 = require('loot'),
+    createLoot = _require6.createLoot,
+    addLootToState = _require6.addLootToState,
+    getComboMultiplier = _require6.getComboMultiplier,
+    ladybugTypes = _require6.ladybugTypes;
 
-var _require8 = require('heroes'),
-    updatePlayer = _require8.updatePlayer;
+var _require7 = require('heroes'),
+    updatePlayer = _require7.updatePlayer;
 
-},{"animations":2,"areas/field":3,"gameConstants":10,"heroes":11,"loot":13,"sprites":17,"world":19}],5:[function(require,module,exports){
+},{"animations":2,"areas/field":3,"gameConstants":11,"heroes":12,"loot":17,"random":18,"world":23}],5:[function(require,module,exports){
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _attacks;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -1812,32 +1695,70 @@ var _require2 = require('gameConstants'),
     WIDTH = _require2.WIDTH,
     GAME_HEIGHT = _require2.GAME_HEIGHT,
     OFFSCREEN_PADDING = _require2.OFFSCREEN_PADDING,
-    ATTACK_OFFSET = _require2.ATTACK_OFFSET,
     ATTACK_BLAST = _require2.ATTACK_BLAST,
     ATTACK_SLASH = _require2.ATTACK_SLASH,
     ATTACK_STAB = _require2.ATTACK_STAB,
     ATTACK_BULLET = _require2.ATTACK_BULLET,
-    ATTACK_ORB = _require2.ATTACK_ORB,
     ATTACK_DEFEATED_ENEMY = _require2.ATTACK_DEFEATED_ENEMY,
+    ATTACK_SPRAY_UP = _require2.ATTACK_SPRAY_UP,
+    ATTACK_SPRAY_RIGHT = _require2.ATTACK_SPRAY_RIGHT,
+    ATTACK_SPRAY_DOWN = _require2.ATTACK_SPRAY_DOWN,
+    ATTACK_ORB = _require2.ATTACK_ORB,
+    ATTACK_LASER = _require2.ATTACK_LASER,
     ATTACK_EXPLOSION = _require2.ATTACK_EXPLOSION;
 
-var _require3 = require('sounds'),
-    playSound = _require3.playSound;
+var _require3 = require('animations'),
+    requireImage = _require3.requireImage,
+    r = _require3.r,
+    createAnimation = _require3.createAnimation,
+    getFrame = _require3.getFrame,
+    blastStartAnimation = _require3.blastStartAnimation,
+    blastLoopAnimation = _require3.blastLoopAnimation,
+    slashAnimation = _require3.slashAnimation,
+    stabAnimation = _require3.stabAnimation,
+    bulletAnimation = _require3.bulletAnimation,
+    hugeExplosionAnimation = _require3.hugeExplosionAnimation;
 
-var _require4 = require('animations'),
-    getFrame = _require4.getFrame,
-    blastStartAnimation = _require4.blastStartAnimation,
-    blastLoopAnimation = _require4.blastLoopAnimation,
-    slashAnimation = _require4.slashAnimation,
-    stabAnimation = _require4.stabAnimation,
-    ladybugAttackAnimation = _require4.ladybugAttackAnimation,
-    bulletAnimation = _require4.bulletAnimation,
-    hugeExplosionAnimation = _require4.hugeExplosionAnimation;
+var _require4 = require('sprites'),
+    getNewSpriteState = _require4.getNewSpriteState;
 
-var _require5 = require('sprites'),
-    getNewSpriteState = _require5.getNewSpriteState;
+var orbRectangle = r(10, 10);
+var orbAnimation = {
+    frames: [_extends({}, orbRectangle, { image: requireImage('gfx/attacks/lbshot1.png') }), _extends({}, orbRectangle, { image: requireImage('gfx/attacks/lbshot2.png') }), _extends({}, orbRectangle, { image: requireImage('gfx/attacks/lbshot3.png') }), _extends({}, orbRectangle, { image: requireImage('gfx/attacks/lbshot4.png') })],
+    frameDuration: 2
+};
 
-var attacks = (_attacks = {}, _defineProperty(_attacks, ATTACK_BLAST, {
+var laserRectangle = r(20, 7);
+var laserStartAnimation = {
+    frames: [_extends({}, laserRectangle, { image: requireImage('gfx/attacks/r1.png') }), _extends({}, laserRectangle, { image: requireImage('gfx/attacks/r2.png') })],
+    frameDuration: 3
+};
+var laserAnimation = createAnimation('gfx/attacks/r3.png', laserRectangle);
+
+var sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(9, 9));
+var sprayAnimationUp = createAnimation('gfx/attacks/s3.png', r(9, 9));
+var sprayAnimationRight = createAnimation('gfx/attacks/s2.png', r(9, 9));
+var sprayAnimationDown = createAnimation('gfx/attacks/s4.png', r(9, 9));
+
+var attacks = (_attacks = {}, _defineProperty(_attacks, ATTACK_SPRAY_UP, {
+    startAnimation: sprayStartAnimation,
+    animation: sprayAnimationUp,
+    props: {
+        sfx: 'sfx/shoot.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_SPRAY_RIGHT, {
+    startAnimation: sprayStartAnimation,
+    animation: sprayAnimationRight,
+    props: {
+        sfx: 'sfx/shoot.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_SPRAY_DOWN, {
+    startAnimation: sprayStartAnimation,
+    animation: sprayAnimationDown,
+    props: {
+        sfx: 'sfx/shoot.mp3'
+    }
+}), _defineProperty(_attacks, ATTACK_BLAST, {
     startAnimation: blastStartAnimation,
     animation: blastLoopAnimation,
     props: {
@@ -1862,7 +1783,14 @@ var attacks = (_attacks = {}, _defineProperty(_attacks, ATTACK_BLAST, {
 }), _defineProperty(_attacks, ATTACK_BULLET, {
     animation: bulletAnimation
 }), _defineProperty(_attacks, ATTACK_ORB, {
-    animation: ladybugAttackAnimation
+    animation: orbAnimation
+}), _defineProperty(_attacks, ATTACK_LASER, {
+    startAnimation: laserStartAnimation,
+    animation: laserAnimation,
+    props: {
+        damage: 2,
+        piercing: true
+    }
 }), _defineProperty(_attacks, ATTACK_DEFEATED_ENEMY, {
     // The animation will be the enemy death animation.
     hitSfx: 'sfx/throwhit.mp3',
@@ -1887,15 +1815,21 @@ var createAttack = function createAttack(type, props) {
 };
 
 var addPlayerAttackToState = function addPlayerAttackToState(state, attack) {
-    return _extends({}, state, { newPlayerAttacks: [].concat(_toConsumableArray(state.newPlayerAttacks), [attack]) });
+    var sfx = state.sfx;
+    if (attack.sfx) sfx = _extends({}, sfx, _defineProperty({}, attack.sfx, true));
+    return _extends({}, state, { newPlayerAttacks: [].concat(_toConsumableArray(state.newPlayerAttacks), [attack]), sfx: sfx });
 };
 
 var addEnemyAttackToState = function addEnemyAttackToState(state, attack) {
-    return _extends({}, state, { newEnemyAttacks: [].concat(_toConsumableArray(state.newEnemyAttacks), [attack]) });
+    var sfx = state.sfx;
+    if (attack.sfx) sfx = _extends({}, sfx, _defineProperty({}, attack.sfx, true));
+    return _extends({}, state, { newEnemyAttacks: [].concat(_toConsumableArray(state.newEnemyAttacks), [attack]), sfx: sfx });
 };
 
 var addNeutralAttackToState = function addNeutralAttackToState(state, attack) {
-    return _extends({}, state, { newNeutralAttacks: [].concat(_toConsumableArray(state.newNeutralAttacks), [attack]) });
+    var sfx = state.sfx;
+    if (attack.sfx) sfx = _extends({}, sfx, _defineProperty({}, attack.sfx, true));
+    return _extends({}, state, { newNeutralAttacks: [].concat(_toConsumableArray(state.newNeutralAttacks), [attack]), sfx: sfx });
 };
 
 var renderAttack = function renderAttack(context, attack) {
@@ -1915,10 +1849,6 @@ var renderAttack = function renderAttack(context, attack) {
     if (attack.explosion && attack.delay) return;
     // These should only apply to player attacks since any damage defeats a player.
     if (attack.explosion || attack.damage === 1 || !attack.damage) drawImage(context, frame.image, frame, attack);else if (attack.damage >= 6) drawTintedImage(context, frame.image, 'white', .9, frame, attack);else if (attack.damage === 5) drawTintedImage(context, frame.image, 'black', .9, frame, attack);else if (attack.damage === 4) drawTintedImage(context, frame.image, 'blue', .5, frame, attack);else if (attack.damage === 3) drawTintedImage(context, frame.image, 'red', .4, frame, attack);else if (attack.damage === 2) drawTintedImage(context, frame.image, 'orange', .5, frame, attack);
-    if (attack.sfx) {
-        playSound(attack.sfx);
-        attack.sfx = false;
-    }
 };
 
 var advanceAttack = function advanceAttack(state, attack) {
@@ -1932,7 +1862,8 @@ var advanceAttack = function advanceAttack(state, attack) {
         animationTime = attack.animationTime,
         playerIndex = attack.playerIndex,
         melee = attack.melee,
-        explosion = attack.explosion;
+        explosion = attack.explosion,
+        ttl = attack.ttl;
 
     if (delay > 0 || melee) {
         delay--;
@@ -1948,13 +1879,16 @@ var advanceAttack = function advanceAttack(state, attack) {
     }
     animationTime += FRAME_LENGTH;
     var done = false;
-    if (melee || explosion) {
+    if (ttl > 0) {
+        ttl--;
+        done = ttl <= 0;
+    } else if (melee || explosion) {
         var animation = attacks[attack.type].animation;
         done = animationTime >= animation.frames.length * animation.frameDuration * FRAME_LENGTH;
     } else {
         done = left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING || top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
     }
-    return _extends({}, attack, { delay: delay, left: left, top: top, animationTime: animationTime, done: done });
+    return _extends({}, attack, { delay: delay, left: left, top: top, animationTime: animationTime, done: done, ttl: ttl });
 };
 
 module.exports = {
@@ -1967,12 +1901,10 @@ module.exports = {
     renderAttack: renderAttack
 };
 
-},{"animations":2,"draw":7,"gameConstants":10,"sounds":16,"sprites":17}],6:[function(require,module,exports){
+},{"animations":2,"draw":7,"gameConstants":11,"sprites":21}],6:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
-    WIDTH = _require.WIDTH,
-    HEIGHT = _require.HEIGHT,
     FRAME_LENGTH = _require.FRAME_LENGTH;
 
 var _require2 = require('sounds'),
@@ -1998,11 +1930,9 @@ var _require4 = require('keyboard'),
     KEY_C = _require4.KEY_C,
     KEY_V = _require4.KEY_V;
 
-var now = function now() {
-    return Date.now();
-};
-
 // Currently we only support a single player.
+
+
 var playerIndex = 0;
 
 preloadSounds();
@@ -2054,7 +1984,7 @@ var renderLoop = function renderLoop() {
 };
 renderLoop();
 
-},{"gameConstants":10,"keyboard":12,"render":15,"sounds":16,"state":18}],7:[function(require,module,exports){
+},{"gameConstants":11,"keyboard":16,"render":19,"sounds":20,"state":22}],7:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
@@ -2110,12 +2040,12 @@ module.exports = {
     embossText: embossText
 };
 
-},{"gameConstants":10}],8:[function(require,module,exports){
+},{"gameConstants":11}],8:[function(require,module,exports){
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _effects;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -2147,32 +2077,49 @@ var _require2 = require('gameConstants'),
     EFFECT_DEFLECT_BULLET = _require2.EFFECT_DEFLECT_BULLET;
 
 var _require3 = require('animations'),
-    allAnimations = _require3.allAnimations,
+    requireImage = _require3.requireImage,
     getFrame = _require3.getFrame,
     getHitBox = _require3.getHitBox,
     damageAnimation = _require3.damageAnimation,
     dustAnimation = _require3.dustAnimation,
     explosionAnimation = _require3.explosionAnimation,
-    beeDeathAnimation = _require3.beeDeathAnimation,
-    beeSwitchAnimation = _require3.beeSwitchAnimation,
-    dragonflyDeathAnimation = _require3.dragonflyDeathAnimation,
-    dragonflySwitchAnimation = _require3.dragonflySwitchAnimation,
-    mothDeathAnimation = _require3.mothDeathAnimation,
-    mothSwitchAnimation = _require3.mothSwitchAnimation,
     needleFlipAnimation = _require3.needleFlipAnimation,
     rateTextAnimation = _require3.rateTextAnimation,
     sizeTextAnimation = _require3.sizeTextAnimation,
     speedTextAnimation = _require3.speedTextAnimation,
     deflectAnimation = _require3.deflectAnimation,
-    createVerticalFrames = _require3.createVerticalFrames,
-    r = _require3.r,
-    i = _require3.i;
+    r = _require3.r;
 
-var _require4 = require('sounds'),
-    playSound = _require4.playSound;
+var _require4 = require('sprites'),
+    getNewSpriteState = _require4.getNewSpriteState;
 
-var _require5 = require('sprites'),
-    getNewSpriteState = _require5.getNewSpriteState;
+var beeRectangle = r(88, 56);
+var beeSwitchAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beeswitch4.png') })],
+    frameDuration: 6
+};
+var beeDeathAnimation = {
+    frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beedie4.png') })],
+    frameDuration: 6
+};
+var dragonflyRectangle = r(88, 56);
+var dragonflySwitchAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png') })],
+    frameDuration: 6
+};
+var dragonflyDeathAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png') })],
+    frameDuration: 6
+};
+var mothRectangle = r(88, 56);
+var mothSwitchAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothswitch4.png') })],
+    frameDuration: 6
+};
+var mothDeathAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothdie4.png') })],
+    frameDuration: 6
+};
 
 var effects = (_effects = {}, _defineProperty(_effects, EFFECT_DAMAGE, {
     animation: damageAnimation
@@ -2227,7 +2174,9 @@ var createEffect = function createEffect(type, props) {
 };
 
 var addEffectToState = function addEffectToState(state, effect) {
-    return _extends({}, state, { newEffects: [].concat(_toConsumableArray(state.newEffects), [effect]) });
+    var sfx = state.sfx;
+    if (effect.sfx) sfx = _extends({}, sfx, _defineProperty({}, effect.sfx, true));
+    return _extends({}, state, { newEffects: [].concat(_toConsumableArray(state.newEffects), [effect]), sfx: sfx });
 };
 
 var updateEffect = function updateEffect(state, effectIndex, props) {
@@ -2252,10 +2201,6 @@ var renderEffect = function renderEffect(context, effect) {
         drawImage(context, frame.image, frame, target);
         context.restore();
     }
-    if (effect.sfx) {
-        playSound(effect.sfx);
-        effect.sfx = false;
-    }
 };
 
 var advanceEffect = function advanceEffect(state, effectIndex) {
@@ -2270,8 +2215,6 @@ var advanceEffect = function advanceEffect(state, effectIndex) {
         height = _state$effects$effect.height,
         vx = _state$effects$effect.vx,
         vy = _state$effects$effect.vy,
-        delay = _state$effects$effect.delay,
-        duration = _state$effects$effect.duration,
         animationTime = _state$effects$effect.animationTime,
         relativeToGround = _state$effects$effect.relativeToGround,
         loops = _state$effects$effect.loops;
@@ -2291,8 +2234,8 @@ var advanceEffect = function advanceEffect(state, effectIndex) {
 };
 
 var advanceAllEffects = function advanceAllEffects(state) {
-    for (var _i = 0; _i < state.effects.length; _i++) {
-        state = advanceEffect(state, _i);
+    for (var i = 0; i < state.effects.length; i++) {
+        state = advanceEffect(state, i);
     }
     state.effects = state.effects.filter(function (effect) {
         return !effect.done;
@@ -2309,7 +2252,165 @@ module.exports = {
     updateEffect: updateEffect
 };
 
-},{"Rectangle":1,"animations":2,"draw":7,"gameConstants":10,"sounds":16,"sprites":17}],9:[function(require,module,exports){
+},{"Rectangle":1,"animations":2,"draw":7,"gameConstants":11,"sprites":21}],9:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _require = require('gameConstants'),
+    FRAME_LENGTH = _require.FRAME_LENGTH;
+
+var _require2 = require('animations'),
+    requireImage = _require2.requireImage,
+    r = _require2.r;
+
+var EFFECT_LIGHTNING = 'lightning';
+var EFFECT_FAST_LIGHTNING = 'fastLightning';
+
+var lightningFrames = [_extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain1.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain2.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain3.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain4.png') })];
+function advanceLightning(state, effectIndex) {
+    var effect = state.effects[effectIndex];
+    if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
+        var center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
+        var left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
+        var top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
+        state = checkToAddLightning(state, _extends({}, effect, { left: left, top: top }));
+    }
+    return state;
+}
+var checkToAddLightning = function checkToAddLightning(state, _ref) {
+    var left = _ref.left,
+        top = _ref.top,
+        _ref$charges = _ref.charges,
+        charges = _ref$charges === undefined ? 8 : _ref$charges,
+        _ref$damage = _ref.damage,
+        damage = _ref$damage === undefined ? 5 : _ref$damage,
+        _ref$branchChance = _ref.branchChance,
+        branchChance = _ref$branchChance === undefined ? 0 : _ref$branchChance,
+        _ref$rotation = _ref.rotation,
+        rotation = _ref$rotation === undefined ? 0 : _ref$rotation,
+        _ref$scale = _ref.scale,
+        scale = _ref$scale === undefined ? 2 : _ref$scale,
+        _ref$vx = _ref.vx,
+        vx = _ref$vx === undefined ? 0 : _ref$vx,
+        _ref$vy = _ref.vy,
+        vy = _ref$vy === undefined ? 0 : _ref$vy,
+        _ref$type = _ref.type,
+        type = _ref$type === undefined ? EFFECT_LIGHTNING : _ref$type;
+
+    var addLightning = function addLightning(rotation, branchChance) {
+        var lightning = createEffect(type, {
+            left: left, top: top,
+            charges: charges - 1,
+            rotation: rotation,
+            branchChance: branchChance,
+            xScale: scale, yScale: scale,
+            vx: vx, vy: vy
+        });
+        lightning.width *= scale;
+        lightning.height *= scale;
+        lightning.left -= lightning.width / 2;
+        lightning.left += Math.cos(rotation) * lightning.width / 2;
+        lightning.top -= lightning.height / 2;
+        lightning.top += Math.sin(rotation) * lightning.width / 2;
+        state = addEffectToState(state, lightning);
+    };
+    var targetRotations = [];
+    for (var i = 0; i < state.enemies.length; i++) {
+        var enemy = state.enemies[i];
+        if (enemy.done || enemy.dead) continue;
+        // The large lightning attack can only hit enemies in front of each bolt.
+        if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
+        var hitBox = getEnemyHitBox(enemy);
+        var dx = hitBox.left + hitBox.width / 2 - left,
+            dy = hitBox.top + hitBox.height / 2 - top;
+        var radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;
+        if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
+            targetRotations.push(Math.atan2(dy, dx));
+            state = damageEnemy(state, i, { playerIndex: 0, damage: damage });
+            state = _extends({}, state, { sfx: _extends({}, state.sfx, { 'sfx/hit.mp3': true }) });
+        }
+    }
+    if (targetRotations.length) {
+        var _branchChance = targetRotations.length > 1 ? 0 : _branchChance + 0.2;
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = targetRotations[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var enemyRotation = _step.value;
+
+                addLightning(enemyRotation, _branchChance);
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
+    } else if (Math.random() < branchChance) {
+        addLightning(rotation - Math.PI / 12, 0);
+        addLightning(rotation + Math.PI / 13, 0);
+    } else {
+        addLightning(rotation, branchChance + 0.2);
+    }
+    return state;
+};
+
+module.exports = {
+    EFFECT_FAST_LIGHTNING: EFFECT_FAST_LIGHTNING,
+    checkToAddLightning: checkToAddLightning
+};
+
+var _require3 = require('effects'),
+    effects = _require3.effects,
+    createEffect = _require3.createEffect,
+    addEffectToState = _require3.addEffectToState;
+
+var _require4 = require('enemies'),
+    getEnemyHitBox = _require4.getEnemyHitBox,
+    damageEnemy = _require4.damageEnemy;
+
+effects[EFFECT_LIGHTNING] = {
+    animation: {
+        frames: lightningFrames,
+        frameDuration: 4
+    },
+    advanceEffect: advanceLightning,
+    props: {
+        loops: 1,
+        damage: 5,
+        charges: 8,
+        branchChance: .9,
+        rotation: 0,
+        sfx: 'sfx/fastlightning.mp3'
+    }
+};
+effects[EFFECT_FAST_LIGHTNING] = {
+    animation: {
+        frames: lightningFrames,
+        frameDuration: 1
+    },
+    advanceEffect: advanceLightning,
+    props: {
+        loops: 1,
+        damage: 1,
+        charges: 0,
+        branchChance: 0,
+        rotation: 0
+    }
+};
+
+},{"animations":2,"effects":8,"enemies":10,"gameConstants":11}],10:[function(require,module,exports){
 'use strict';
 
 var _enemyData;
@@ -2346,10 +2447,7 @@ var _require2 = require('gameConstants'),
     EFFECT_EXPLOSION = _require2.EFFECT_EXPLOSION,
     EFFECT_DAMAGE = _require2.EFFECT_DAMAGE,
     EFFECT_DUST = _require2.EFFECT_DUST,
-    LOOT_COIN = _require2.LOOT_COIN,
-    LOOT_SPEED = _require2.LOOT_SPEED,
-    LOOT_ATTACK_POWER = _require2.LOOT_ATTACK_POWER,
-    LOOT_ATTACK_SPEED = _require2.LOOT_ATTACK_SPEED;
+    LOOT_COIN = _require2.LOOT_COIN;
 
 var _require3 = require('keyboard'),
     isKeyDown = _require3.isKeyDown,
@@ -2462,8 +2560,7 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
                     vy = enemy.speed * Math.sin(_theta);
                 } else {
                     var _getTargetVector2 = getTargetVector(enemy, { left: targetX, top: targetY }),
-                        _dx = _getTargetVector2.dx,
-                        _dy = _getTargetVector2.dy;
+                        _dx = _getTargetVector2.dx;
 
                     if (_dx * vx < 0) {
                         mode = 'retreat';
@@ -2501,7 +2598,6 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
     accelerate: function accelerate(state, enemy) {
         var vx = enemy.vx,
             vy = enemy.vy,
-            seed = enemy.seed,
             targetX = enemy.targetX,
             targetY = enemy.targetY,
             mode = enemy.mode,
@@ -2549,8 +2645,7 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
                     vy = enemy.speed * Math.sin(_theta2);
                 } else {
                     var _getTargetVector4 = getTargetVector(enemy, { left: targetX, top: targetY }),
-                        _dx2 = _getTargetVector4.dx,
-                        _dy2 = _getTargetVector4.dy;
+                        _dx2 = _getTargetVector4.dx;
 
                     if (_dx2 * vx < 0) {
                         mode = 'retreat';
@@ -2730,8 +2825,7 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
     deathSound: 'sfx/flydeath.mp3',
     accelerate: function accelerate(state, enemy) {
         var vx = enemy.vx,
-            vy = enemy.vy,
-            seed = enemy.seed;
+            vy = enemy.vy;
 
         var target = state.players[0].sprite;
         var speed = enemy.speed;
@@ -2762,8 +2856,7 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
     deathSound: 'sfx/hit.mp3',
     accelerate: function accelerate(state, enemy) {
         var vx = enemy.vx,
-            vy = enemy.vy,
-            seed = enemy.seed;
+            vy = enemy.vy;
 
         var speed = enemy.speed;
 
@@ -2794,16 +2887,11 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         if (enemy.shotCooldown > 0) {
             enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldown - 1 });
             return _extends({}, state, { enemies: enemies });
-        } else {
-            var _getTargetVector8 = getTargetVector(enemy, state.players[0].sprite),
-                dx = _getTargetVector8.dx,
-                dy = _getTargetVector8.dy;
-            // Don't shoot unless aiming approximately towards the player.
-            //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
-
-
-            enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
         }
+        // const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
+        // Don't shoot unless aiming approximately towards the player.
+        //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
+        enemies[enemyIndex] = _extends({}, enemy, { shotCooldown: enemy.shotCooldownFrames });
         var theta = Math.atan2(enemy.vy, enemy.vx);
         var bullet = createAttack(ATTACK_BULLET, {
             left: enemy.left - enemy.vx,
@@ -2863,9 +2951,9 @@ var enemyData = (_enemyData = {}, _defineProperty(_enemyData, ENEMY_FLY, {
         var target = state.players[0].sprite;
         target = _extends({}, target, { left: target.left + state.world.vx * 40 });
 
-        var _getTargetVector9 = getTargetVector(enemy, target),
-            dx = _getTargetVector9.dx,
-            dy = _getTargetVector9.dy;
+        var _getTargetVector8 = getTargetVector(enemy, target),
+            dx = _getTargetVector8.dx,
+            dy = _getTargetVector8.dy;
 
         var mag = Math.sqrt(dx * dx + dy * dy);
         if (!mag) {
@@ -2977,13 +3065,6 @@ var updateEnemy = function updateEnemy(state, enemyIndex, props) {
     return _extends({}, state, { enemies: enemies });
 };
 
-// Return the value with the smallest absolute value.
-var absMin = function absMin(A, B) {
-    if (A < 0 && B < 0) return Math.max(A, B);
-    if (A > 0 && B > 0) return Math.min(A, B);
-    return Math.abs(A) < Math.abs(B) ? A : B;
-};
-
 var addEnemyToState = function addEnemyToState(state, enemy) {
     return _extends({}, state, { newEnemies: [].concat(_toConsumableArray(state.newEnemies || []), [enemy]) });
 };
@@ -3035,9 +3116,9 @@ var damageEnemy = function damageEnemy(state, enemyIndex) {
         if (attack.melee) {
             var playerSprite = updatedState.players[attack.playerIndex].sprite;
 
-            var _getTargetVector10 = getTargetVector(playerSprite, enemy),
-                dx = _getTargetVector10.dx,
-                dy = _getTargetVector10.dy;
+            var _getTargetVector9 = getTargetVector(playerSprite, enemy),
+                dx = _getTargetVector9.dx,
+                dy = _getTargetVector9.dy;
 
             var theta = Math.atan2(dy, dx);
             var defeatedEnemyAttack = createAttack(ATTACK_DEFEATED_ENEMY, {
@@ -3056,7 +3137,7 @@ var damageEnemy = function damageEnemy(state, enemyIndex) {
         }
 
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
-        if (enemy.grounded && attack.left) {
+        if (enemy.grounded && attack.type !== 'fall') {
             updatedState = updateEnemy(updatedState, enemyIndex, { vx: 6, vy: -6 });
             enemy = updatedState.enemies[enemyIndex];
         }
@@ -3073,7 +3154,7 @@ var damageEnemy = function damageEnemy(state, enemyIndex) {
         }
     } else {
         if (enemyIsInvulnerable) {
-            updatedState = _extends({}, updatedState, { sfx: [].concat(_toConsumableArray(updatedState.sfx), ['reflect']) });
+            updatedState = _extends({}, updatedState, { sfx: _extends({}, updatedState.sfx, { 'reflect': true }) });
         } else {
 
             if (enemyData[enemy.type].onDamageEffect) {
@@ -3091,8 +3172,8 @@ var damageEnemy = function damageEnemy(state, enemyIndex) {
             }
         }
     }
-    if (attack.type && attacks[attack.type].hitSfx) {
-        updatedState = _extends({}, updatedState, { sfx: [].concat(_toConsumableArray(updatedState.sfx), [attacks[attack.type].hitSfx]) });
+    if (attack.type && attacks[attack.type] && attacks[attack.type].hitSfx) {
+        updatedState = _extends({}, updatedState, { sfx: _extends({}, updatedState.sfx, _defineProperty({}, attacks[attack.type].hitSfx, true)) });
     }
     return updatedState;
 };
@@ -3142,7 +3223,7 @@ var advanceEnemy = function advanceEnemy(state, enemyIndex) {
     }
     // This is kind of a hack to support fall damage being applied to newly created enemies.
     if (enemy.pendingDamage) {
-        state = damageEnemy(state, enemyIndex, { playerIndex: 0, damage: enemy.pendingDamage });
+        state = damageEnemy(state, enemyIndex, { playerIndex: 0, damage: enemy.pendingDamage, type: 'fall' });
         enemy = state.enemies[enemyIndex];
     }
 
@@ -3280,25 +3361,27 @@ var _require8 = require('attacks'),
 var _require9 = require('loot'),
     createLoot = _require9.createLoot,
     addLootToState = _require9.addLootToState,
-    getRandomPowerupType = _require9.getRandomPowerupType,
     getAdaptivePowerupType = _require9.getAdaptivePowerupType,
     gainPoints = _require9.gainPoints;
 
 var _require10 = require('heroes'),
     updatePlayer = _require10.updatePlayer;
 
-},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"gameConstants":10,"heroes":11,"keyboard":12,"loot":13,"sprites":17,"world":19}],10:[function(require,module,exports){
+},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"gameConstants":11,"heroes":12,"keyboard":16,"loot":17,"sprites":21,"world":23}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = {
     TEST_ITEMS: false,
     TEST_ENEMY: false,
+    /*TEST_ITEMS: ['tripleCombo', 'combo'],
+    TEST_ENEMY: 'cargoBeetle',*/
+    /*TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
+    TEST_ENEMY: 'cargoBeetle',*/
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
     ACCELERATION: 1, SHOT_COOLDOWN: 8, ATTACK_OFFSET: -4,
     ENEMY_COOLDOWN: 10, DEATH_COOLDOWN: 1000, SPAWN_COOLDOWN: 1000, SPAWN_INV_TIME: 2000,
-    POINTS_FOR_POWERUP: 1000,
 
     HERO_BEE: 'bee', HERO_DRAGONFLY: 'dragonfly', HERO_MOTH: 'moth',
     MAX_ENERGY: 20,
@@ -3314,7 +3397,11 @@ module.exports = {
     ENEMY_LOCUST: 'locust',
     ENEMY_LOCUST_SOLDIER: 'locustSoldier',
 
-    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet', ATTACK_ORB: 'orb',
+    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet',
+    ATTACK_SPRAY_UP: 'sprayUp',
+    ATTACK_SPRAY_RIGHT: 'sprayRight',
+    ATTACK_SPRAY_DOWN: 'sprayDown',
+    ATTACK_LASER: 'laser', ATTACK_ORB: 'orb',
     ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 
     EFFECT_DAMAGE: 'damage', EFFECT_EXPLOSION: 'explosion', EFFECT_DUST: 'dust',
@@ -3326,7 +3413,9 @@ module.exports = {
     EFFECT_DEFLECT_BULLET: 'deflect',
     LOOT_COIN: 'coin',
     LOOT_LIFE: 'life',
-    LOOT_LADYBUG: 'ladybug',
+    LOOT_NORMAL_LADYBUG: 'normalLadybug',
+    LOOT_LIGHTNING_LADYBUG: 'lightningLadybug',
+    LOOT_PENETRATING_LADYBUG: 'penetratingLadybug',
     LOOT_SPEED: 'speed',
     LOOT_ATTACK_POWER: 'power',
     LOOT_ATTACK_SPEED: 'attackSpeed',
@@ -3339,10 +3428,8 @@ module.exports = {
     LOOT_HELMET: 'helmet'
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
-
-var _heroesData;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -3359,17 +3446,8 @@ var _require = require('gameConstants'),
     ATTACK_OFFSET = _require.ATTACK_OFFSET,
     SPAWN_INV_TIME = _require.SPAWN_INV_TIME,
     ACCELERATION = _require.ACCELERATION,
-    ATTACK_BLAST = _require.ATTACK_BLAST,
     ATTACK_ORB = _require.ATTACK_ORB,
-    ATTACK_SLASH = _require.ATTACK_SLASH,
-    ATTACK_STAB = _require.ATTACK_STAB,
-    EFFECT_EXPLOSION = _require.EFFECT_EXPLOSION,
-    EFFECT_DEAD_BEE = _require.EFFECT_DEAD_BEE,
-    EFFECT_SWITCH_BEE = _require.EFFECT_SWITCH_BEE,
-    EFFECT_DEAD_DRAGONFLY = _require.EFFECT_DEAD_DRAGONFLY,
-    EFFECT_SWITCH_DRAGONFLY = _require.EFFECT_SWITCH_DRAGONFLY,
-    EFFECT_DEAD_MOTH = _require.EFFECT_DEAD_MOTH,
-    EFFECT_SWITCH_MOTH = _require.EFFECT_SWITCH_MOTH,
+    ATTACK_LASER = _require.ATTACK_LASER,
     EFFECT_NEEDLE_FLIP = _require.EFFECT_NEEDLE_FLIP,
     HERO_BEE = _require.HERO_BEE,
     HERO_DRAGONFLY = _require.HERO_DRAGONFLY,
@@ -3380,9 +3458,10 @@ var _require = require('gameConstants'),
     LOOT_ATTACK_SPEED = _require.LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED = _require.LOOT_TRIPLE_SPEED,
     LOOT_TRIPLE_POWER = _require.LOOT_TRIPLE_POWER,
-    LOOT_TRIPLE_RATE = _require.LOOT_TRIPLE_RATE,
     LOOT_COMBO = _require.LOOT_COMBO,
-    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO;
+    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO,
+    LOOT_LIGHTNING_LADYBUG = _require.LOOT_LIGHTNING_LADYBUG,
+    LOOT_PENETRATING_LADYBUG = _require.LOOT_PENETRATING_LADYBUG;
 
 var _require2 = require('keyboard'),
     isKeyDown = _require2.isKeyDown,
@@ -3391,145 +3470,19 @@ var _require2 = require('keyboard'),
 var Rectangle = require('Rectangle');
 
 var _require3 = require('draw'),
-    drawImage = _require3.drawImage;
+    drawImage = _require3.drawImage,
+    drawTintedImage = _require3.drawTintedImage;
 
 var _require4 = require('sprites'),
     getNewSpriteState = _require4.getNewSpriteState;
 
 var _require5 = require('animations'),
-    requireImage = _require5.requireImage,
     r = _require5.r,
     createAnimation = _require5.createAnimation,
-    beeAnimation = _require5.beeAnimation,
-    beeEnterAnimation = _require5.beeEnterAnimation,
-    beeCatchAnimation = _require5.beeCatchAnimation,
-    beeMeleeAnimation = _require5.beeMeleeAnimation,
-    dragonflyAnimation = _require5.dragonflyAnimation,
-    dragonflyEnterAnimation = _require5.dragonflyEnterAnimation,
-    dragonflyCatchAnimation = _require5.dragonflyCatchAnimation,
-    dragonflyMeleeAnimation = _require5.dragonflyMeleeAnimation,
-    dragonflyIdleAnimation = _require5.dragonflyIdleAnimation,
-    mothAnimation = _require5.mothAnimation,
-    mothEnterAnimation = _require5.mothEnterAnimation,
-    mothCatchAnimation = _require5.mothCatchAnimation,
-    mothMeleeAnimation = _require5.mothMeleeAnimation,
-    ladybugAnimation = _require5.ladybugAnimation,
     getHitBox = _require5.getHitBox,
     getFrame = _require5.getFrame;
-/*
-Dragonfly - I don't know how long the dash should be, but I made a little sprite for a trail behind wherever
-she goes. I figure it'll mostly be in a single direction, but the idea is she can dash in that direction and
-anyone she dashes through is hit with a standard melee attack. The dash trail is left behind to show this for half
-a second.
 
-Moth - There is a short animation of her initializing the invisibility, then she goes invisible.
- At first I thought of doing an outline for the moth, but I thought outlines possibly can be hidden by backgrounds
- if the color is too similar. So, is it possible for you to simply change the opacity to 50% for any moves the moth
-  does during the invisibility? I can also do it via photoshop, but I did not know if there was a programming method
-  to do it without creating a bunch more files.
-
-Brighten screen during lightning.
-*/
-
-
-var heroesData = (_heroesData = {}, _defineProperty(_heroesData, HERO_BEE, {
-    animation: beeAnimation,
-    enterAnimation: beeEnterAnimation,
-    catchAnimation: beeCatchAnimation,
-    meleeAnimation: beeMeleeAnimation,
-    specialAnimation: {
-        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial2.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial3.png') })],
-        frameDuration: 6
-    },
-    meleeAttack: ATTACK_STAB,
-    deathEffect: EFFECT_DEAD_BEE,
-    deathSfx: 'sfx/exclamation.mp3',
-    switchEffect: EFFECT_SWITCH_BEE,
-    portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
-    baseSpeed: 7,
-    meleePower: 2,
-    meleeScaling: 0.25,
-    hudColor: '#603820',
-    // hudColor: '#E85038'
-    specialCost: 12,
-    applySpecial: function applySpecial(state, playerIndex) {
-        var player = state.players[playerIndex];
-        if (player.specialFrames < 6 * 3) {
-            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 });
-        }
-        state = checkToAddLightning(state, {
-            left: player.sprite.left + player.sprite.width - 10,
-            top: player.sprite.top + player.sprite.height / 2
-        });
-        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 500 });
-    }
-}), _defineProperty(_heroesData, HERO_DRAGONFLY, {
-    animation: dragonflyAnimation,
-    enterAnimation: dragonflyEnterAnimation,
-    catchAnimation: dragonflyCatchAnimation,
-    meleeAnimation: dragonflyMeleeAnimation,
-    idleAnimation: dragonflyIdleAnimation,
-    specialAnimation: {
-        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/dragonfly/knightspecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/dragonfly/knightspecial2.png') })],
-        frameDuration: 8
-    },
-    meleeAttack: ATTACK_SLASH,
-    deathEffect: EFFECT_DEAD_DRAGONFLY,
-    deathSfx: 'sfx/exclamation3.mp3',
-    specialSfx: 'sfx/dash.mp3',
-    switchEffect: EFFECT_SWITCH_DRAGONFLY,
-    portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),
-    baseSpeed: 8,
-    meleePower: 1,
-    meleeScaling: 0.25,
-    hudColor: '#F03010',
-    specialCost: 8,
-    applySpecial: function applySpecial(state, playerIndex) {
-        var player = state.players[playerIndex];
-        for (var i = 0; i < state.enemies.length; i++) {
-            var enemy = state.enemies[i];
-            var enemyHitBox = getEnemyHitBox(enemy);
-            if (enemy && !enemy.done && !enemy.dead && Rectangle.collision(enemyHitBox, getHeroHitBox(player))) {
-                state = damageEnemy(state, i, { playerIndex: playerIndex });
-            }
-        }
-        if (player.specialFrames <= 20) {
-            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 }, { left: player.sprite.left + 15 });
-        }
-        state = useMeleeAttack(state, playerIndex);
-        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 500 });
-    }
-}), _defineProperty(_heroesData, HERO_MOTH, {
-    animation: mothAnimation,
-    enterAnimation: mothEnterAnimation,
-    catchAnimation: mothCatchAnimation,
-    meleeAnimation: mothMeleeAnimation,
-    specialAnimation: {
-        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial2.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial3.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial4.png') })],
-        frameDuration: 6
-    },
-    meleeAttack: ATTACK_SLASH,
-    deathEffect: EFFECT_DEAD_MOTH,
-    deathSfx: 'sfx/exclamation2.mp3',
-    specialSfx: 'sfx/special.mp3',
-    switchEffect: EFFECT_SWITCH_MOTH,
-    portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
-    baseSpeed: 6,
-    meleePower: 1,
-    meleeScaling: 0.5,
-    hudColor: '#B0B0B0',
-    specialCost: 10,
-    applySpecial: function applySpecial(state, playerIndex) {
-        var player = state.players[playerIndex];
-        if (player.specialFrames < 6 * 4) {
-            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 });
-        }
-        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 4000 });
-    }
-}), _heroesData);
+var heroesData = {};
 
 var getNewPlayerState = function getNewPlayerState() {
     var _ref;
@@ -3539,13 +3492,13 @@ var getNewPlayerState = function getNewPlayerState() {
         powerupPoints: 0,
         powerupIndex: 0,
         comboScore: 0,
-        sprite: getNewSpriteState(_extends({}, dragonflyAnimation.frames[0], {
+        sprite: getNewSpriteState(_extends({}, heroesData[HERO_DRAGONFLY].animation.frames[0], {
             left: 160, top: 377,
             targetLeft: 170, targetTop: 200,
             spawnSpeed: 7
         })),
-        heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH]
-    }, _defineProperty(_ref, HERO_DRAGONFLY, { energy: 0, deaths: 0 }), _defineProperty(_ref, HERO_BEE, { energy: 0, deaths: 0 }), _defineProperty(_ref, HERO_MOTH, { energy: 0, deaths: 0 }), _defineProperty(_ref, 'invulnerableFor', 0), _defineProperty(_ref, 'spawning', true), _defineProperty(_ref, 'shotCooldown', 0), _defineProperty(_ref, 'ladybugShotCooldown', 0), _defineProperty(_ref, 'powerups', []), _defineProperty(_ref, 'relics', {}), _defineProperty(_ref, 'ladybugs', []), _defineProperty(_ref, 'actions', {
+        heroes: [HERO_MOTH, HERO_DRAGONFLY, HERO_BEE]
+    }, _defineProperty(_ref, HERO_DRAGONFLY, { energy: 0, deaths: 0 }), _defineProperty(_ref, HERO_BEE, { energy: 0, deaths: 0 }), _defineProperty(_ref, HERO_MOTH, { energy: 0, deaths: 0 }), _defineProperty(_ref, 'invulnerableFor', 0), _defineProperty(_ref, 'spawning', true), _defineProperty(_ref, 'shotCooldown', 0), _defineProperty(_ref, 'powerups', []), _defineProperty(_ref, 'relics', {}), _defineProperty(_ref, 'ladybugs', []), _defineProperty(_ref, 'actions', {
         up: false,
         down: false,
         left: false,
@@ -3658,7 +3611,7 @@ var advanceHero = function advanceHero(state, playerIndex) {
     if (player.actions.special && heroData.applySpecial && !player.sprite.targetLeft && !player.invulnerableFor
     // You can use a special when you don't have enough energy *if* another hero is available.
     && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))) {
-        if (heroData.specialSfx) state = _extends({}, state, { sfx: [].concat(_toConsumableArray(state.sfx), [heroData.specialSfx]) });
+        if (heroData.specialSfx) state = _extends({}, state, { sfx: _extends({}, state.sfx, _defineProperty({}, heroData.specialSfx, true)) });
         return updatePlayer(state, playerIndex, _defineProperty({
             usingSpecial: true, specialFrames: 0
         }, heroType, _extends({}, player[heroType], { energy: player[heroType].energy - heroData.specialCost })), { animationTime: 0 });
@@ -3672,76 +3625,10 @@ var advanceHero = function advanceHero(state, playerIndex) {
     } else if (shotCooldown > 0) {
         shotCooldown--;
     } else if (player.actions.shoot) {
-        shotCooldown = SHOT_COOLDOWN - player.powerups.filter(function (powerup) {
+        shotCooldown = (heroData.shotCooldown || SHOT_COOLDOWN) - player.powerups.filter(function (powerup) {
             return powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO;
         }).length;
-        var powers = player.powerups.filter(function (powerup) {
-            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
-        }).length;
-        var triplePowers = player.powerups.filter(function (powerup) {
-            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
-        }).length;
-        var tripleRates = player.powerups.filter(function (powerup) {
-            return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
-        }).length;
-        var middleShot = { x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0 };
-        var upperA = { x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1 },
-            lowerA = { x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1 };
-        var upperB = { x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2 },
-            lowerB = { x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2 };
-        var upperC = { x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4 },
-            lowerC = { x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4 };
-        var upperD = { x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6 },
-            lowerD = { x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6 };
-        var upperE = { x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6 },
-            lowerE = { x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6 };
-        var blastPattern = [[middleShot], [upperA, lowerA], [upperB, middleShot, lowerB], [upperC, upperA, lowerA, lowerC], [upperD, upperB, middleShot, lowerB, lowerD], [upperE, upperC, upperA, lowerA, lowerC, lowerE]][tripleRates];
-        var mute = false;
-        var scale = 1 + powers + triplePowers / 2;
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-            for (var _iterator2 = blastPattern[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var blastOffsets = _step2.value;
-
-                var blast = createAttack(ATTACK_BLAST, {
-                    damage: 1 + triplePowers,
-                    left: player.sprite.left + player.sprite.vx + player.sprite.width,
-                    /*xOffset: blastOffsets.x,
-                    yOffset: blastOffsets.y,
-                    vx: 20,*/
-                    xOffset: ATTACK_OFFSET,
-                    yOffset: 0,
-                    vx: blastOffsets.vx,
-                    vy: blastOffsets.vy,
-                    delay: 2,
-                    playerIndex: playerIndex
-                });
-                blast.width *= scale;
-                blast.height *= scale;
-                blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
-                // Only play 1 attack sound per frame.
-                if (mute) delete blast.sfx;
-                state = addPlayerAttackToState(state, blast);
-                mute = true;
-            }
-        } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                    _iterator2.return();
-                }
-            } finally {
-                if (_didIteratorError2) {
-                    throw _iteratorError2;
-                }
-            }
-        }
-
+        state = heroData.shoot(state, playerIndex);
         player = state.players[playerIndex];
     }
 
@@ -3750,8 +3637,6 @@ var advanceHero = function advanceHero(state, playerIndex) {
         left = _player$sprite.left,
         vx = _player$sprite.vx,
         vy = _player$sprite.vy,
-        width = _player$sprite.width,
-        height = _player$sprite.height,
         animationTime = _player$sprite.animationTime,
         targetLeft = _player$sprite.targetLeft,
         targetTop = _player$sprite.targetTop;
@@ -3768,7 +3653,7 @@ var advanceHero = function advanceHero(state, playerIndex) {
             targetLeft = targetTop = false;
         }
         return updatePlayer(state, playerIndex, {
-            ladybugShotCooldown: 1, invulnerableFor: invulnerableFor, spawning: true,
+            invulnerableFor: invulnerableFor, spawning: true,
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames: specialCooldownFrames
         }, { left: left, top: top, animationTime: animationTime, targetLeft: targetLeft, targetTop: targetTop });
     }
@@ -3815,13 +3700,13 @@ var advanceHero = function advanceHero(state, playerIndex) {
         vx = 0;
     }
     var sprite = _extends({}, player.sprite, { left: left, top: top, vx: vx, vy: vy, animationTime: animationTime });
-    var sfx = state.sfx;
+    var sfx = _extends({}, state.sfx);
     var chasingNeedle = player.chasingNeedle,
         catchingNeedleFrames = player.catchingNeedleFrames;
     if (chasingNeedle) {
         chasingNeedle = false;
         catchingNeedleFrames = 6;
-        sfx.push('sfx/needlegrab.mp3');
+        sfx['sfx/needlegrab.mp3'] = true;
     } else if (catchingNeedleFrames > 0) {
         catchingNeedleFrames--;
     }
@@ -3848,19 +3733,41 @@ var advanceLadybugs = function advanceLadybugs(state, playerIndex) {
     var player = state.players[playerIndex];
     var sprite = player.sprite;
     var ladybugs = [].concat(_toConsumableArray(player.ladybugs));
-    var ladybugShotCooldown = player.ladybugShotCooldown;
-    if (ladybugShotCooldown > 0) {
-        ladybugShotCooldown--;
-    } else if (player.actions.shoot && player.ladybugs.length) {
-        ladybugShotCooldown = SHOT_COOLDOWN * 1.5;
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-            for (var _iterator3 = ladybugs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                var ladybug = _step3.value;
-
+    for (var i = 0; i < ladybugs.length; i++) {
+        var ladybug = ladybugs[i];
+        var delta = [[-5, -32], [-5, 32], [52, -16], [52, 16]][i % 4];
+        var factor = 1;
+        if (ladybug.type === LOOT_LIGHTNING_LADYBUG) factor = 2;
+        var tx = sprite.left + sprite.width / 2 - ladybug.width / 2 + factor * delta[0];
+        var ty = sprite.top + sprite.height / 2 - ladybug.height / 2 + factor * delta[1];
+        var shotCooldown = ladybug.shotCooldown || 0;
+        if (shotCooldown > 0) {
+            shotCooldown--;
+        } else if (player.actions.shoot && !player.spawning) {
+            if (ladybug.type === LOOT_PENETRATING_LADYBUG) {
+                shotCooldown = 2 * SHOT_COOLDOWN;
+                var laser = createAttack(ATTACK_LASER, {
+                    left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
+                    vx: 25,
+                    playerIndex: playerIndex
+                });
+                laser.width *= 2;
+                laser.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - laser.height) / 2) + 6;
+                state = addPlayerAttackToState(state, laser);
+            } else if (ladybug.type === LOOT_LIGHTNING_LADYBUG) {
+                shotCooldown = 0.5 * SHOT_COOLDOWN;
+                state = checkToAddLightning(state, {
+                    type: EFFECT_FAST_LIGHTNING,
+                    charges: 0, damage: 1,
+                    left: ladybug.left + ladybug.width / 2 + player.sprite.vx,
+                    top: ladybug.top + ladybug.height / 2 + player.sprite.vy,
+                    rotation: Math.random() * 2 * Math.PI,
+                    scale: 1,
+                    vx: player.sprite.vx,
+                    vy: player.sprite.vy
+                });
+            } else {
+                shotCooldown = 1.5 * SHOT_COOLDOWN;
                 var orb = createAttack(ATTACK_ORB, {
                     damage: 1,
                     left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
@@ -3870,32 +3777,15 @@ var advanceLadybugs = function advanceLadybugs(state, playerIndex) {
                 orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6;
                 state = addPlayerAttackToState(state, orb);
             }
-        } catch (err) {
-            _didIteratorError3 = true;
-            _iteratorError3 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                    _iterator3.return();
-                }
-            } finally {
-                if (_didIteratorError3) {
-                    throw _iteratorError3;
-                }
-            }
         }
-    }
-    for (var i = 0; i < ladybugs.length; i++) {
-        var delta = [[-5, -32], [-5, 32], [52, -16], [52, 16]][i % 4];
-        var tx = sprite.left + sprite.width / 2 - ladybugAnimation.frames[0].width / 2 + delta[0];
-        var ty = sprite.top + sprite.height / 2 - ladybugAnimation.frames[0].height / 2 + delta[1];
         ladybugs[i] = _extends({}, ladybugs[i], {
+            shotCooldown: shotCooldown,
             left: (ladybugs[i].left + tx) / 2,
             top: (ladybugs[i].top + ty) / 2,
             animationTime: ladybugs[i].animationTime + FRAME_LENGTH
         });
     }
-    return updatePlayer(state, playerIndex, { ladybugShotCooldown: ladybugShotCooldown, ladybugs: ladybugs });
+    return updatePlayer(state, playerIndex, { ladybugs: ladybugs });
 };
 
 var switchHeroes = function switchHeroes(updatedState, playerIndex) {
@@ -3939,7 +3829,7 @@ var switchHeroes = function switchHeroes(updatedState, playerIndex) {
     }));
     player = updatedState.players[playerIndex];
 
-    var sfx = [].concat(_toConsumableArray(updatedState.sfx), ['sfx/needledropflip.mp3']);
+    var sfx = _extends({}, updatedState.sfx, { 'sfx/needledropflip.mp3': true });
     return _extends({}, updatedState, { sfx: sfx });
 };
 
@@ -4004,12 +3894,12 @@ var damageHero = function damageHero(updatedState, playerIndex) {
     }));
     player = updatedState.players[playerIndex];
 
-    var sfx = [].concat(_toConsumableArray(updatedState.sfx), [deadHeroData.deathSfx]);
+    var sfx = _extends({}, updatedState.sfx, _defineProperty({}, deadHeroData.deathSfx, true));
     if (player.done) {
         deathCooldown = DEATH_COOLDOWN;
-        sfx.push('sfx/death.mp3');
+        sfx['sfx/death.mp3'] = true;
     } else {
-        sfx.push('sfx/needledropflip.mp3');
+        sfx['sfx/needledropflip.mp3'] = true;
     }
     return _extends({}, updatedState, { deathCooldown: deathCooldown, sfx: sfx });
 };
@@ -4066,34 +3956,38 @@ var renderHero = function renderHero(context, player) {
         context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         context.restore();
     }
-    var _iteratorNormalCompletion4 = true;
-    var _didIteratorError4 = false;
-    var _iteratorError4 = undefined;
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
 
     try {
-        for (var _iterator4 = ladybugs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var ladybug = _step4.value;
+        for (var _iterator2 = ladybugs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var ladybug = _step2.value;
 
             renderLadybug(context, ladybug);
         }
     } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
     } finally {
         try {
-            if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                _iterator4.return();
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
             }
         } finally {
-            if (_didIteratorError4) {
-                throw _iteratorError4;
+            if (_didIteratorError2) {
+                throw _iteratorError2;
             }
         }
     }
 };
 
+var ladybugAnimation = createAnimation('gfx/heroes/ladybug.png', r(25, 20), { top: 20, cols: 4, duration: 4 });
+var ladybugAnimationTint = createAnimation('gfx/heroes/ladybug.png', r(25, 20), { top: 0, cols: 4, duration: 4 });
 var renderLadybug = function renderLadybug(context, ladybug) {
-    var frame = getFrame(ladybugAnimation, ladybug.animationTime);
+    var frame = getFrame(ladybugAnimationTint, ladybug.animationTime);
+    drawTintedImage(context, frame.image, ladybug.color, 1, frame, ladybug);
+    frame = getFrame(ladybugAnimation, ladybug.animationTime);
     drawImage(context, frame.image, frame, ladybug);
 };
 
@@ -4105,7 +3999,9 @@ module.exports = {
     renderHero: renderHero,
     heroesData: heroesData,
     updatePlayer: updatePlayer,
-    isPlayerInvulnerable: isPlayerInvulnerable
+    isPlayerInvulnerable: isPlayerInvulnerable,
+    ladybugAnimation: ladybugAnimation,
+    useMeleeAttack: useMeleeAttack
 };
 
 var _require6 = require('world'),
@@ -4116,115 +4012,437 @@ var _require7 = require('attacks'),
     addPlayerAttackToState = _require7.addPlayerAttackToState;
 
 var _require8 = require('effects'),
-    effects = _require8.effects,
     createEffect = _require8.createEffect,
     addEffectToState = _require8.addEffectToState;
 
-var EFFECT_LIGHTNING = 'lightning';
-effects[EFFECT_LIGHTNING] = {
+var _require9 = require('effects/lightning'),
+    EFFECT_FAST_LIGHTNING = _require9.EFFECT_FAST_LIGHTNING,
+    checkToAddLightning = _require9.checkToAddLightning;
+
+require('heroes/bee');
+require('heroes/dragonfly');
+require('heroes/moth');
+
+},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"effects/lightning":9,"gameConstants":11,"heroes/bee":13,"heroes/dragonfly":14,"heroes/moth":15,"keyboard":16,"sprites":21,"world":23}],13:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _require = require('gameConstants'),
+    ATTACK_OFFSET = _require.ATTACK_OFFSET,
+    ATTACK_BLAST = _require.ATTACK_BLAST,
+    ATTACK_STAB = _require.ATTACK_STAB,
+    EFFECT_DEAD_BEE = _require.EFFECT_DEAD_BEE,
+    EFFECT_SWITCH_BEE = _require.EFFECT_SWITCH_BEE,
+    HERO_BEE = _require.HERO_BEE,
+    LOOT_ATTACK_POWER = _require.LOOT_ATTACK_POWER,
+    LOOT_TRIPLE_POWER = _require.LOOT_TRIPLE_POWER,
+    LOOT_TRIPLE_RATE = _require.LOOT_TRIPLE_RATE,
+    LOOT_COMBO = _require.LOOT_COMBO,
+    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO;
+
+var _require2 = require('animations'),
+    requireImage = _require2.requireImage,
+    r = _require2.r,
+    createAnimation = _require2.createAnimation;
+
+var _require3 = require('heroes'),
+    heroesData = _require3.heroesData,
+    updatePlayer = _require3.updatePlayer;
+
+var beeHitBox = { left: 10, top: 12, width: 60, height: 40 };
+var beeRectangle = r(88, 56, { hitBox: beeHitBox });
+
+heroesData[HERO_BEE] = {
     animation: {
-        frames: [_extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain1.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain2.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain3.png') }), _extends({}, r(50, 10), { image: requireImage('gfx/attacks/chain4.png') })],
-        frameDuration: 4
+        frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/bee4.png') })],
+        frameDuration: 3
     },
-    advanceEffect: function advanceEffect(state, effectIndex) {
-        var effect = state.effects[effectIndex];
-        if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
-            var center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
-            var left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
-            var top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
-            state = checkToAddLightning(state, _extends({}, effect, { left: left, top: top }));
+    enterAnimation: createAnimation('gfx/heroes/bee/beeflyin1.png', beeRectangle),
+    catchAnimation: createAnimation('gfx/heroes/bee/beeflyin2.png', beeRectangle),
+    meleeAnimation: {
+        frames: [_extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem1.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem2.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem3.png') }), _extends({}, beeRectangle, { image: requireImage('gfx/heroes/bee/beem4.png') })],
+        frameDuration: 3
+    },
+    specialAnimation: {
+        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial2.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/bee/beespecial3.png') })],
+        frameDuration: 6
+    },
+    meleeAttack: ATTACK_STAB,
+    deathEffect: EFFECT_DEAD_BEE,
+    deathSfx: 'sfx/exclamation.mp3',
+    switchEffect: EFFECT_SWITCH_BEE,
+    portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
+    baseSpeed: 7,
+    meleePower: 2,
+    meleeScaling: 0.25,
+    hudColor: '#603820',
+    // hudColor: '#E85038'
+    specialCost: 12,
+    applySpecial: function applySpecial(state, playerIndex) {
+        // TODO: Brighten screen during lightning.
+        var player = state.players[playerIndex];
+        if (player.specialFrames < 6 * 3) {
+            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 });
         }
-        return state;
-    },
-    props: {
-        loops: 1,
-        damage: 5,
-        charges: 8,
-        branchChance: .9,
-        rotation: 0,
-        sfx: 'sfx/fastlightning.mp3'
-    }
-};
-
-var checkToAddLightning = function checkToAddLightning(state, _ref2) {
-    var left = _ref2.left,
-        top = _ref2.top,
-        _ref2$charges = _ref2.charges,
-        charges = _ref2$charges === undefined ? 8 : _ref2$charges,
-        _ref2$damage = _ref2.damage,
-        damage = _ref2$damage === undefined ? 5 : _ref2$damage,
-        _ref2$branchChance = _ref2.branchChance,
-        branchChance = _ref2$branchChance === undefined ? 0 : _ref2$branchChance,
-        _ref2$rotation = _ref2.rotation,
-        rotation = _ref2$rotation === undefined ? 0 : _ref2$rotation;
-
-    var addLightning = function addLightning(rotation, branchChance) {
-        var lightning = createEffect(EFFECT_LIGHTNING, {
-            left: left, top: top,
-            charges: charges - 1,
-            rotation: rotation,
-            branchChance: branchChance,
-            xScale: 2, yScale: 2
+        state = checkToAddLightning(state, {
+            left: player.sprite.left + player.sprite.width - 10,
+            top: player.sprite.top + player.sprite.height / 2
         });
-        lightning.width *= 2;
-        lightning.height *= 2;
-        lightning.left -= lightning.width / 2;
-        lightning.left += Math.cos(rotation) * lightning.width / 2;
-        lightning.top -= lightning.height / 2;
-        lightning.top += Math.sin(rotation) * lightning.width / 2;
-        state = addEffectToState(state, lightning);
-    };
-    var targetRotations = [];
-    for (var i = 0; i < state.enemies.length; i++) {
-        var enemy = state.enemies[i];
-        if (enemy.done || enemy.dead || enemy.left + enemy.width / 2 <= left) continue;
-        var dx = enemy.left + enemy.width / 2 - left,
-            dy = enemy.top + enemy.height / 2 - top;
-        if (Math.sqrt(dx * dx + dy * dy) < 200) {
-            targetRotations.push(Math.atan2(dy, dx));
-            state = damageEnemy(state, i, { playerIndex: 0, damage: damage });
-        }
-    }
-    if (targetRotations.length) {
-        var _branchChance = targetRotations.length > 1 ? 0 : _branchChance + 0.2;
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
+        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 500 });
+    },
+    shoot: function shoot(state, playerIndex) {
+        var player = state.players[playerIndex];
+        var powers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
+        }).length;
+        var triplePowers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var tripleRates = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var middleShot = { x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0 };
+        var upperA = { x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1 },
+            lowerA = { x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1 };
+        var upperB = { x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2 },
+            lowerB = { x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2 };
+        var upperC = { x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4 },
+            lowerC = { x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4 };
+        var upperD = { x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6 },
+            lowerD = { x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6 };
+        var upperE = { x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6 },
+            lowerE = { x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6 };
+        var blastPattern = [[middleShot], [upperA, lowerA], [upperB, middleShot, lowerB], [upperC, upperA, lowerA, lowerC], [upperD, upperB, middleShot, lowerB, lowerD], [upperE, upperC, upperA, lowerA, lowerC, lowerE]][tripleRates];
+        var scale = 1 + powers + triplePowers / 2;
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
 
         try {
-            for (var _iterator5 = targetRotations[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                var enemyRotation = _step5.value;
+            for (var _iterator = blastPattern[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var blastOffsets = _step.value;
 
-                addLightning(enemyRotation, _branchChance);
+                var blast = createAttack(ATTACK_BLAST, {
+                    damage: 1 + triplePowers,
+                    left: player.sprite.left + player.sprite.vx + player.sprite.width,
+                    xOffset: ATTACK_OFFSET,
+                    yOffset: 0,
+                    vx: blastOffsets.vx,
+                    vy: blastOffsets.vy,
+                    delay: 2,
+                    playerIndex: playerIndex
+                });
+                blast.width *= scale;
+                blast.height *= scale;
+                blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+                state = addPlayerAttackToState(state, blast);
             }
         } catch (err) {
-            _didIteratorError5 = true;
-            _iteratorError5 = err;
+            _didIteratorError = true;
+            _iteratorError = err;
         } finally {
             try {
-                if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                    _iterator5.return();
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
                 }
             } finally {
-                if (_didIteratorError5) {
-                    throw _iteratorError5;
+                if (_didIteratorError) {
+                    throw _iteratorError;
                 }
             }
         }
-    } else if (Math.random() < branchChance) {
-        addLightning(rotation - Math.PI / 12, 0);
-        addLightning(rotation + Math.PI / 13, 0);
-    } else {
-        addLightning(rotation, branchChance + 0.2);
+
+        return state;
     }
-    return state;
 };
 
-var _require9 = require('enemies'),
-    getEnemyHitBox = _require9.getEnemyHitBox,
-    damageEnemy = _require9.damageEnemy;
+var _require4 = require('attacks'),
+    createAttack = _require4.createAttack,
+    addPlayerAttackToState = _require4.addPlayerAttackToState;
 
-},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"enemies":9,"gameConstants":10,"keyboard":12,"sprites":17,"world":19}],12:[function(require,module,exports){
+var _require5 = require('effects/lightning'),
+    checkToAddLightning = _require5.checkToAddLightning;
+
+},{"animations":2,"attacks":5,"effects/lightning":9,"gameConstants":11,"heroes":12}],14:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _require = require('gameConstants'),
+    ATTACK_OFFSET = _require.ATTACK_OFFSET,
+    ATTACK_BLAST = _require.ATTACK_BLAST,
+    ATTACK_SLASH = _require.ATTACK_SLASH,
+    EFFECT_DEAD_DRAGONFLY = _require.EFFECT_DEAD_DRAGONFLY,
+    EFFECT_SWITCH_DRAGONFLY = _require.EFFECT_SWITCH_DRAGONFLY,
+    HERO_DRAGONFLY = _require.HERO_DRAGONFLY,
+    LOOT_ATTACK_POWER = _require.LOOT_ATTACK_POWER,
+    LOOT_TRIPLE_POWER = _require.LOOT_TRIPLE_POWER,
+    LOOT_TRIPLE_RATE = _require.LOOT_TRIPLE_RATE,
+    LOOT_COMBO = _require.LOOT_COMBO,
+    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO;
+
+var Rectangle = require('Rectangle');
+
+var _require2 = require('animations'),
+    requireImage = _require2.requireImage,
+    r = _require2.r,
+    createAnimation = _require2.createAnimation;
+
+var _require3 = require('heroes'),
+    heroesData = _require3.heroesData,
+    updatePlayer = _require3.updatePlayer,
+    useMeleeAttack = _require3.useMeleeAttack,
+    getHeroHitBox = _require3.getHeroHitBox;
+
+var dragonflyHitBox = { left: 10, top: 15, width: 70, height: 30 };
+var dragonflyRectangle = r(88, 56, { hitBox: dragonflyHitBox });
+var dragonflyAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonfly4.png') })],
+    frameDuration: 3
+};
+var dragonflyEnterAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin1.png', dragonflyRectangle);
+
+var dragonflyCatchAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin2.png', dragonflyRectangle);
+
+var dragonflyMeleeAnimation = {
+    frames: [_extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym1.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym2.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym3.png') }), _extends({}, dragonflyRectangle, { image: requireImage('gfx/heroes/dragonfly/dragonflym4.png') })],
+    frameDuration: 3
+};
+
+heroesData[HERO_DRAGONFLY] = {
+    animation: dragonflyAnimation,
+    enterAnimation: dragonflyEnterAnimation,
+    catchAnimation: dragonflyCatchAnimation,
+    meleeAnimation: dragonflyMeleeAnimation,
+    specialAnimation: {
+        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/dragonfly/knightspecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/dragonfly/knightspecial2.png') })],
+        frameDuration: 8
+    },
+    meleeAttack: ATTACK_SLASH,
+    deathEffect: EFFECT_DEAD_DRAGONFLY,
+    deathSfx: 'sfx/exclamation3.mp3',
+    specialSfx: 'sfx/dash.mp3',
+    switchEffect: EFFECT_SWITCH_DRAGONFLY,
+    portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),
+    baseSpeed: 8,
+    meleePower: 1,
+    meleeScaling: 0.25,
+    hudColor: '#F03010',
+    specialCost: 8,
+    applySpecial: function applySpecial(state, playerIndex) {
+        // TODO: support multiple directions, add ghost trail behind her.
+        var player = state.players[playerIndex];
+        for (var i = 0; i < state.enemies.length; i++) {
+            var enemy = state.enemies[i];
+            var enemyHitBox = getEnemyHitBox(enemy);
+            if (enemy && !enemy.done && !enemy.dead && Rectangle.collision(enemyHitBox, getHeroHitBox(player))) {
+                state = damageEnemy(state, i, { playerIndex: playerIndex });
+            }
+        }
+        if (player.specialFrames <= 20) {
+            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 }, { left: player.sprite.left + 15 });
+        }
+        state = useMeleeAttack(state, playerIndex);
+        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 500 });
+    },
+    shoot: function shoot(state, playerIndex) {
+        var player = state.players[playerIndex];
+        var powers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
+        }).length;
+        var triplePowers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var tripleRates = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var middleShot = { x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0 };
+        var upperA = { x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1 },
+            lowerA = { x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1 };
+        var upperB = { x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2 },
+            lowerB = { x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2 };
+        var upperC = { x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4 },
+            lowerC = { x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4 };
+        var upperD = { x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6 },
+            lowerD = { x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6 };
+        var upperE = { x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6 },
+            lowerE = { x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6 };
+        var blastPattern = [[middleShot], [upperA, lowerA], [upperB, middleShot, lowerB], [upperC, upperA, lowerA, lowerC], [upperD, upperB, middleShot, lowerB, lowerD], [upperE, upperC, upperA, lowerA, lowerC, lowerE]][tripleRates];
+        var scale = 1 + powers + triplePowers / 2;
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = blastPattern[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var blastOffsets = _step.value;
+
+                var blast = createAttack(ATTACK_BLAST, {
+                    damage: 1 + triplePowers,
+                    left: player.sprite.left + player.sprite.vx + player.sprite.width,
+                    xOffset: ATTACK_OFFSET,
+                    yOffset: 0,
+                    vx: blastOffsets.vx,
+                    vy: blastOffsets.vy,
+                    delay: 2,
+                    playerIndex: playerIndex
+                });
+                blast.width *= scale;
+                blast.height *= scale;
+                blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+                state = addPlayerAttackToState(state, blast);
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
+        }
+
+        return state;
+    }
+};
+
+var _require4 = require('attacks'),
+    createAttack = _require4.createAttack,
+    addPlayerAttackToState = _require4.addPlayerAttackToState;
+
+var _require5 = require('enemies'),
+    getEnemyHitBox = _require5.getEnemyHitBox,
+    damageEnemy = _require5.damageEnemy;
+
+},{"Rectangle":1,"animations":2,"attacks":5,"enemies":10,"gameConstants":11,"heroes":12}],15:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _require = require('gameConstants'),
+    ATTACK_OFFSET = _require.ATTACK_OFFSET,
+    ATTACK_SPRAY_UP = _require.ATTACK_SPRAY_UP,
+    ATTACK_SPRAY_RIGHT = _require.ATTACK_SPRAY_RIGHT,
+    ATTACK_SPRAY_DOWN = _require.ATTACK_SPRAY_DOWN,
+    ATTACK_SLASH = _require.ATTACK_SLASH,
+    EFFECT_DEAD_MOTH = _require.EFFECT_DEAD_MOTH,
+    EFFECT_SWITCH_MOTH = _require.EFFECT_SWITCH_MOTH,
+    HERO_MOTH = _require.HERO_MOTH,
+    LOOT_ATTACK_POWER = _require.LOOT_ATTACK_POWER,
+    LOOT_TRIPLE_POWER = _require.LOOT_TRIPLE_POWER,
+    LOOT_TRIPLE_RATE = _require.LOOT_TRIPLE_RATE,
+    LOOT_COMBO = _require.LOOT_COMBO,
+    LOOT_TRIPLE_COMBO = _require.LOOT_TRIPLE_COMBO;
+
+var _require2 = require('animations'),
+    requireImage = _require2.requireImage,
+    r = _require2.r,
+    createAnimation = _require2.createAnimation;
+
+var _require3 = require('heroes'),
+    heroesData = _require3.heroesData,
+    updatePlayer = _require3.updatePlayer;
+
+var mothHitBox = { left: 10, top: 10, width: 65, height: 42 };
+var mothRectangle = r(88, 56, { hitBox: mothHitBox });
+var mothAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/moth4.png') })],
+    frameDuration: 3
+};
+var mothEnterAnimation = createAnimation('gfx/heroes/moth/mothflyin1.png', mothRectangle);
+var mothCatchAnimation = createAnimation('gfx/heroes/moth/mothflyin2.png', mothRectangle);
+var mothMeleeAnimation = {
+    frames: [_extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm1.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm2.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm3.png') }), _extends({}, mothRectangle, { image: requireImage('gfx/heroes/moth/mothm4.png') })],
+    frameDuration: 3
+};
+
+heroesData[HERO_MOTH] = {
+    animation: mothAnimation,
+    enterAnimation: mothEnterAnimation,
+    catchAnimation: mothCatchAnimation,
+    meleeAnimation: mothMeleeAnimation,
+    specialAnimation: {
+        frames: [_extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial1.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial2.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial3.png') }), _extends({}, r(88, 56), { image: requireImage('gfx/heroes/moth/mothspecial4.png') })],
+        frameDuration: 6
+    },
+    meleeAttack: ATTACK_SLASH,
+    deathEffect: EFFECT_DEAD_MOTH,
+    deathSfx: 'sfx/exclamation2.mp3',
+    specialSfx: 'sfx/special.mp3',
+    switchEffect: EFFECT_SWITCH_MOTH,
+    portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
+    baseSpeed: 6,
+    meleePower: 1,
+    meleeScaling: 0.5,
+    hudColor: '#B0B0B0',
+    specialCost: 10,
+    applySpecial: function applySpecial(state, playerIndex) {
+        var player = state.players[playerIndex];
+        if (player.specialFrames < 6 * 4) {
+            return updatePlayer(state, playerIndex, { specialFrames: player.specialFrames + 1 });
+        }
+        return updatePlayer(state, playerIndex, { usingSpecial: false, invulnerableFor: 4000 });
+    },
+
+    shotCooldown: 16,
+    shoot: function shoot(state, playerIndex) {
+        var player = state.players[playerIndex];
+        var powers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO;
+        }).length;
+        var triplePowers = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var tripleRates = player.powerups.filter(function (powerup) {
+            return powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO;
+        }).length;
+        var scale = 1.5 + powers / 2 + triplePowers / 4;
+        // This maxes out at 13 bullets.
+        var numBullets = 3 + 3 * triplePowers;
+        // This is between ~PI/4 and PI/2
+        var minAngle = -Math.PI / 6 - numBullets * Math.PI / 96;
+        var angleBetween = 2 * -minAngle / 3;
+        for (var i = 0; i < numBullets; i++) {
+            var theta = minAngle + angleBetween * (i % 3 + Math.random());
+            var vx = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.cos(theta);
+            var vy = (tripleRates + 7 + 2 * Math.floor(i / 3)) * Math.sin(theta);
+            var type = ATTACK_SPRAY_RIGHT;
+            if (theta > Math.PI / 12) type = ATTACK_SPRAY_DOWN;else if (theta < -Math.PI / 12) type = ATTACK_SPRAY_UP;
+            var blast = createAttack(type, {
+                damage: 1,
+                left: player.sprite.left + player.sprite.vx + player.sprite.width,
+                xOffset: ATTACK_OFFSET,
+                yOffset: 0,
+                vx: vx,
+                vy: vy,
+                delay: 2,
+                playerIndex: playerIndex,
+                ttl: 20,
+                piercing: true
+            });
+            blast.width *= scale;
+            blast.height *= scale;
+            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+            state = addPlayerAttackToState(state, blast);
+        }
+        return state;
+    }
+};
+
+var _require4 = require('attacks'),
+    createAttack = _require4.createAttack,
+    addPlayerAttackToState = _require4.addPlayerAttackToState;
+
+},{"animations":2,"attacks":5,"gameConstants":11,"heroes":12}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4237,6 +4455,7 @@ var _KEY_MAPPINGS, _GAME_PAD_MAPPINGS;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+/* global navigator */
 var KEY_LEFT = exports.KEY_LEFT = 37;
 var KEY_RIGHT = exports.KEY_RIGHT = 39;
 var KEY_UP = exports.KEY_UP = 38;
@@ -4341,7 +4560,7 @@ var isKeyDown = exports.isKeyDown = function isKeyDown(keyCode) {
     return false;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var _lootData;
@@ -4364,15 +4583,15 @@ var _require2 = require('gameConstants'),
     FRAME_LENGTH = _require2.FRAME_LENGTH,
     WIDTH = _require2.WIDTH,
     GAME_HEIGHT = _require2.GAME_HEIGHT,
-    OFFSCREEN_PADDING = _require2.OFFSCREEN_PADDING,
-    POINTS_FOR_POWERUP = _require2.POINTS_FOR_POWERUP,
     MAX_ENERGY = _require2.MAX_ENERGY,
     HERO_BEE = _require2.HERO_BEE,
     HERO_DRAGONFLY = _require2.HERO_DRAGONFLY,
     HERO_MOTH = _require2.HERO_MOTH,
     LOOT_COIN = _require2.LOOT_COIN,
     LOOT_LIFE = _require2.LOOT_LIFE,
-    LOOT_LADYBUG = _require2.LOOT_LADYBUG,
+    LOOT_NORMAL_LADYBUG = _require2.LOOT_NORMAL_LADYBUG,
+    LOOT_LIGHTNING_LADYBUG = _require2.LOOT_LIGHTNING_LADYBUG,
+    LOOT_PENETRATING_LADYBUG = _require2.LOOT_PENETRATING_LADYBUG,
     LOOT_SPEED = _require2.LOOT_SPEED,
     LOOT_ATTACK_POWER = _require2.LOOT_ATTACK_POWER,
     LOOT_ATTACK_SPEED = _require2.LOOT_ATTACK_SPEED,
@@ -4400,17 +4619,11 @@ var _require3 = require('animations'),
     powerupTripleSquareAnimation = _require3.powerupTripleSquareAnimation,
     powerupTripleTriangleAnimation = _require3.powerupTripleTriangleAnimation,
     powerupComboAnimation = _require3.powerupComboAnimation,
-    powerupTripleComboAnimation = _require3.powerupTripleComboAnimation,
-    powerupLadybugAnimation = _require3.powerupLadybugAnimation,
-    ladybugAnimation = _require3.ladybugAnimation,
-    beePortraitAnimation = _require3.beePortraitAnimation;
+    powerupTripleComboAnimation = _require3.powerupTripleComboAnimation;
 
-var _require4 = require('sounds'),
-    playSound = _require4.playSound;
-
-var _require5 = require('sprites'),
-    getNewSpriteState = _require5.getNewSpriteState,
-    getTargetVector = _require5.getTargetVector;
+var _require4 = require('sprites'),
+    getNewSpriteState = _require4.getNewSpriteState,
+    getTargetVector = _require4.getTargetVector;
 
 var helmetAnimation = createAnimation('gfx/items/helmet.png', r(17, 18));
 
@@ -4418,7 +4631,6 @@ var circleAcceleration = function circleAcceleration(state, lootIndex) {
     var _state$loot$lootIndex = state.loot[lootIndex],
         vx = _state$loot$lootIndex.vx,
         vy = _state$loot$lootIndex.vy,
-        seed = _state$loot$lootIndex.seed,
         animationTime = _state$loot$lootIndex.animationTime,
         radius = _state$loot$lootIndex.radius;
 
@@ -4503,7 +4715,7 @@ var powerupLoot = function powerupLoot(type, animation, effectType) {
         },
 
         // draw: drawGlowing,
-        sfx: 'sfx/powerup.mp3',
+        collectSfx: 'sfx/powerup.mp3',
         props: {
             scale: 1
         }
@@ -4514,25 +4726,42 @@ var triplePowerupLoot = function triplePowerupLoot(type, animation) {
     return {
         animation: animation,
         // accelerate: circleAcceleration,
-        collect: function collect(state, playerIndex, loot) {
+        collect: function collect(state, playerIndex) {
             var powerups = [].concat(_toConsumableArray(state.players[playerIndex].powerups), [type]);
             if (powerups.length > 5) powerups.shift();
             return updatePlayer(state, playerIndex, { powerups: powerups });
         },
 
-        sfx: 'sfx/powerup.mp3',
+        collectSfx: 'sfx/powerup.mp3',
         props: {
             scale: 1
         }
     };
 };
 
-var getNewLadyBug = function getNewLadyBug(playerSprite) {
-    return getNewSpriteState(_extends({}, ladybugAnimation.frames[0], {
-        left: playerSprite.left + playerSprite.width / 2 - ladybugAnimation.frames[0].width / 2,
-        top: playerSprite.top + playerSprite.height / 2 - ladybugAnimation.frames[0].height / 2
-    }));
-};
+function ladybugPowerup(animation, color) {
+    return {
+        animation: animation,
+        accelerate: circleAcceleration,
+        collect: collectLadybug,
+        draw: drawGlowing,
+        collectSfx: 'sfx/powerup.mp3',
+        props: {
+            scale: 1,
+            color: color
+        }
+    };
+}
+function collectLadybug(state, playerIndex, loot) {
+    var ladybugs = [].concat(_toConsumableArray(state.players[playerIndex].ladybugs), [getNewSpriteState(_extends({}, ladybugAnimation.frames[0], {
+        type: loot.type,
+        color: loot.color,
+        left: loot.left + loot.width / 2 - ladybugAnimation.frames[0].width / 2,
+        top: loot.top + loot.height / 2 - ladybugAnimation.frames[0].height / 2
+    }))]);
+    if (ladybugs.length > 3) ladybugs.shift();
+    return updatePlayer(state, playerIndex, { ladybugs: ladybugs });
+}
 
 var portalAnimation = createAnimation('gfx/scene/portal/portal.png', r(50, 80), { rows: 6, duration: 8 }, { loopFrame: 3 });
 
@@ -4557,7 +4786,7 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
         return gainPoints(state, playerIndex, loot.points);
     },
 
-    sfx: 'sfx/coin.mp3',
+    collectSfx: 'sfx/coin.mp3',
     props: {
         scale: 2,
         comboPoints: 20,
@@ -4566,7 +4795,7 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
 }), _defineProperty(_lootData, LOOT_LIFE, {
     animation: createAnimation('gfx/items/goldenheart.png', r(17, 18)),
     accelerate: circleAcceleration,
-    collect: function collect(state, playerIndex, loot) {
+    collect: function collect(state, playerIndex) {
         var _updatePlayer;
 
         var player = state.players[playerIndex];
@@ -4575,25 +4804,11 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
     },
 
     draw: drawGlowing,
-    sfx: 'sfx/heal.mp3',
+    collectSfx: 'sfx/heal.mp3',
     props: {
         scale: 1
     }
-}), _defineProperty(_lootData, LOOT_LADYBUG, {
-    animation: powerupLadybugAnimation,
-    accelerate: circleAcceleration,
-    collect: function collect(state, playerIndex, loot) {
-        var ladybugs = [].concat(_toConsumableArray(state.players[playerIndex].ladybugs), [getNewLadyBug(state.players[playerIndex].sprite)]);
-        if (ladybugs.length > 3) ladybugs.shift();
-        return updatePlayer(state, playerIndex, { ladybugs: ladybugs });
-    },
-
-    draw: drawGlowing,
-    sfx: 'sfx/powerup.mp3',
-    props: {
-        scale: 1
-    }
-}), _defineProperty(_lootData, LOOT_HELMET, {
+}), _defineProperty(_lootData, LOOT_NORMAL_LADYBUG, ladybugPowerup(createAnimation('gfx/items/ladybugicon.png', r(30, 15)), 'red')), _defineProperty(_lootData, LOOT_LIGHTNING_LADYBUG, ladybugPowerup(createAnimation('gfx/items/ladybugblue.png', r(30, 15)), '#4860A0')), _defineProperty(_lootData, LOOT_PENETRATING_LADYBUG, ladybugPowerup(createAnimation('gfx/items/ladybugorange.png', r(30, 15)), '#FFB008')), _defineProperty(_lootData, LOOT_HELMET, {
     animation: helmetAnimation,
     accelerate: circleAcceleration,
     collect: function collect(state, playerIndex, loot) {
@@ -4604,7 +4819,7 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
     },
 
     draw: drawGlowing,
-    sfx: 'sfx/powerup.mp3',
+    collectSfx: 'sfx/powerup.mp3',
     props: {
         scale: 2
     }
@@ -4613,18 +4828,18 @@ var lootData = (_lootData = {}, _defineProperty(_lootData, LOOT_COIN, {
     accelerate: function accelerate(state, lootIndex) {
         // play the portal sfx periodically while it is on the screen.
         if (state.loot[lootIndex].animationTime % 2000 === 0) {
-            return _extends({}, state, { sfx: [].concat(_toConsumableArray(state.sfx), ['sfx/portal.mp3+0+5']) });
+            return _extends({}, state, { sfx: _extends({}, state.sfx, { 'sfx/portal.mp3+0+5': true }) });
         }
         return state;
     },
-    collect: function collect(state, playerIndex, loot) {
+    collect: function collect(state) {
         return enterStarWorld(state);
     },
 
-    spawnSfx: 'sfx/portal.mp3',
-    sfx: 'sfx/portaltravel.mp3',
+    collectSfx: 'sfx/portaltravel.mp3',
     props: {
-        scale: 1
+        scale: 1,
+        sfx: 'sfx/portal.mp3'
     }
 }), _lootData);
 var createLoot = function createLoot(type, props) {
@@ -4636,18 +4851,13 @@ var createLoot = function createLoot(type, props) {
 };
 
 var addLootToState = function addLootToState(state, loot) {
-    if (lootData[loot.type].spawnSfx) {
-        return _extends({}, state, { newLoot: [].concat(_toConsumableArray(state.newLoot), [loot]), sfx: [].concat(_toConsumableArray(state.sfx), [lootData[loot.type].spawnSfx]) });
-    }
-    return _extends({}, state, { newLoot: [].concat(_toConsumableArray(state.newLoot), [loot]) });
+    var sfx = state.sfx;
+    if (loot.sfx) sfx = _extends({}, sfx, _defineProperty({}, loot.sfx, true));
+    return _extends({}, state, { newLoot: [].concat(_toConsumableArray(state.newLoot), [loot]), sfx: sfx });
 };
 
-var renderLoot = function renderLoot(context, loot) {
+var renderLoot = function renderLoot(context, state, loot) {
     if (lootData[loot.type].draw) lootData[loot.type].draw(context, state, loot);else drawNormal(context, state, loot);
-    if (loot.sfx) {
-        playSound(loot.sfx);
-        loot.sfx = false;
-    }
 };
 
 var updateLoot = function updateLoot(state, lootIndex, props) {
@@ -4661,11 +4871,8 @@ var advanceLoot = function advanceLoot(state, lootIndex) {
         left = _state$loot$lootIndex2.left,
         top = _state$loot$lootIndex2.top,
         width = _state$loot$lootIndex2.width,
-        height = _state$loot$lootIndex2.height,
         vx = _state$loot$lootIndex2.vx,
         vy = _state$loot$lootIndex2.vy,
-        delay = _state$loot$lootIndex2.delay,
-        duration = _state$loot$lootIndex2.duration,
         animationTime = _state$loot$lootIndex2.animationTime,
         type = _state$loot$lootIndex2.type;
 
@@ -4699,11 +4906,8 @@ var advanceAllLoot = function advanceAllLoot(state) {
     return state;
 };
 
-var getRandomPowerupType = function getRandomPowerupType() {
-    if (Math.random() < 1 / 3) return LOOT_ATTACK_POWER;
-    if (Math.random() < 1 / 2) return LOOT_SPEED;
-    return LOOT_ATTACK_SPEED;
-};
+var powerupTypes = [LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED, LOOT_SPEED];
+var ladybugTypes = [LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG];
 
 /*
 1: If they are missing a character, it always drops an extra character. Otherwise...
@@ -4717,14 +4921,15 @@ var getAdaptivePowerupType = function getAdaptivePowerupType(state) {
     //if (!state.players[0].relics[LOOT_HELMET]) return LOOT_HELMET;
     if (getComboMultiplier(state, 0) === 5) return LOOT_PORTAL;
     // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
-    if (state.players[0].powerups.length < 1) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 1) return LOOT_LADYBUG;
-    if (state.players[0].powerups.length < 3) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 2) return LOOT_LADYBUG;
-    if (state.players[0].powerups.length < 5) return getRandomPowerupType();
-    if (state.players[0].ladybugs.length < 3) return LOOT_LADYBUG;
+    if (state.players[0].powerups.length < 1) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 1) return random.element(ladybugTypes);
+    if (state.players[0].powerups.length < 3) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 2) return random.element(ladybugTypes);
+    if (state.players[0].powerups.length < 5) return random.element(powerupTypes);
+    if (state.players[0].ladybugs.length < 3) return random.element(ladybugTypes);
     if (Math.random() < 1 / 10) return LOOT_LIFE;
-    return getRandomPowerupType();
+    if (Math.random() < 1 / 5) return random.element(ladybugTypes);
+    return random.element(powerupTypes);
 };
 
 var getComboMultiplier = function getComboMultiplier(state, playerIndex) {
@@ -4764,8 +4969,8 @@ var collectLoot = function collectLoot(state, playerIndex, lootIndex) {
     state = lootInfo.collect(state, playerIndex, loot);
     state = _extends({}, state, { loot: [].concat(_toConsumableArray(state.loot)) });
     state.loot[lootIndex] = _extends({}, loot, { done: true });
-    if (lootInfo.sfx) {
-        state = _extends({}, state, { sfx: [].concat(_toConsumableArray(state.sfx), [lootData[loot.type].sfx]) });
+    if (lootInfo.collectSfx) {
+        state = _extends({}, state, { sfx: _extends({}, state.sfx, _defineProperty({}, lootInfo.collectSfx, true)) });
     }
     return state;
 };
@@ -4777,33 +4982,33 @@ module.exports = {
     advanceAllLoot: advanceAllLoot,
     renderLoot: renderLoot,
     gainPoints: gainPoints,
-    getRandomPowerupType: getRandomPowerupType,
     getAdaptivePowerupType: getAdaptivePowerupType,
     getComboMultiplier: getComboMultiplier,
     collectLoot: collectLoot,
     powerupGoals: powerupGoals,
-    helmetAnimation: helmetAnimation
+    helmetAnimation: helmetAnimation,
+    ladybugTypes: ladybugTypes
 };
 
 // Move possible circular imports to after exports.
 
-var _require6 = require('enemies'),
-    addEnemyToState = _require6.addEnemyToState,
-    createEnemy = _require6.createEnemy;
+var _require5 = require('enemies'),
+    addEnemyToState = _require5.addEnemyToState,
+    createEnemy = _require5.createEnemy;
 
-var _require7 = require('heroes'),
-    heroesData = _require7.heroesData,
-    updatePlayer = _require7.updatePlayer,
-    getHeroHitBox = _require7.getHeroHitBox;
+var _require6 = require('heroes'),
+    updatePlayer = _require6.updatePlayer,
+    getHeroHitBox = _require6.getHeroHitBox,
+    ladybugAnimation = _require6.ladybugAnimation;
 
-var _require8 = require('effects'),
-    createEffect = _require8.createEffect,
-    addEffectToState = _require8.addEffectToState;
+var _require7 = require('effects'),
+    createEffect = _require7.createEffect,
+    addEffectToState = _require7.addEffectToState;
 
-var _require9 = require('areas/stars'),
-    enterStarWorld = _require9.enterStarWorld;
+var _require8 = require('areas/stars'),
+    enterStarWorld = _require8.enterStarWorld;
 
-},{"Rectangle":1,"animations":2,"areas/stars":4,"draw":7,"effects":8,"enemies":9,"gameConstants":10,"heroes":11,"random":14,"sounds":16,"sprites":17}],14:[function(require,module,exports){
+},{"Rectangle":1,"animations":2,"areas/stars":4,"draw":7,"effects":8,"enemies":10,"gameConstants":11,"heroes":12,"random":18,"sprites":21}],18:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -4881,16 +5086,13 @@ module.exports = {
     }
 };
 
-},{}],15:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 var _require = require('gameConstants'),
     WIDTH = _require.WIDTH,
     HEIGHT = _require.HEIGHT,
     GAME_HEIGHT = _require.GAME_HEIGHT,
-    FRAME_LENGTH = _require.FRAME_LENGTH,
-    DEATH_COOLDOWN = _require.DEATH_COOLDOWN,
-    POINTS_FOR_POWERUP = _require.POINTS_FOR_POWERUP,
     LOOT_HELMET = _require.LOOT_HELMET,
     MAX_ENERGY = _require.MAX_ENERGY;
 
@@ -4898,7 +5100,6 @@ var Rectangle = require('Rectangle');
 
 var _require2 = require('draw'),
     drawImage = _require2.drawImage,
-    drawTintedImage = _require2.drawTintedImage,
     embossText = _require2.embossText;
 
 var _require3 = require('sounds'),
@@ -4915,19 +5116,11 @@ var _require5 = require('animations'),
     requireImage = _require5.requireImage,
     r = _require5.r,
     createAnimation = _require5.createAnimation,
-    blastStartAnimation = _require5.blastStartAnimation,
-    blastLoopAnimation = _require5.blastLoopAnimation,
-    ladybugAttackAnimation = _require5.ladybugAttackAnimation,
-    bulletAnimation = _require5.bulletAnimation,
-    explosionAnimation = _require5.explosionAnimation,
     selectNeedleImage = _require5.selectNeedleImage,
     startGameImage = _require5.startGameImage,
     optionsImage = _require5.optionsImage,
-    startImage = _require5.startImage,
     gameOverImage = _require5.gameOverImage,
-    getHitBox = _require5.getHitBox,
-    getFrame = _require5.getFrame,
-    dragonflyIdleAnimation = _require5.dragonflyIdleAnimation;
+    getFrame = _require5.getFrame;
 
 var canvas = document.createElement('canvas');
 canvas.width = WIDTH;
@@ -4937,6 +5130,8 @@ context.imageSmoothingEnabled = false;
 document.body.appendChild(canvas);
 
 var HUD_PADDING = 9;
+
+var dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyidle.png', r(88, 56));
 
 var rewindAlpha = 1;
 var render = function render(state) {
@@ -4981,7 +5176,7 @@ var render = function render(state) {
         return renderAttack(context, attack);
     });
     state.loot.map(function (loot) {
-        return renderLoot(context, loot);
+        return renderLoot(context, state, loot);
     });
     state.effects.map(function (effect) {
         return renderEffect(context, effect);
@@ -5021,32 +5216,11 @@ var render = function render(state) {
         context.restore();
     }
     if (state.interacted) {
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-            for (var _iterator = state.sfx[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var sfx = _step.value;
-
-                playSound(sfx);
-            }
-        } catch (err) {
-            _didIteratorError = true;
-            _iteratorError = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion && _iterator.return) {
-                    _iterator.return();
-                }
-            } finally {
-                if (_didIteratorError) {
-                    throw _iteratorError;
-                }
-            }
+        for (var sfx in state.sfx) {
+            playSound(sfx);
         }
     }
-    state.sfx = [];
+    state.sfx = {};
 };
 
 var hudImage = r(800, 36, { image: requireImage('gfx/hud/newhud.png') });
@@ -5210,14 +5384,14 @@ var _require10 = require('effects'),
 var _require11 = require('attacks'),
     renderAttack = _require11.renderAttack;
 
-},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"enemies":9,"gameConstants":10,"heroes":11,"keyboard":12,"loot":13,"sounds":16,"world":19}],16:[function(require,module,exports){
+},{"Rectangle":1,"animations":2,"attacks":5,"draw":7,"effects":8,"enemies":10,"gameConstants":11,"heroes":12,"keyboard":16,"loot":17,"sounds":20,"world":23}],20:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+/* globals Float32Array, clearTimeout, setTimeout, Audio, Set, Map */
 var sounds = new Map();
-var numberOfSoundsLeftToLoad = 0,
-    soundsMuted = false;
+var soundsMuted = false;
 
 function ifdefor(value, defaultValue) {
     if (value !== undefined && !(typeof value === 'number' && isNaN(value))) {
@@ -5269,7 +5443,7 @@ var requireSound = function requireSound(source) {
 };
 
 var playingSounds = new Set();
-var playSound = function playSound(source, area) {
+var playSound = function playSound(source) {
     if (soundsMuted) return;
     var offset = void 0,
         volume = void 0,
@@ -5388,7 +5562,7 @@ var muteSounds = function muteSounds() {
 };
 
 var preloadSounds = function preloadSounds() {
-    ['sfx/shoot.mp3+0+2', 'sfx/hit.mp3+200+1', 'sfx/flydeath.mp3+0+5', 'sfx/robedeath1.mp3+0+2', 'sfx/hornetdeath.mp3+0+8', 'sfx/coin.mp3', 'sfx/powerup.mp3', 'sfx/startgame.mp3', 'sfx/exclamation.mp3+0+3', 'sfx/exclamation2.mp3+0+3', 'sfx/exclamation3.mp3+0+3', 'sfx/heal.mp3+200+5', 'sfx/death.mp3+0+1', 'sfx/dodge.mp3+200+2', 'sfx/meleehit.mp3+50+6', 'sfx/throwhit.mp3+200+5', 'sfx/needledropflip.mp3+0+3', 'sfx/needlegrab.mp3+0+3', 'sfx/portal.mp3+0+10', 'sfx/portaltravel.mp3+0+4', 'sfx/explosion.mp3+0+1', 'sfx/dash.mp3+0+1', { source: 'sfx/fastlightning.mp3', volume: 3, limit: 1 }, { source: 'sfx/dash.mp3', volume: 10, limit: 1 }, { source: 'sfx/special.mp3', volume: 3, limit: 1 },
+    [{ source: 'sfx/shoot.mp3', volume: 2 }, 'sfx/hit.mp3+200+1', 'sfx/flydeath.mp3+0+5', 'sfx/robedeath1.mp3+0+2', 'sfx/hornetdeath.mp3+0+8', 'sfx/coin.mp3', 'sfx/powerup.mp3', 'sfx/startgame.mp3', 'sfx/exclamation.mp3+0+3', 'sfx/exclamation2.mp3+0+3', 'sfx/exclamation3.mp3+0+3', 'sfx/heal.mp3+200+5', 'sfx/death.mp3+0+1', 'sfx/dodge.mp3+200+2', 'sfx/meleehit.mp3+50+6', 'sfx/throwhit.mp3+200+5', 'sfx/needledropflip.mp3+0+3', 'sfx/needlegrab.mp3+0+3', 'sfx/portal.mp3+0+10', 'sfx/portaltravel.mp3+0+4', 'sfx/explosion.mp3+0+1', 'sfx/dash.mp3+0+1', { source: 'sfx/fastlightning.mp3', volume: 3, limit: 1 }, { source: 'sfx/dash.mp3', volume: 10, limit: 1 }, { source: 'sfx/special.mp3', volume: 3, limit: 1 },
     // See credits.html for: mobbrobb.
     'bgm/river.mp3+0+1', 'bgm/area.mp3+0+2', 'bgm/space.mp3+0+2', 'bgm/boss.mp3+0+2'].forEach(requireSound);
 };
@@ -5414,7 +5588,7 @@ function makeDistortionCurve(amount) {
         curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
     }
     return curve;
-};
+}
 var distortionCurve = makeDistortionCurve(100);
 
 function playBeeps(frequencies, volume, duration, _ref) {
@@ -5478,13 +5652,14 @@ sounds.set('wand', {
 window.playSound = playSound;
 
 module.exports = {
+    muteSounds: muteSounds,
     playSound: playSound,
     playTrack: playTrack,
     stopTrack: stopTrack,
     preloadSounds: preloadSounds
 };
 
-},{}],17:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -5514,14 +5689,14 @@ module.exports = {
     getTargetVector: getTargetVector
 };
 
-},{}],18:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var Rectangle = require('Rectangle');
 
@@ -5529,12 +5704,9 @@ var _require = require('gameConstants'),
     FRAME_LENGTH = _require.FRAME_LENGTH,
     EFFECT_DEFLECT_BULLET = _require.EFFECT_DEFLECT_BULLET;
 
-var _require2 = require('sprites'),
-    getNewSpriteState = _require2.getNewSpriteState;
-
-var _require3 = require('world'),
-    getNewWorld = _require3.getNewWorld,
-    advanceWorld = _require3.advanceWorld;
+var _require2 = require('world'),
+    getNewWorld = _require2.getNewWorld,
+    advanceWorld = _require2.advanceWorld;
 
 var getNewState = function getNewState() {
     return advanceWorld({
@@ -5547,7 +5719,7 @@ var getNewState = function getNewState() {
         playerAttacks: [],
         neutralAttacks: [],
         enemyAttacks: [],
-        sfx: [],
+        sfx: {},
         title: true,
         titleIndex: 0,
         paused: false,
@@ -5568,8 +5740,8 @@ var advanceState = function advanceState(state) {
     if (updatedState.title) {
         var titleIndex = updatedState.titleIndex;
         if (updatedState.players[0].actions.start && titleIndex === 0) {
-            var _world = updatedState.world;
-            return _extends({}, updatedState, { title: false, world: _world, bgm: _world.bgm });
+            var world = updatedState.world;
+            return _extends({}, updatedState, { title: false, world: world, bgm: world.bgm });
         }
         if (updatedState.players[0].actions.up) {
             titleIndex = (titleIndex + 2 - 1) % 2;
@@ -5597,8 +5769,8 @@ var advanceState = function advanceState(state) {
     if (updatedState.players[0].actions.start) {
         paused = !paused;
         if (!paused) {
-            var _world2 = updatedState.world;
-            updatedState = _extends({}, updatedState, { world: _world2, bgm: _world2.bgm });
+            var _world = updatedState.world;
+            updatedState = _extends({}, updatedState, { world: _world, bgm: _world.bgm });
         }
     }
     if (paused) {
@@ -5614,8 +5786,6 @@ var advanceState = function advanceState(state) {
         updatedState = advanceHero(updatedState, playerIndex);
     }
     updatedState = advanceWorld(updatedState);
-    var world = updatedState.world;
-
     var currentPlayerAttacks = updatedState.playerAttacks.map(function (attack) {
         return advanceAttack(updatedState, attack);
     }).filter(function (attack) {
@@ -5631,7 +5801,7 @@ var advanceState = function advanceState(state) {
         }
     }
 
-    updatedState.sfx = [].concat(_toConsumableArray(updatedState.sfx));
+    updatedState.sfx = _extends({}, updatedState.sfx);
     // Check for enemies hit by attacks.
     for (var i = 0; i < updatedState.enemies.length; i++) {
         var _enemy = updatedState.enemies[i];
@@ -5767,34 +5937,31 @@ module.exports = {
     applyPlayerActions: applyPlayerActions
 };
 
-var _require4 = require('attacks'),
-    advanceAttack = _require4.advanceAttack;
+var _require3 = require('attacks'),
+    advanceAttack = _require3.advanceAttack;
 
-var _require5 = require('heroes'),
-    getNewPlayerState = _require5.getNewPlayerState,
-    advanceHero = _require5.advanceHero,
-    getHeroHitBox = _require5.getHeroHitBox,
-    damageHero = _require5.damageHero,
-    isPlayerInvulnerable = _require5.isPlayerInvulnerable;
+var _require4 = require('heroes'),
+    getNewPlayerState = _require4.getNewPlayerState,
+    advanceHero = _require4.advanceHero,
+    getHeroHitBox = _require4.getHeroHitBox,
+    damageHero = _require4.damageHero,
+    isPlayerInvulnerable = _require4.isPlayerInvulnerable;
 
-var _require6 = require('enemies'),
-    enemyData = _require6.enemyData,
-    createEnemy = _require6.createEnemy,
-    addEnemyToState = _require6.addEnemyToState,
-    damageEnemy = _require6.damageEnemy,
-    advanceEnemy = _require6.advanceEnemy,
-    getEnemyHitBox = _require6.getEnemyHitBox;
+var _require5 = require('enemies'),
+    enemyData = _require5.enemyData,
+    damageEnemy = _require5.damageEnemy,
+    advanceEnemy = _require5.advanceEnemy,
+    getEnemyHitBox = _require5.getEnemyHitBox;
 
-var _require7 = require('loot'),
-    collectLoot = _require7.collectLoot,
-    advanceAllLoot = _require7.advanceAllLoot;
+var _require6 = require('loot'),
+    advanceAllLoot = _require6.advanceAllLoot;
 
-var _require8 = require('effects'),
-    createEffect = _require8.createEffect,
-    addEffectToState = _require8.addEffectToState,
-    advanceAllEffects = _require8.advanceAllEffects;
+var _require7 = require('effects'),
+    createEffect = _require7.createEffect,
+    addEffectToState = _require7.addEffectToState,
+    advanceAllEffects = _require7.advanceAllEffects;
 
-},{"Rectangle":1,"attacks":5,"effects":8,"enemies":9,"gameConstants":10,"heroes":11,"loot":13,"sprites":17,"world":19}],19:[function(require,module,exports){
+},{"Rectangle":1,"attacks":5,"effects":8,"enemies":10,"gameConstants":11,"heroes":12,"loot":17,"world":23}],23:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -5960,7 +6127,6 @@ var advanceWorld = function advanceWorld(state) {
         targetX = _world.targetX,
         targetY = _world.targetY,
         targetFrames = _world.targetFrames,
-        time = _world.time,
         transitionFrames = _world.transitionFrames;
 
     x += vx;
@@ -5977,7 +6143,7 @@ var advanceWorld = function advanceWorld(state) {
         vy = Math.max((targetVy + vy) / 2, -y);
     } else {
         vx = targetX - x;
-        vy = targetY - y;
+        vy = Math.max(targetY - y, -y);
     }
     world = _extends({}, world, { x: x, y: y, vx: vx, vy: vy, transitionFrames: transitionFrames, targetFrames: targetFrames });
     state = _extends({}, state, { world: world });
@@ -6230,10 +6396,6 @@ module.exports = {
 };
 
 var _require5 = require('areas/field'),
-    getFieldWorld = _require5.getFieldWorld,
     getFieldWorldStart = _require5.getFieldWorldStart;
 
-var _require6 = require('areas/stars'),
-    getStarWorld = _require6.getStarWorld;
-
-},{"Rectangle":1,"animations":2,"areas/field":3,"areas/stars":4,"draw":7,"gameConstants":10,"random":14,"sprites":17}]},{},[6]);
+},{"Rectangle":1,"animations":2,"areas/field":3,"draw":7,"gameConstants":11,"random":18,"sprites":21}]},{},[6]);

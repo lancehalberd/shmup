@@ -1,18 +1,16 @@
 const { drawImage, drawTintedImage } = require('draw');
 
 const {
-    FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING, ATTACK_OFFSET,
+    FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
     ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB, ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
+    ATTACK_SPRAY_UP, ATTACK_SPRAY_RIGHT, ATTACK_SPRAY_DOWN,
     ATTACK_ORB, ATTACK_LASER,
     ATTACK_EXPLOSION,
 } = require('gameConstants');
 
 const {
-    playSound,
-} = require('sounds');
-
-const {
     requireImage, r,
+    createAnimation,
     getFrame,
     blastStartAnimation,
     blastLoopAnimation,
@@ -44,14 +42,35 @@ const laserStartAnimation = {
     ],
     frameDuration: 3,
 };
-const laserAnimation = {
-    frames: [
-        {...laserRectangle, image: requireImage('gfx/attacks/r3.png')},
-    ],
-    frameDuration: 3,
-};
+const laserAnimation = createAnimation('gfx/attacks/r3.png', laserRectangle);
+
+const sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(9, 9));
+const sprayAnimationUp = createAnimation('gfx/attacks/s3.png', r(9, 9));
+const sprayAnimationRight = createAnimation('gfx/attacks/s2.png', r(9, 9));
+const sprayAnimationDown = createAnimation('gfx/attacks/s4.png', r(9, 9));
 
 const attacks = {
+    [ATTACK_SPRAY_UP]: {
+        startAnimation: sprayStartAnimation,
+        animation: sprayAnimationUp,
+        props: {
+            sfx: 'sfx/shoot.mp3',
+        },
+    },
+    [ATTACK_SPRAY_RIGHT]: {
+        startAnimation: sprayStartAnimation,
+        animation: sprayAnimationRight,
+        props: {
+            sfx: 'sfx/shoot.mp3',
+        },
+    },
+    [ATTACK_SPRAY_DOWN]: {
+        startAnimation: sprayStartAnimation,
+        animation: sprayAnimationDown,
+        props: {
+            sfx: 'sfx/shoot.mp3',
+        },
+    },
     [ATTACK_BLAST]: {
         startAnimation: blastStartAnimation,
         animation: blastLoopAnimation,
@@ -120,15 +139,21 @@ const createAttack = (type, props) => {
 };
 
 const addPlayerAttackToState = (state, attack) => {
-    return {...state, newPlayerAttacks: [...state.newPlayerAttacks, attack] };
+    let sfx = state.sfx;
+    if (attack.sfx) sfx = {...sfx, [attack.sfx]: true};
+    return {...state, newPlayerAttacks: [...state.newPlayerAttacks, attack], sfx};
 };
 
 const addEnemyAttackToState = (state, attack) => {
-    return {...state, newEnemyAttacks: [...state.newEnemyAttacks, attack] };
+    let sfx = state.sfx;
+    if (attack.sfx) sfx = {...sfx, [attack.sfx]: true};
+    return {...state, newEnemyAttacks: [...state.newEnemyAttacks, attack], sfx };
 };
 
 const addNeutralAttackToState = (state, attack) => {
-    return {...state, newNeutralAttacks: [...state.newNeutralAttacks, attack] };
+    let sfx = state.sfx;
+    if (attack.sfx) sfx = {...sfx, [attack.sfx]: true};
+    return {...state, newNeutralAttacks: [...state.newNeutralAttacks, attack], sfx };
 };
 
 const renderAttack = (context, attack) => {
@@ -152,14 +177,10 @@ const renderAttack = (context, attack) => {
     else if (attack.damage === 4) drawTintedImage(context, frame.image, 'blue', .5, frame, attack);
     else if (attack.damage === 3) drawTintedImage(context, frame.image, 'red', .4, frame, attack);
     else if (attack.damage === 2) drawTintedImage(context, frame.image, 'orange', .5, frame, attack);
-    if (attack.sfx) {
-        playSound(attack.sfx);
-        attack.sfx = false;
-    }
 };
 
 const advanceAttack = (state, attack) => {
-    let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, melee, explosion} = attack;
+    let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, melee, explosion, ttl} = attack;
     if ((delay > 0 || melee)) {
         delay--;
         if (!explosion && playerIndex >= 0) {
@@ -174,14 +195,17 @@ const advanceAttack = (state, attack) => {
     }
     animationTime += FRAME_LENGTH;
     let done = false;
-    if (melee || explosion) {
+    if (ttl > 0) {
+        ttl--;
+        done = (ttl <= 0);
+    } else if (melee || explosion) {
         const animation = attacks[attack.type].animation;
         done = animationTime >= animation.frames.length * animation.frameDuration * FRAME_LENGTH;
     } else {
         done = left + width  < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
                 top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
     }
-    return {...attack, delay, left, top, animationTime, done};
+    return {...attack, delay, left, top, animationTime, done, ttl};
 };
 
 

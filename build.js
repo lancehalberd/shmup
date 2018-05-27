@@ -9,7 +9,7 @@ const bundler = browserify({
     cache: {},
     packageCache: {},
     plugin: [watchify]
-})
+}).transform("eslintify")
   .transform("babelify");
 
 bundler.on('update', updateBundle);

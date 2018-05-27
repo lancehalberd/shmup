@@ -4,14 +4,14 @@ const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     LOOT_COIN, LOOT_HELMET, LOOT_COMBO,
 } = require('gameConstants');
-const { requireImage, createAnimation, r } = require('animations');
-const { getNewSpriteState } = require('sprites');
+const { createAnimation, r } = require('animations');
 const { getNewLayer, allWorlds } = require('world');
 
 const WORLD_STARS = 'stars';
 
 const stars1 = createAnimation('gfx/scene/portal/portal1.png', r(200, 200));
-const stars2 = createAnimation('gfx/scene/portal/portal2.png', r(200, 200));
+// TODO: Ask Jon to fix black in this image and add it back.
+// const stars2 = createAnimation('gfx/scene/portal/portal2.png', r(200, 200));
 const stars3 = createAnimation('gfx/scene/portal/portal3.png', r(200, 200));
 
 const advanceStarWorld = (state) => {

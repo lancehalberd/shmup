@@ -6,18 +6,13 @@ const {
     SHOT_COOLDOWN, ATTACK_OFFSET,
     SPAWN_INV_TIME,
     ACCELERATION,
-    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB,
     ATTACK_ORB, ATTACK_LASER,
-    EFFECT_EXPLOSION,
-    EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE,
-    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
-    EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
     EFFECT_NEEDLE_FLIP,
     HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
     MAX_ENERGY,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
-    LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
-    LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
+    LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_COMBO, LOOT_TRIPLE_COMBO,
+    LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
 } = require('gameConstants');
 
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
@@ -32,179 +27,25 @@ const {
 const { getNewSpriteState } = require('sprites');
 
 const {
-    requireImage, r,
+    r,
     createAnimation,
-    beeAnimation,
-    beeEnterAnimation,
-    beeCatchAnimation,
-    beeMeleeAnimation,
-    dragonflyAnimation,
-    dragonflyEnterAnimation,
-    dragonflyCatchAnimation,
-    dragonflyMeleeAnimation,
-    dragonflyIdleAnimation,
-    mothAnimation,
-    mothEnterAnimation,
-    mothCatchAnimation,
-    mothMeleeAnimation,
     getHitBox,
     getFrame,
 } = require('animations');
-/*
-Dragonfly - I don't know how long the dash should be, but I made a little sprite for a trail behind wherever
-she goes. I figure it'll mostly be in a single direction, but the idea is she can dash in that direction and
-anyone she dashes through is hit with a standard melee attack. The dash trail is left behind to show this for half
-a second.
 
-Moth - There is a short animation of her initializing the invisibility, then she goes invisible.
- At first I thought of doing an outline for the moth, but I thought outlines possibly can be hidden by backgrounds
- if the color is too similar. So, is it possible for you to simply change the opacity to 50% for any moves the moth
-  does during the invisibility? I can also do it via photoshop, but I did not know if there was a programming method
-  to do it without creating a bunch more files.
-
-Brighten screen during lightning.
-*/
-const heroesData = {
-    [HERO_BEE]: {
-        animation: beeAnimation,
-        enterAnimation: beeEnterAnimation,
-        catchAnimation: beeCatchAnimation,
-        meleeAnimation: beeMeleeAnimation,
-        specialAnimation: {
-            frames: [
-                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial1.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial2.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial3.png')},
-            ],
-            frameDuration: 6,
-        },
-        meleeAttack: ATTACK_STAB,
-        deathEffect: EFFECT_DEAD_BEE,
-        deathSfx: 'sfx/exclamation.mp3',
-        switchEffect: EFFECT_SWITCH_BEE,
-        portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
-        defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
-        baseSpeed: 7,
-        meleePower: 2,
-        meleeScaling: 0.25,
-        hudColor: '#603820',
-        // hudColor: '#E85038'
-        specialCost: 12,
-        applySpecial(state, playerIndex) {
-            const player = state.players[playerIndex];
-            if (player.specialFrames < 6 * 3) {
-                return updatePlayer(state, playerIndex,
-                    {specialFrames: player.specialFrames + 1},
-                );
-            }
-            state = checkToAddLightning(state, {
-                left: player.sprite.left + player.sprite.width - 10,
-                top: player.sprite.top + player.sprite.height / 2,
-            });
-            return updatePlayer(state, playerIndex,
-                {usingSpecial: false, invulnerableFor: 500},
-            );
-        },
-    },
-    [HERO_DRAGONFLY]: {
-        animation: dragonflyAnimation,
-        enterAnimation: dragonflyEnterAnimation,
-        catchAnimation: dragonflyCatchAnimation,
-        meleeAnimation: dragonflyMeleeAnimation,
-        idleAnimation: dragonflyIdleAnimation,
-        specialAnimation: {
-            frames: [
-                {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial1.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial2.png')},
-            ],
-            frameDuration: 8,
-        },
-        meleeAttack: ATTACK_SLASH,
-        deathEffect: EFFECT_DEAD_DRAGONFLY,
-        deathSfx: 'sfx/exclamation3.mp3',
-        specialSfx: 'sfx/dash.mp3',
-        switchEffect: EFFECT_SWITCH_DRAGONFLY,
-        portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
-        defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),
-        baseSpeed: 8,
-        meleePower: 1,
-        meleeScaling: 0.25,
-        hudColor: '#F03010',
-        specialCost: 8,
-        applySpecial(state, playerIndex) {
-            const player = state.players[playerIndex];
-            for (let i = 0; i < state.enemies.length; i++) {
-                let enemy = state.enemies[i];
-                const enemyHitBox = getEnemyHitBox(enemy);
-                if (enemy && !enemy.done && !enemy.dead &&
-                    Rectangle.collision(enemyHitBox, getHeroHitBox(player))
-                ) {
-                    state = damageEnemy(state, i, {playerIndex});
-                }
-            }
-            if (player.specialFrames <= 20) {
-                return updatePlayer(state, playerIndex,
-                    {specialFrames: player.specialFrames + 1},
-                    {left: player.sprite.left + 15}
-                );
-            }
-            state = useMeleeAttack(state, playerIndex);
-            return updatePlayer(state, playerIndex,
-                {usingSpecial: false, invulnerableFor: 500},
-            );
-        },
-    },
-    [HERO_MOTH]: {
-        animation: mothAnimation,
-        enterAnimation: mothEnterAnimation,
-        catchAnimation: mothCatchAnimation,
-        meleeAnimation: mothMeleeAnimation,
-        specialAnimation: {
-            frames: [
-                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial1.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial2.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial3.png')},
-                {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial4.png')},
-            ],
-            frameDuration: 6,
-        },
-        meleeAttack: ATTACK_SLASH,
-        deathEffect: EFFECT_DEAD_MOTH,
-        deathSfx: 'sfx/exclamation2.mp3',
-        specialSfx: 'sfx/special.mp3',
-        switchEffect: EFFECT_SWITCH_MOTH,
-        portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
-        defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
-        baseSpeed: 6,
-        meleePower: 1,
-        meleeScaling: 0.5,
-        hudColor: '#B0B0B0',
-        specialCost: 10,
-        applySpecial(state, playerIndex) {
-            const player = state.players[playerIndex];
-            if (player.specialFrames < 6 * 4) {
-                return updatePlayer(state, playerIndex,
-                    {specialFrames: player.specialFrames + 1},
-                );
-            }
-            return updatePlayer(state, playerIndex,
-                {usingSpecial: false, invulnerableFor: 4000},
-            );
-        },
-    },
-};
+const heroesData = { };
 
 const getNewPlayerState = () => ({
     score: 0,
     powerupPoints: 0,
     powerupIndex: 0,
     comboScore: 0,
-    sprite: getNewSpriteState({...dragonflyAnimation.frames[0],
+    sprite: getNewSpriteState({...heroesData[HERO_DRAGONFLY].animation.frames[0],
         left: 160, top: 377,
         targetLeft: 170, targetTop: 200,
         spawnSpeed: 7,
     }),
-    heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH],
+    heroes: [HERO_MOTH, HERO_DRAGONFLY, HERO_BEE, ],
     [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
     [HERO_BEE]: {energy: 0, deaths: 0},
     [HERO_MOTH]: {energy: 0, deaths: 0},
@@ -299,7 +140,7 @@ const advanceHero = (state, playerIndex) => {
         // You can use a special when you don't have enough energy *if* another hero is available.
         && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))
     ) {
-        if (heroData.specialSfx) state = {...state, sfx: [...state.sfx, heroData.specialSfx]};
+        if (heroData.specialSfx) state = {...state, sfx: {...state.sfx, [heroData.specialSfx]: true}};
         return updatePlayer(state, playerIndex, {
             usingSpecial: true, specialFrames: 0,
             [heroType]: {...player[heroType], energy: player[heroType].energy - heroData.specialCost},
@@ -314,53 +155,12 @@ const advanceHero = (state, playerIndex) => {
     } else if (shotCooldown > 0) {
         shotCooldown--;
     } else if (player.actions.shoot) {
-        shotCooldown = SHOT_COOLDOWN - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
-        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-        const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
-        const middleShot = {x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0};
-        const upperA = {x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1}, lowerA = {x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1};
-        const upperB = {x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2}, lowerB = {x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2};
-        const upperC = {x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4}, lowerC = {x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4};
-        const upperD = {x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6}, lowerD = {x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6};
-        const upperE = {x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6}, lowerE = {x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6};
-        const blastPattern = [
-                                [middleShot],
-                                [upperA, lowerA],
-                                [upperB, middleShot, lowerB],
-                                [upperC, upperA, lowerA, lowerC],
-                                [upperD, upperB, middleShot, lowerB, lowerD],
-                                [upperE, upperC, upperA, lowerA, lowerC, lowerE],
-                            ][tripleRates];
-        let mute = false;
-        const scale = 1 + powers + triplePowers / 2;
-        for (const blastOffsets of blastPattern) {
-            const blast = createAttack(ATTACK_BLAST, {
-                damage: 1 + triplePowers,
-                left: player.sprite.left + player.sprite.vx + player.sprite.width,
-                /*xOffset: blastOffsets.x,
-                yOffset: blastOffsets.y,
-                vx: 20,*/
-                xOffset: ATTACK_OFFSET,
-                yOffset: 0,
-                vx: blastOffsets.vx,
-                vy: blastOffsets.vy,
-                delay: 2,
-                playerIndex,
-            });
-            blast.width *= scale;
-            blast.height *= scale;
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
-            // Only play 1 attack sound per frame.
-            if (mute) delete blast.sfx;
-            state = addPlayerAttackToState(state, blast);
-            mute = true;
-        }
-
+        shotCooldown = (heroData.shotCooldown || SHOT_COOLDOWN) - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
+        state = heroData.shoot(state, playerIndex);
         player = state.players[playerIndex];
     }
 
-    let {top, left, vx, vy, width, height, animationTime, targetLeft, targetTop} = player.sprite;
+    let {top, left, vx, vy, animationTime, targetLeft, targetTop} = player.sprite;
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
@@ -416,12 +216,12 @@ const advanceHero = (state, playerIndex) => {
         vx = 0;
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
-    let sfx = state.sfx;
+    let sfx = {...state.sfx};
     let chasingNeedle = player.chasingNeedle, catchingNeedleFrames = player.catchingNeedleFrames;
     if (chasingNeedle) {
         chasingNeedle = false;
         catchingNeedleFrames = 6;
-        sfx.push('sfx/needlegrab.mp3');
+        sfx['sfx/needlegrab.mp3'] = true;
     } else if(catchingNeedleFrames > 0) {
         catchingNeedleFrames--;
     }
@@ -545,7 +345,7 @@ const switchHeroes = (updatedState, playerIndex) => {
     );
     player = updatedState.players[playerIndex];
 
-    const sfx = [...updatedState.sfx, 'sfx/needledropflip.mp3'];
+    const sfx = {...updatedState.sfx, 'sfx/needledropflip.mp3': true};
     return {...updatedState, sfx};
 };
 
@@ -611,12 +411,12 @@ const damageHero = (updatedState, playerIndex) => {
     player = updatedState.players[playerIndex];
 
 
-    let sfx = [...updatedState.sfx, deadHeroData.deathSfx];
+    let sfx = {...updatedState.sfx, [deadHeroData.deathSfx]: true};
     if (player.done) {
         deathCooldown = DEATH_COOLDOWN;
-        sfx.push('sfx/death.mp3');
+        sfx['sfx/death.mp3'] = true;
     } else {
-        sfx.push('sfx/needledropflip.mp3');
+        sfx['sfx/needledropflip.mp3'] = true;
     }
     return {...updatedState, deathCooldown, sfx};
 };
@@ -688,109 +488,16 @@ module.exports = {
     updatePlayer,
     isPlayerInvulnerable,
     ladybugAnimation,
+    useMeleeAttack,
 };
-
 
 const { getGroundHeight } = require('world');
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { effects, createEffect, addEffectToState } = require('effects');
+const { createEffect, addEffectToState } = require('effects');
+const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
 
-const lightningFrames = [
-    {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain2.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain3.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain4.png')},
-];
-function advanceLightning(state, effectIndex) {
-    const effect = state.effects[effectIndex];
-    if (effect.charges > 0 && effect.animationTime === FRAME_LENGTH) {
-        const center = [effect.left + effect.width / 2, effect.top + effect.height / 2];
-        const left = center[0] + Math.cos(effect.rotation) * effect.width / 2;
-        const top = center[1] + Math.sin(effect.rotation) * effect.width / 2;
-        state = checkToAddLightning(state, {...effect, left, top});
-    }
-    return state;
-}
-const EFFECT_LIGHTNING = 'lightning';
-effects[EFFECT_LIGHTNING] = {
-    animation: {
-        frames: lightningFrames,
-        frameDuration: 4,
-    },
-    advanceEffect: advanceLightning,
-    props: {
-        loops: 1,
-        damage: 5,
-        charges: 8,
-        branchChance: .9,
-        rotation: 0,
-        sfx: 'sfx/fastlightning.mp3',
-    },
-};
-const EFFECT_FAST_LIGHTNING = 'fastLightning';
-effects[EFFECT_FAST_LIGHTNING] = {
-    animation: {
-        frames: lightningFrames,
-        frameDuration: 1,
-    },
-    advanceEffect: advanceLightning,
-    props: {
-        loops: 1,
-        damage: 1,
-        charges: 0,
-        branchChance: 0,
-        rotation: 0,
-    },
-};
-
-const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchChance = 0, rotation = 0, scale = 2, vx = 0, vy = 0, type = EFFECT_LIGHTNING}) => {
-    const addLightning = (rotation, branchChance) => {
-        const lightning = createEffect(type, {
-            left, top,
-            charges: charges - 1,
-            rotation,
-            branchChance,
-            xScale: scale, yScale: scale,
-            vx, vy,
-        });
-        lightning.width *= scale;
-        lightning.height *= scale;
-        lightning.left -= lightning.width / 2;
-        lightning.left += Math.cos(rotation) * lightning.width / 2;
-        lightning.top -= lightning.height / 2;
-        lightning.top += Math.sin(rotation) * lightning.width / 2;
-        state = addEffectToState(state, lightning);
-    }
-    const targetRotations = [];
-    for (let i = 0; i < state.enemies.length; i++) {
-        const enemy = state.enemies[i];
-        if (enemy.done || enemy.dead) continue;
-        // The large lightning attack can only hit enemies in front of each bolt.
-        if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
-        const hitBox = getEnemyHitBox(enemy);
-        const dx = hitBox.left + hitBox.width / 2 - left,
-            dy = hitBox.top + hitBox.height / 2 - top;
-        const radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;
-        if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
-            targetRotations.push(Math.atan2(dy, dx));
-            state = damageEnemy(state, i, {playerIndex: 0, damage});
-            state = {...state, sfx: [...state.sfx, 'sfx/hit.mp3']};
-        }
-    }
-    if (targetRotations.length) {
-        const branchChance = targetRotations.length > 1 ? 0 : branchChance + 0.2;
-        for (var enemyRotation of targetRotations) {
-            addLightning(enemyRotation, branchChance);
-        }
-    } else if (Math.random() < branchChance) {
-        addLightning(rotation - (Math.PI / 12), 0);
-        addLightning(rotation + (Math.PI / 13), 0);
-    } else {
-        addLightning(rotation, branchChance + 0.2);
-    }
-    return state;
-}
-
-const { getEnemyHitBox, damageEnemy } = require('enemies');
+require('heroes/bee');
+require('heroes/dragonfly');
+require('heroes/moth');
 

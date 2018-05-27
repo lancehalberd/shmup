@@ -2,9 +2,6 @@ const {
     WIDTH,
     HEIGHT,
     GAME_HEIGHT,
-    FRAME_LENGTH,
-    DEATH_COOLDOWN,
-    POINTS_FOR_POWERUP,
     LOOT_HELMET,
     MAX_ENERGY,
 } = require('gameConstants');
@@ -13,7 +10,7 @@ const Rectangle = require('Rectangle');
 
 const {
     drawImage,
-    drawTintedImage,
+    // drawTintedImage,
     embossText,
 } = require('draw');
 
@@ -31,11 +28,8 @@ const {
     selectNeedleImage,
     startGameImage,
     optionsImage,
-    startImage,
     gameOverImage,
-    getHitBox,
     getFrame,
-    dragonflyIdleAnimation,
 } = require('animations');
 
 const canvas = document.createElement('canvas');
@@ -46,6 +40,8 @@ context.imageSmoothingEnabled = false;
 document.body.appendChild(canvas);
 
 const HUD_PADDING = 9;
+
+const dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyidle.png', r(88, 56));
 
 let rewindAlpha = 1;
 const render = (state) => {
@@ -85,7 +81,7 @@ const render = (state) => {
         context.translate(0, hudImage.height);
         state.enemies.map(enemy => renderEnemy(context, enemy));
         state.playerAttacks.map(attack => renderAttack(context, attack));
-        state.loot.map(loot => renderLoot(context, loot));
+        state.loot.map(loot => renderLoot(context, state, loot));
         state.effects.map(effect => renderEffect(context, effect));
         state.neutralAttacks.map(attack => renderAttack(context, attack));
         // Thinking an attack shuold display on top of other effects so it can be avoided.
@@ -116,11 +112,11 @@ const render = (state) => {
         context.restore();
     }
     if (state.interacted) {
-        for (const sfx of state.sfx) {
+        for (const sfx in state.sfx) {
             playSound(sfx);
         }
     }
-    state.sfx = [];
+    state.sfx = {};
 };
 
 const hudImage = r(800, 36, {image: requireImage('gfx/hud/newhud.png')});

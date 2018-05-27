@@ -2,6 +2,8 @@
 module.exports = {
     TEST_ITEMS: false,
     TEST_ENEMY: false,
+    /*TEST_ITEMS: ['tripleCombo', 'combo'],
+    TEST_ENEMY: 'cargoBeetle',*/
     /*TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
     TEST_ENEMY: 'cargoBeetle',*/
 
@@ -9,7 +11,6 @@ module.exports = {
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
     ACCELERATION: 1, SHOT_COOLDOWN: 8, ATTACK_OFFSET: -4,
     ENEMY_COOLDOWN: 10, DEATH_COOLDOWN: 1000, SPAWN_COOLDOWN: 1000, SPAWN_INV_TIME: 2000,
-    POINTS_FOR_POWERUP: 1000,
 
     HERO_BEE: 'bee', HERO_DRAGONFLY: 'dragonfly', HERO_MOTH: 'moth',
     MAX_ENERGY: 20,
@@ -26,6 +27,9 @@ module.exports = {
     ENEMY_LOCUST_SOLDIER: 'locustSoldier',
 
     ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet',
+    ATTACK_SPRAY_UP: 'sprayUp',
+    ATTACK_SPRAY_RIGHT: 'sprayRight',
+    ATTACK_SPRAY_DOWN: 'sprayDown',
     ATTACK_LASER: 'laser', ATTACK_ORB: 'orb',
     ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 

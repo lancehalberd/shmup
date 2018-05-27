@@ -12,7 +12,6 @@ const {
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY, ATTACK_EXPLOSION,
     EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
     LOOT_COIN,
-    LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
 } = require('gameConstants');
 
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
@@ -104,7 +103,7 @@ const enemyData = {
                         vx = enemy.speed * Math.cos(theta);
                         vy = enemy.speed * Math.sin(theta);
                     } else {
-                        const {dx, dy} = getTargetVector(enemy, {left: targetX, top: targetY});
+                        const {dx} = getTargetVector(enemy, {left: targetX, top: targetY});
                         if (dx * vx < 0) {
                             mode = 'retreat';
                             modeTime = 0;
@@ -140,7 +139,7 @@ const enemyData = {
         deathAnimation: hornetSoldierDeathAnimation,
         deathSound: 'sfx/hit.mp3',
         accelerate: (state, enemy) => {
-            let {vx, vy, seed, targetX, targetY, mode, modeTime} = enemy;
+            let {vx, vy, targetX, targetY, mode, modeTime} = enemy;
             const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 8000;
             const radius = 1;
             switch (mode) {
@@ -178,7 +177,7 @@ const enemyData = {
                         vx = enemy.speed * Math.cos(theta);
                         vy = enemy.speed * Math.sin(theta);
                     } else {
-                        const {dx, dy} = getTargetVector(enemy, {left: targetX, top: targetY});
+                        const {dx} = getTargetVector(enemy, {left: targetX, top: targetY});
                         if (dx * vx < 0) {
                             mode = 'retreat';
                             modeTime = 0;
@@ -339,7 +338,7 @@ const enemyData = {
         deathAnimation: flyingAntDeathAnimation,
         deathSound: 'sfx/flydeath.mp3',
         accelerate: (state, enemy) => {
-            let {vx, vy, seed} = enemy;
+            let {vx, vy} = enemy;
             const target = state.players[0].sprite;
             const speed = enemy.speed;
             const dx = target.left + target.width / 2 - (enemy.left + enemy.width / 2)
@@ -369,7 +368,7 @@ const enemyData = {
         deathAnimation: flyingAntSoldierDeathAnimation,
         deathSound: 'sfx/hit.mp3',
         accelerate(state, enemy) {
-            let {vx, vy, seed} = enemy;
+            let {vx, vy} = enemy;
             const speed = enemy.speed;
             const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
             const theta = Math.atan2(dy, dx);
@@ -395,12 +394,11 @@ const enemyData = {
             if (enemy.shotCooldown > 0) {
                 enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldown - 1 };
                 return { ...state, enemies };
-            } else {
-                const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-                // Don't shoot unless aiming approximately towards the player.
-                //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
             }
+            // const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
+            // Don't shoot unless aiming approximately towards the player.
+            //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
+            enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
             const theta = Math.atan2(enemy.vy, enemy.vx);
             const bullet = createAttack(ATTACK_BULLET, {
                 left: enemy.left - enemy.vx,
@@ -568,13 +566,6 @@ const updateEnemy = (state, enemyIndex, props) => {
     return {...state, enemies};
 };
 
-// Return the value with the smallest absolute value.
-const absMin = (A, B) => {
-    if (A < 0 && B < 0) return Math.max(A, B);
-    if (A > 0 && B > 0) return Math.min(A, B);
-    return Math.abs(A) < Math.abs(B) ? A : B;
-};
-
 const addEnemyToState = (state, enemy) => {
     return {...state, newEnemies: [...(state.newEnemies || []), enemy] };
 }
@@ -660,7 +651,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
         }
     } else {
         if (enemyIsInvulnerable) {
-            updatedState = {...updatedState, sfx: [...updatedState.sfx, 'reflect']};
+            updatedState = {...updatedState, sfx: {...updatedState.sfx, 'reflect': true}};
         } else {
 
             if (enemyData[enemy.type].onDamageEffect) {
@@ -679,7 +670,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
         }
     }
     if (attack.type && attacks[attack.type] && attacks[attack.type].hitSfx) {
-        updatedState = {...updatedState, sfx: [...updatedState.sfx, attacks[attack.type].hitSfx]};
+        updatedState = {...updatedState, sfx: {...updatedState.sfx, [attacks[attack.type].hitSfx]: true}};
     }
     return updatedState;
 }

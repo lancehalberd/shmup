@@ -1,4 +1,4 @@
-
+/* globals Image */
 const { FRAME_LENGTH } = require('gameConstants');
 
 const Rectangle = require('Rectangle');
@@ -24,15 +24,6 @@ const initialImagesToLoad = [
 for (const initialImageToLoad of initialImagesToLoad) {
     requireImage(initialImageToLoad);
 }
-
-const rectangleToFrames = (rectangle, image, numberOfFrames) => {
-    const frames = [];
-    for (let i = 0; i < numberOfFrames; i++) {
-        frames[i] = rectangle.moveTo(i * rectangle.width, 0);
-        frames[i].image = image;
-    }
-    return frames;
-};
 
 const i = (width, height, source) => ({left: 0, top: 0, width, height, image: requireImage(source)});
 const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props});
@@ -76,189 +67,6 @@ const createVerticalFrames = (rect, count, source, offset = 0) => {
 };
 
 const allAnimations = {};
-
-const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
-const beeRectangle = r(88, 56, {hitBox: beeHitBox});
-const beeAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/bee1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/bee2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/bee3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/bee4.png')},
-        // {...beeRectangle, image: requireImage('gfx/heroes/bee/bee3.png')},
-        // {...beeRectangle, image: requireImage('gfx/heroes/bee/bee2.png')},
-    ],
-    frameDuration: 3,
-};
-const beeEnterAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeflyin1.png')},
-    ],
-    frameDuration: 3,
-};
-const beeCatchAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeflyin2.png')},
-    ],
-    frameDuration: 3,
-};
-const beeSwitchAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch4.png')},
-    ],
-    frameDuration: 6,
-};
-const beeMeleeAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beem1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beem2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beem3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beem4.png')},
-    ],
-    frameDuration: 3,
-};
-const beeDeathAnimation = {
-    frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie4.png')},
-    ],
-    frameDuration: 6,
-};
-const beePortraitAnimation = {
-    frames: [
-        {...r(17, 18), image: requireImage('gfx/heroes/bee/beeportrait.png')},
-    ],
-    frameDuration: 5
-};
-
-const dragonflyHitBox = {left: 10, top: 15, width: 70, height: 30};
-const dragonflyRectangle = r(88, 56, {hitBox: dragonflyHitBox});
-const dragonflyAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly4.png')},
-        //{...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png')},
-        //{...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png')},
-    ],
-    frameDuration: 3,
-};
-const dragonflyEnterAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyflyin1.png')},
-    ],
-    frameDuration: 3,
-};
-const dragonflyCatchAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyflyin2.png')},
-    ],
-    frameDuration: 3,
-};
-const dragonflySwitchAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png')},
-    ],
-    frameDuration: 6,
-};
-const dragonflyMeleeAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym4.png')},
-    ],
-    frameDuration: 3,
-};
-const dragonflyDeathAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png')},
-    ],
-    frameDuration: 6,
-};
-const dragonflyIdleAnimation = {
-    frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyidle.png')},
-    ],
-    frameDuration: 6,
-};
-const dragonflyPortraitAnimation = {
-    frames: [
-        {...r(17, 18), image: requireImage('gfx/heroes/dragonfly/dragonflyportrait.png')},
-    ],
-    frameDuration: 5
-};
-
-const mothHitBox = {left: 10, top: 10, width: 65, height: 42};
-const mothRectangle = r(88, 56, {hitBox: mothHitBox});
-const mothAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth4.png')},
-        //{...mothRectangle, image: requireImage('gfx/heroes/moth/moth3.png')},
-        //{...mothRectangle, image: requireImage('gfx/heroes/moth/moth2.png')},
-    ],
-    frameDuration: 3,
-};
-const mothEnterAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothflyin1.png')},
-    ],
-    frameDuration: 3,
-};
-const mothCatchAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothflyin2.png')},
-    ],
-    frameDuration: 3,
-};
-const mothSwitchAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch4.png')},
-    ],
-    frameDuration: 6,
-};
-const mothMeleeAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm4.png')},
-    ],
-    frameDuration: 3,
-};
-const mothDeathAnimation = {
-    frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie4.png')},
-    ],
-    frameDuration: 6,
-};
-const mothPortraitAnimation = {
-    frames: [
-        {...r(17, 18), image: requireImage('gfx/heroes/moth/mothportrait.png')},
-    ],
-    frameDuration: 5
-};
 
 const needleFlipRectangle = r(88, 56);
 const needleFlipAnimation = {
@@ -673,30 +481,7 @@ module.exports = {
     plainsBackground,
     plainsMidground,
     plainsNearground,
-    beeAnimation,
-    beeEnterAnimation,
-    beeCatchAnimation,
-    beeSwitchAnimation,
-    beeMeleeAnimation,
-    beeDeathAnimation,
-    beePortraitAnimation,
-    dragonflyAnimation,
-    dragonflyEnterAnimation,
-    dragonflyCatchAnimation,
-    dragonflySwitchAnimation,
-    dragonflyMeleeAnimation,
-    dragonflyIdleAnimation,
-    dragonflyDeathAnimation,
-    dragonflyPortraitAnimation,
-    mothAnimation,
-    mothEnterAnimation,
-    mothCatchAnimation,
-    mothSwitchAnimation,
-    mothMeleeAnimation,
-    mothDeathAnimation,
-    mothPortraitAnimation,
     needleFlipAnimation,
-    requireImage,
     blastStartAnimation,
     blastLoopAnimation,
     slashAnimation,

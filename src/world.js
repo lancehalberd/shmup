@@ -108,7 +108,7 @@ const advanceLayer = (state, layerName) => {
 
 const advanceWorld = (state) => {
     let world = state.world;
-    let {x, y, vx, vy, targetX, targetY, targetFrames, time, transitionFrames} = world
+    let {x, y, vx, vy, targetX, targetY, targetFrames, transitionFrames} = world
     x += vx;
     y += vy;
     y = Math.max(0, y);
@@ -214,5 +214,4 @@ module.exports = {
     clearSprites,
 };
 
-const { getFieldWorld, getFieldWorldStart } = require('areas/field');
-const { getStarWorld } = require('areas/stars');
+const { getFieldWorldStart } = require('areas/field');

@@ -1,5 +1,6 @@
+/* globals Float32Array, clearTimeout, setTimeout, Audio, Set, Map */
 const sounds = new Map();
-let numberOfSoundsLeftToLoad = 0, soundsMuted = false;
+let soundsMuted = false;
 
 function ifdefor(value, defaultValue) {
     if (value !== undefined && !(typeof value === 'number' && isNaN(value))) {
@@ -34,7 +35,7 @@ const requireSound = source => {
 };
 
 const playingSounds = new Set();
-const playSound = (source, area) => {
+const playSound = (source) => {
     if (soundsMuted) return;
     let offset,volume, duration;
     [source, offset, volume] = source.split('+');
@@ -106,7 +107,7 @@ const muteSounds = () => {
 
 const preloadSounds = () => {
     [
-        'sfx/shoot.mp3+0+2',
+        {source: 'sfx/shoot.mp3', volume: 2},
         'sfx/hit.mp3+200+1',
         'sfx/flydeath.mp3+0+5',
         'sfx/robedeath1.mp3+0+2',
@@ -160,7 +161,7 @@ function makeDistortionCurve(amount) {
     curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
   }
   return curve;
-};
+}
 const distortionCurve = makeDistortionCurve(100);
 
 function playBeeps(frequencies, volume, duration, {smooth=false, swell=false, taper=false, distortion=false}) {
@@ -217,6 +218,7 @@ sounds.set('wand', {
 window.playSound = playSound;
 
 module.exports = {
+    muteSounds,
     playSound,
     playTrack,
     stopTrack,

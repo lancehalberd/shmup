@@ -4,7 +4,6 @@ const {
     FRAME_LENGTH,
     EFFECT_DEFLECT_BULLET,
 } = require('gameConstants');
-const { getNewSpriteState } = require('sprites');
 const { getNewWorld, advanceWorld, } = require('world');
 
 const getNewState = () => (advanceWorld({
@@ -17,7 +16,7 @@ const getNewState = () => (advanceWorld({
     playerAttacks: [],
     neutralAttacks: [],
     enemyAttacks: [],
-    sfx: [],
+    sfx: {},
     title: true,
     titleIndex: 0,
     paused: false,
@@ -81,8 +80,6 @@ const advanceState = (state) => {
         updatedState = advanceHero(updatedState, playerIndex);
     }
     updatedState = advanceWorld(updatedState);
-    let world = updatedState.world;
-
     let currentPlayerAttacks = updatedState.playerAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
     for (let enemyIndex = 0; enemyIndex < updatedState.enemies.length; enemyIndex++) {
         updatedState = advanceEnemy(updatedState, enemyIndex);
@@ -94,7 +91,7 @@ const advanceState = (state) => {
         }
     }
 
-    updatedState.sfx = [...updatedState.sfx];
+    updatedState.sfx = {...updatedState.sfx};
     // Check for enemies hit by attacks.
     for (let i = 0; i < updatedState.enemies.length; i++) {
         let enemy = updatedState.enemies[i];
@@ -223,6 +220,6 @@ const {
     advanceAttack,
 } = require('attacks');
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable } = require('heroes');
-const { enemyData, createEnemy, addEnemyToState, damageEnemy, advanceEnemy, getEnemyHitBox } = require('enemies');
-const { collectLoot, advanceAllLoot } = require('loot');
+const { enemyData, damageEnemy, advanceEnemy, getEnemyHitBox } = require('enemies');
+const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');

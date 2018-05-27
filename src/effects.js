@@ -14,31 +14,79 @@ const {
 } = require('gameConstants');
 
 const {
-    allAnimations,
+    requireImage,
     getFrame,
     getHitBox,
     damageAnimation,
     dustAnimation,
     explosionAnimation,
-    beeDeathAnimation,
-    beeSwitchAnimation,
-    dragonflyDeathAnimation,
-    dragonflySwitchAnimation,
-    mothDeathAnimation,
-    mothSwitchAnimation,
     needleFlipAnimation,
     rateTextAnimation,
     sizeTextAnimation,
     speedTextAnimation,
     deflectAnimation,
-    createVerticalFrames, r, i,
+    r,
 } = require('animations');
 
-const {
-    playSound
-} = require('sounds');
-
 const { getNewSpriteState } = require('sprites');
+
+const beeRectangle = r(88, 56);
+const beeSwitchAnimation = {
+    frames: [
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch1.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch2.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch3.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch4.png')},
+    ],
+    frameDuration: 6,
+};
+const beeDeathAnimation = {
+    frames: [
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie1.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie2.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie3.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie4.png')},
+    ],
+    frameDuration: 6,
+};
+const dragonflyRectangle = r(88, 56);
+const dragonflySwitchAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png')},
+    ],
+    frameDuration: 6,
+};
+const dragonflyDeathAnimation = {
+    frames: [
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png')},
+    ],
+    frameDuration: 6,
+};
+const mothRectangle = r(88, 56);
+const mothSwitchAnimation = {
+    frames: [
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch1.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch2.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch3.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch4.png')},
+    ],
+    frameDuration: 6,
+};
+const mothDeathAnimation = {
+    frames: [
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie1.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie2.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie3.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie4.png')},
+    ],
+    frameDuration: 6,
+};
 
 const effects = {
     [EFFECT_DAMAGE]: {
@@ -111,7 +159,9 @@ const createEffect = (type, props) => {
 };
 
 const addEffectToState = (state, effect) => {
-    return {...state, newEffects: [...state.newEffects, effect] };
+    let sfx = state.sfx;
+    if (effect.sfx) sfx = {...sfx, [effect.sfx]: true};
+    return {...state, newEffects: [...state.newEffects, effect], sfx };
 };
 
 const updateEffect = (state, effectIndex, props) => {
@@ -139,10 +189,6 @@ const renderEffect = (context, effect) => {
         drawImage(context, frame.image, frame, target);
         context.restore();
     }
-    if (effect.sfx) {
-        playSound(effect.sfx);
-        effect.sfx = false;
-    }
 };
 
 const advanceEffect = (state, effectIndex) => {
@@ -150,7 +196,7 @@ const advanceEffect = (state, effectIndex) => {
     if (effectInfo.advanceEffect) {
         state = effectInfo.advanceEffect(state, effectIndex);
     }
-    let { left, top, width, height, vx, vy, delay, duration, animationTime,
+    let { left, top, width, height, vx, vy, animationTime,
         relativeToGround, loops,
     } = state.effects[effectIndex];
     const animation = effectInfo.animation;
