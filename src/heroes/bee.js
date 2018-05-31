@@ -1,11 +1,16 @@
 const {
+    FRAME_LENGTH, SHOT_COOLDOWN,
     ATTACK_OFFSET,
-    ATTACK_BLAST, ATTACK_STAB,
+    ATTACK_STAB,
     EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE,
     HERO_BEE,
-    LOOT_ATTACK_POWER,
-    LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
+    LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
+    LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE,
+    LOOT_COMBO,
+    LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
+const random = require('random');
+const Rectangle = require('Rectangle');
 const {
     requireImage, r,
     createAnimation,
@@ -47,6 +52,7 @@ heroesData[HERO_BEE] = {
     meleeAttack: ATTACK_STAB,
     deathEffect: EFFECT_DEAD_BEE,
     deathSfx: 'sfx/exclamation.mp3',
+    specialSfx: 'sfx/special.mp3',
     switchEffect: EFFECT_SWITCH_BEE,
     portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
     defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
@@ -72,45 +78,225 @@ heroesData[HERO_BEE] = {
             {usingSpecial: false, invulnerableFor: 500},
         );
     },
-    shoot(state, playerIndex) {
+    formations: [
+        (player, numTargets) => {
+            const points = [];
+            const minAngle = -(numTargets - 1) * Math.PI / 18;
+            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
+            for (let i = 0; i < numTargets; i++) {
+                const theta = minAngle + i * angleBetween;
+                points.push({x: 160 * Math.cos(theta), y: 160 * Math.sin(theta)});
+            }
+            return points;
+        },
+        (player, numTargets) => {
+            const points = [];
+            const minAngle = -(numTargets - 1) * Math.PI / 18;
+            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
+            for (let i = 0; i < numTargets; i++) {
+                const theta = minAngle + i * angleBetween - Math.PI / 2;
+                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
+            }
+            return points;
+        },
+        (player, numTargets) => {
+            const points = [];
+            const minAngle = -(numTargets - 1) * Math.PI / 18;
+            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
+            for (let i = 0; i < numTargets; i++) {
+                const theta = minAngle + i * angleBetween + Math.PI / 2;
+                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
+            }
+            return points;
+        },
+        (player, numTargets) => {
+            const points = [];
+            const minAngle = -(numTargets - 1) * Math.PI / 18;
+            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
+            for (let i = 0; i < numTargets; i++) {
+                const theta = minAngle + i * angleBetween + Math.PI;
+                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
+            }
+            return points;
+        },
+        (player, numTargets) => {
+            const points = [];
+            const minAngle = 0;// - player.time / (500 - numTargets * 20);
+            const angleBetween = 2 * Math.PI / numTargets;
+            for (let i = 0; i < numTargets; i++) {
+                const theta = minAngle + i * angleBetween;
+                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
+            }
+            return points;
+        },
+    ],
+    advanceHero(state, playerIndex) {
         const player = state.players[playerIndex];
+        const sprite = player.sprite;
         const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
         const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
-        const middleShot = {x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0};
-        const upperA = {x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1}, lowerA = {x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1};
-        const upperB = {x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2}, lowerB = {x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2};
-        const upperC = {x: ATTACK_OFFSET - 4, y: -15, vx: 17, vy: -4}, lowerC = {x: ATTACK_OFFSET - 4, y: 15, vx: 18, vy: 4};
-        const upperD = {x: ATTACK_OFFSET - 10, y: -20, vx: 15, vy: -6}, lowerD = {x: ATTACK_OFFSET - 10, y: 20, vx: 15, vy: 6};
-        const upperE = {x: ATTACK_OFFSET - 10, y: -25, vx: 15, vy: -6}, lowerE = {x: ATTACK_OFFSET - 10, y: 25, vx: 15, vy: 6};
-        const blastPattern = [
-                                [middleShot],
-                                [upperA, lowerA],
-                                [upperB, middleShot, lowerB],
-                                [upperC, upperA, lowerA, lowerC],
-                                [upperD, upperB, middleShot, lowerB, lowerD],
-                                [upperE, upperC, upperA, lowerA, lowerC, lowerE],
-                            ][tripleRates];
-        const scale = 1 + powers + triplePowers / 2;
-        for (const blastOffsets of blastPattern) {
-            const blast = createAttack(ATTACK_BLAST, {
-                damage: 1 + triplePowers,
-                left: player.sprite.left + player.sprite.vx + player.sprite.width,
-                xOffset: ATTACK_OFFSET,
-                yOffset: 0,
-                vx: blastOffsets.vx,
-                vy: blastOffsets.vy,
-                delay: 2,
-                playerIndex,
-            });
-            blast.width *= scale;
-            blast.height *= scale;
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
-            state = addPlayerAttackToState(state, blast);
+        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        const numTargets = 3 + tripleRates;
+        const size = 50 + powers * 10 + triplePowers * 5;
+        const targets = [...player[HERO_BEE].targets].slice(0, numTargets);
+        const middle = {x: sprite.left + sprite.width / 2, y: sprite.top + sprite.height / 2};
+        for (let i = 0; i < numTargets; i++) {
+            if (!targets[i]) {
+                targets[i] = {
+                    left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET - 2,
+                    top: player.sprite.top + player.sprite.vy + player.sprite.height / 2 - 2,
+                    vx: player.sprite.vx,
+                    vy: player.sprite.vy,
+                    width: 4, height: 4,
+                };
+                break;
+            }
+            // Follow the enemy
+            if (player.actions.shoot && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
+                !state.idMap[targets[i].enemyId].dead
+            ) {
+                const hitBox = getEnemyHitBox(state.idMap[targets[i].enemyId]);
+                targets[i] = {
+                    left: (targets[i].left + hitBox.left + hitBox.width / 2 - targets[i].width / 2) / 2,
+                    top: (targets[i].top + hitBox.top + hitBox.height / 2 - targets[i].height / 2) / 2,
+                    vx: 0, vy: 0,
+                    width: (targets[i].width * 10 + size) / 11,
+                    height: (targets[i].height * 10 + size) / 11,
+                    enemyId: targets[i].enemyId,
+                };
+                continue;
+            }
+            const x = targets[i].left + targets[i].width / 2, y = targets[i].top + targets[i].height / 2;
+            let vx = targets[i].vx * 0.8,
+                vy = targets[i].vy * 0.8;
+            const factor = (i % 2) ? -0.8 : 1.5;
+            if (player.actions.right) vx += factor * 3;
+            if (player.actions.left) vx -= factor * 2;
+            if (player.actions.down) vy += factor * 2;
+            if (player.actions.up) vy -= factor * 2;
+            for (var j = 0; j < player[HERO_BEE].targets.length; j++) {
+                if ( j === i) continue;
+                const otherTarget = player[HERO_BEE].targets[j];
+                if (otherTarget.enemyId) continue;
+                const dx = targets[i].left - otherTarget.left, dy = targets[i].top - otherTarget.top;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance === 0) {
+                    vx += 10 * Math.random() - 5;
+                    vy += 10 * Math.random() - 5;
+                } else {
+                    vx += 20 * dx / (distance * distance);
+                    vy += 20 * dy / (distance * distance);
+                }
+            }
+            const dx = x - middle.x, dy = y - middle.y;
+            const distance = Math.min(180, Math.sqrt(dx * dx + dy * dy));
+            //if (distance < 140) {
+                vx += 20 * dx / Math.max(0.5, (distance * distance));
+                vy += 20 * dy / Math.max(0.5, (distance * distance));
+            //} else if (distance > 160) {
+                vx -= dx / Math.max(0.5, (180 - distance) * (180 - distance)) / 200;
+                vy -= dy / Math.max(0.5, (180 - distance) * (180 - distance)) / 200;
+            //}
+            vx = Math.max(-20, Math.min(20, vx));
+            vy = Math.max(-20, Math.min(20, vy));
+            targets[i] = {
+                left: targets[i].left + targets[i].vx,// + sprite.vx,
+                top: targets[i].top + targets[i].vy,// + sprite.vy,
+                vx, vy,
+                width: (targets[i].width * 10 + size) / 11,
+                height: (targets[i].height * 10 + size) / 11,
+            };
         }
-        return state;
+        return updatePlayer(state, playerIndex, {[HERO_BEE]: {...player[HERO_BEE], targets}});
+    },
+    getFormationRectangles(player) {
+        return player[HERO_BEE].targets;
+        /*const formation = this.formations[player[HERO_BEE].formation];
+        const rectangles = [];
+        const sprite = player.sprite;
+        const middle = {x: sprite.left + sprite.width / 2, y: sprite.top + sprite.height / 2};
+        for (const data of formation(player, numTargets)) {
+            rectangles.push(
+                new Rectangle(0, 0, size, size).moveCenterTo(middle.x + data.x, middle.y + data.y)
+            );
+        }
+        return rectangles;*/
+    },
+    render(context, player) {
+        context.save();
+        context.globalAlpha = 0.5;
+        context.fillStyle = 'orange';
+        for (const formation of this.getFormationRectangles(player)) {
+            context.fillRect(formation.left, formation.top, formation.width, formation.height);
+        }
+        context.restore();
+    },
+    shoot(state, playerIndex) {
+        let player = state.players[playerIndex];
+        const attackSpeedPowers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length
+        const shotCooldown = (this.shotCooldown || SHOT_COOLDOWN) - attackSpeedPowers;
+        state = updatePlayer(state, playerIndex, {shotCooldown});
+        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        const damage = 1 + triplePowers;
+        const tint = getAttackTint({damage});
+        let hit = false;
+        const targets = [...player[HERO_BEE].targets];
+        //const targetHitBoxes = this.getFormationRectangles(player);
+        for (let i = 0; i < targets.length; i++) {
+            const targetHitBox = targets[i];
+            for (let j = 0; j < state.enemies.length; j++) {
+                const enemy = state.idMap[state.enemies[j].id];
+                if (!enemy || enemy.dead) continue;
+                if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
+                const hitBox = getEnemyHitBox(enemy);
+                if (Rectangle.collision(targetHitBox, hitBox)) {
+                    state = addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
+                        playerIndex, enemyId: enemy.id,
+                        sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
+                        sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
+                        dx: Math.random() * 20 +
+                            2 * ((targetHitBox.left + targetHitBox.width / 2) - (hitBox.left + hitBox.width / 2)),
+                        dy: Math.random() * 20 +
+                            2 * ((targetHitBox.top + targetHitBox.height / 2) - (hitBox.top + hitBox.height / 2)),
+                        duration: 6 * FRAME_LENGTH,
+                        // This will be rendered before it is positioned correctly,
+                        // so just stick it off screen.
+                        left: -200,
+                        tint,
+                        damage,
+                    }));
+                    hit = true;
+                    targets[i] = {...targets[i], enemyId: enemy.id};
+                    break;
+                }
+            }
+        }
+        // If no enemies are in range, just fire a random shot, otherwise the player may not
+        // realize they are attacking.
+        if (!hit) {
+            const targetHitBox = random.element(targets);
+            return addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
+                playerIndex,
+                tx: targetHitBox.left + targetHitBox.width / 2,
+                ty: targetHitBox.top + targetHitBox.height / 2,
+                sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
+                sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
+                dx: Math.random() * 40,
+                dy: Math.random() * 40,
+                duration: 6 * FRAME_LENGTH,
+                // This will be rendered before it is positioned correctly,
+                // so just stick it off screen.
+                left: -200,
+                tint,
+                damage,
+            }));
+        }
+        return updatePlayer(state, playerIndex, {[HERO_BEE]: {...player[HERO_BEE], targets}});
     },
 };
 
-const { createAttack, addPlayerAttackToState } = require('attacks');
-const { checkToAddLightning } = require('effects/lightning');
+const { getAttackTint } = require('attacks');
+const { addEffectToState, createEffect } = require('effects');
+const { getEnemyHitBox } = require('enemies');
+const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
+

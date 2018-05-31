@@ -1,4 +1,4 @@
-const { drawImage } = require('draw');
+const { drawImage, drawTintedImage } = require('draw');
 
 const Rectangle = require('Rectangle');
 
@@ -170,10 +170,15 @@ const updateEffect = (state, effectIndex, props) => {
     return {...state, effects};
 };
 
+function renderEffectFrame(context, frame, target, effect) {
+    if (!effect.tint || !effect.tint.amount) return drawImage(context, frame.image, frame, target);
+    drawTintedImage(context, frame.image, effect.tint.color, effect.tint.amount, frame, target);
+}
+
 const renderEffect = (context, effect) => {
     const frame = getFrame(effects[effect.type].animation, effect.animationTime);
     if ((effect.xScale || 1) === 1 && (effect.yScale || 1) === 1 && (effect.rotation || 0) === 0) {
-        drawImage(context, frame.image, frame, effect);
+        renderEffectFrame(context, frame, effect, effect);
     } else {
         let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
         // This moves the origin to where we want the center of the enemies hitBox to be.
@@ -186,7 +191,7 @@ const renderEffect = (context, effect) => {
             -(hitBox.left + hitBox.width / 2),
             -(hitBox.top + hitBox.height / 2),
         );
-        drawImage(context, frame.image, frame, target);
+        renderEffectFrame(context, frame, target, effect);
         context.restore();
     }
 };
@@ -196,7 +201,7 @@ const advanceEffect = (state, effectIndex) => {
     if (effectInfo.advanceEffect) {
         state = effectInfo.advanceEffect(state, effectIndex);
     }
-    let { left, top, width, height, vx, vy, animationTime,
+    let { done, left, top, width, height, vx, vy, animationTime,
         relativeToGround, loops,
     } = state.effects[effectIndex];
     const animation = effectInfo.animation;
@@ -208,7 +213,7 @@ const advanceEffect = (state, effectIndex) => {
     }
     animationTime += FRAME_LENGTH;
 
-    const done = animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (loops || 1) ||
+    done = done || animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (loops || 1) ||
         left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
         top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
 

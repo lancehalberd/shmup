@@ -7,6 +7,7 @@ const {
 
 const EFFECT_LIGHTNING = 'lightning';
 const EFFECT_FAST_LIGHTNING = 'fastLightning';
+const EFFECT_ARC_LIGHTNING = 'arcLightning';
 
 const lightningFrames = [
     {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
@@ -44,8 +45,8 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     }
     const targetRotations = [];
     for (let i = 0; i < state.enemies.length; i++) {
-        const enemy = state.enemies[i];
-        if (enemy.done || enemy.dead) continue;
+        const enemy = state.idMap[state.enemies[i].id];
+        if (!enemy || enemy.dead) continue;
         // The large lightning attack can only hit enemies in front of each bolt.
         if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
         const hitBox = getEnemyHitBox(enemy);
@@ -54,7 +55,7 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
         const radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;
         if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
             targetRotations.push(Math.atan2(dy, dx));
-            state = damageEnemy(state, i, {playerIndex: 0, damage});
+            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage});
             state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
         }
     }
@@ -73,12 +74,14 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
 }
 
 module.exports = {
+    EFFECT_LIGHTNING,
     EFFECT_FAST_LIGHTNING,
+    EFFECT_ARC_LIGHTNING,
     checkToAddLightning,
+    lightningFrames,
 };
 
-
-const { effects, createEffect, addEffectToState } = require('effects');
+const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
 const { getEnemyHitBox, damageEnemy } = require('enemies');
 effects[EFFECT_LIGHTNING] = {
     animation: {
@@ -107,5 +110,54 @@ effects[EFFECT_FAST_LIGHTNING] = {
         charges: 0,
         branchChance: 0,
         rotation: 0,
+    },
+};
+effects[EFFECT_ARC_LIGHTNING] = {
+    animation: {
+        frames: lightningFrames,
+        frameDuration: 3,
+    },
+    advanceEffect(state, effectIndex) {
+        const effect = state.effects[effectIndex];
+        let p = effect.animationTime / effect.duration;
+        const target = state.idMap[effect.enemyId];
+        const done = effect.done || p >= 1 || (effect.enemyId && !target);
+        if (done) {
+            if (target && !target.dead) {
+                const attack = {playerIndex: effect.playerIndex, damage: effect.damage};
+                state = damageEnemy(state, effect.enemyId, attack);
+                state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
+            }
+        } else {
+            let tx = effect.tx, ty = effect.ty;
+            if (target) {
+                const hitBox = getEnemyHitBox(target);
+                tx = hitBox.left + hitBox.width / 2;
+                ty = hitBox.top + hitBox.height / 2;
+            }
+            const p1 = {
+                x: (1 - p) * effect.sx + p * tx + effect.dx * p * (1 - p),
+                y: (1 - p) * effect.sy + p * ty + effect.dy * p * (1 - p),
+            };
+            p = Math.min(1, p + 0.02);
+            const p2 = {
+                x: (1 - p) * effect.sx + p * tx + effect.dx * p * (1 - p),
+                y: (1 - p) * effect.sy + p * ty + effect.dy * p * (1 - p),
+            };
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const left = (p2.x + p1.x) / 2 - effect.width / 2;
+            const top = (p2.y + p1.y) / 2 - effect.height / 2;
+            const rotation = Math.atan2(dy, dx);
+            return updateEffect(state, effectIndex, {done, left, top, rotation});
+        }
+        return updateEffect(state, effectIndex, {done});
+    },
+    props: {
+        loops: 1,
+        damage: 5,
+        charges: 8,
+        branchChance: .9,
+        rotation: 0,
+        sfx: 'arclightning',
     },
 };

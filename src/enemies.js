@@ -34,8 +34,7 @@ const {
 
 let uniqueIdCounter = 0;
 
-const spawnMonkOnGround = (state, enemyIndex) => {
-    const enemy = state.enemies[enemyIndex];
+const spawnMonkOnGround = (state, enemy) => {
     const fallDamage = Math.floor(enemy.vy / 13);
     const monk = createEnemy(ENEMY_MONK, {
         left: enemy.left,
@@ -47,7 +46,7 @@ const spawnMonkOnGround = (state, enemyIndex) => {
     // Add the new enemy to the state.
     state = addEnemyToState(state, monk);
     // Remove the current enemy from the state.
-    return updateEnemy(state, enemyIndex, {done: true});
+    return removeEnemy(state, enemy);
 };
 
 const enemyData = {
@@ -198,17 +197,14 @@ const enemyData = {
             modeTime += FRAME_LENGTH;
             return {...enemy, targetX, targetY, vx, vy, mode, modeTime};
         },
-        shoot(state, enemyIndex) {
-            const enemies = [...state.enemies];
-            let enemy = enemies[enemyIndex];
+        shoot(state, enemy) {
             if (enemy.mode !== 'circle' && enemy.mode !== 'retreat') return state;
             if (enemy.shotCooldown > 0) {
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldown - 1 };
-                return { ...state, enemies };
+                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
             }
+            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
             const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
             const theta = Math.atan2(dy, dx);
-            enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
             const bullet = createAttack(ATTACK_BULLET, {
                 vx: enemy.bulletSpeed * Math.cos(theta),
                 vy: enemy.bulletSpeed * Math.sin(theta),
@@ -216,10 +212,9 @@ const enemyData = {
                 left: enemy.left + enemy.vx,
             });
             bullet.top -= bullet.height / 2;
-            return addEnemyAttackToState({...state, enemies}, bullet);
+            return addEnemyAttackToState(state, bullet);
         },
-        onDeathEffect(state, enemyIndex) {
-            const enemy = state.enemies[enemyIndex];
+        onDeathEffect(state, enemy) {
             const hornet = createEnemy(ENEMY_HORNET, {
                 life: 20,
                 score: enemyData[ENEMY_HORNET].props.score / 2,
@@ -231,7 +226,7 @@ const enemyData = {
             })
             // Delete the current enemy from the state so it can be
             // added on top of the mount enemy.
-            state = updateEnemy(state, enemyIndex, {done: true});
+            state = removeEnemy(state, enemy);
             state = addEnemyToState(state, hornet);
             return addEnemyToState(state, enemy);
         },
@@ -285,16 +280,13 @@ const enemyData = {
             }
             return {...enemy, targetX, targetY, vx, vy};
         },
-        shoot(state, enemyIndex) {
-            const enemies = [...state.enemies];
-            let enemy = enemies[enemyIndex];
+        shoot(state, enemy) {
             if (enemy.shotCooldown > 0) {
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldown - 1 };
-                return { ...state, enemies };
+                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
             }
+            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
             const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
             const theta = Math.atan2(dy, dx);
-            enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
             const bullet = createAttack(ATTACK_BULLET, {
                 vx: enemy.bulletSpeed * Math.cos(theta),
                 vy: enemy.bulletSpeed * Math.sin(theta),
@@ -302,10 +294,9 @@ const enemyData = {
                 left: enemy.left + enemy.vx,
             });
             bullet.top -= bullet.height / 2;
-            return addEnemyAttackToState({...state, enemies}, bullet);
+            return addEnemyAttackToState(state, bullet);
         },
-        onDeathEffect(state, enemyIndex) {
-            const enemy = state.enemies[enemyIndex];
+        onDeathEffect(state, enemy) {
             const locust = createEnemy(ENEMY_LOCUST, {
                 life: 6,
                 score: enemyData[ENEMY_LOCUST].props.score / 2,
@@ -319,7 +310,7 @@ const enemyData = {
             })
             // Delete the current enemy from the state so it can be
             // added on top of the mount enemy.
-            state = updateEnemy(state, enemyIndex, {done: true});
+            state = removeEnemy(state, enemy);
             state = addEnemyToState(state, locust);
             return addEnemyToState(state, enemy);
         },
@@ -385,20 +376,15 @@ const enemyData = {
             }
             return {...enemy, vx, vy};
         },
-        shoot(state, enemyIndex) {
-            const enemies = [...state.enemies];
-            let enemy = enemies[enemyIndex];
+        shoot(state, enemy) {
             if (enemy.shotCooldown === undefined) {
-                enemy.shotCooldown = 20 + Math.floor(50 * Math.random());
+                state = updateEnemy(state, enemy, {shotCooldown: 20 + Math.floor(50 * Math.random())});
+                enemy = state.idMap[enemy.id];
             }
             if (enemy.shotCooldown > 0) {
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldown - 1 };
-                return { ...state, enemies };
+                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
             }
-            // const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-            // Don't shoot unless aiming approximately towards the player.
-            //if (dx * enemy.vx < 0 || dy * enemy.vy < 0) return state;
-            enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
+            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
             const theta = Math.atan2(enemy.vy, enemy.vx);
             const bullet = createAttack(ATTACK_BULLET, {
                 left: enemy.left - enemy.vx,
@@ -406,10 +392,9 @@ const enemyData = {
                 vy: enemy.bulletSpeed * Math.sin(theta),
             });
             bullet.top = enemy.top + enemy.vy + Math.round((enemy.height - bullet.height) / 2);
-            return addEnemyAttackToState({...state, enemies}, bullet);
+            return addEnemyAttackToState(state, bullet);
         },
-        onDeathEffect(state, enemyIndex) {
-            const enemy = state.enemies[enemyIndex];
+        onDeathEffect(state, enemy) {
             const flyingAnt = createEnemy(ENEMY_FLYING_ANT, {
                 left: enemy.left,
                 top: enemy.top,
@@ -420,7 +405,7 @@ const enemyData = {
             });
             // Delete the current enemy from the state so it can be
             // added on top of the mount enemy.
-            state = updateEnemy(state, enemyIndex, {done: true});
+            state = removeEnemy(state, enemy);
             state = addEnemyToState(state, flyingAnt);
             return addEnemyToState(state, enemy);
         },
@@ -443,17 +428,13 @@ const enemyData = {
             const vx = (enemy.attackCooldownFramesLeft > 0) ? 0.001 : enemy.speed;
             return {...enemy, vx};
         },
-        shoot(state, enemyIndex) {
-            const enemies = [...state.enemies];
-            let enemy = enemies[enemyIndex];
+        shoot(state, enemy) {
             if (enemy.shotCooldown === undefined) {
-                enemy.shotCooldown = 20 + Math.floor(enemy.shotCooldownFrames * Math.random());
+                state = updateEnemy(state, enemy, {shotCooldown: 20 + Math.floor(enemy.shotCooldownFrames * Math.random())});
+                enemy = state.idMap[enemy.id];
             }
             if (enemy.shotCooldown > 0) {
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldown - 1 };
-                return { ...state, enemies };
-            } else {
-                enemies[enemyIndex] = {...enemy, shotCooldown: enemy.shotCooldownFrames };
+                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
             }
             let target = state.players[0].sprite;
             target = {...target, left: target.left + state.world.vx * 40};
@@ -462,6 +443,7 @@ const enemyData = {
             if (!mag) {
                 return state;
             }
+            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames, attackCooldownFramesLeft: enemy.attackCooldownFrames});
 
             const bullet = createAttack(ATTACK_BULLET, {
                 left: enemy.left - enemy.vx + enemy.width / 2,
@@ -471,11 +453,10 @@ const enemyData = {
             });
             bullet.left -= bullet.width / 2;
             bullet.top -= bullet.height;
-            enemies[enemyIndex] = {...enemies[enemyIndex], attackCooldownFramesLeft: enemy.attackCooldownFrames };
-            return addEnemyAttackToState({...state, enemies}, bullet);
+            return addEnemyAttackToState(state, bullet);
         },
-        onDeathEffect(state, enemyIndex) {
-            return updateEnemy(state, enemyIndex, {ttl: 600});
+        onDeathEffect(state, enemy) {
+            return updateEnemy(state, enemy, {ttl: 600});
         },
         props: {
             life: 2,
@@ -497,8 +478,7 @@ const enemyData = {
             return {...enemy, vy};
         },
         deathSound: 'sfx/flydeath.mp3',
-        onDeathEffect(state, enemyIndex) {
-            const enemy = state.enemies[enemyIndex];
+        onDeathEffect(state, enemy) {
             const loot = createLoot(enemy.lootType || getAdaptivePowerupType(state));
             // These offsets are chosen to match the position of the bucket.
             loot.left = enemy.left + 50 - loot.width / 2;
@@ -522,8 +502,7 @@ const enemyData = {
             return {...enemy, vy};
         },
         // deathSound: 'sfx/flydeath.mp3',
-        onDeathEffect(state, enemyIndex, playerIndex = 0) {
-            const enemy = state.enemies[enemyIndex];
+        onDeathEffect(state, enemy, playerIndex = 0) {
             // The bucket explodes on death.
             const explosion = createAttack(ATTACK_EXPLOSION, {
                 // These offsets are chosen to match the position of the bucket.
@@ -560,14 +539,20 @@ const createEnemy = (type, props) => {
     });
 };
 
-const updateEnemy = (state, enemyIndex, props) => {
-    const enemies = [...state.enemies];
-    enemies[enemyIndex] = {...enemies[enemyIndex], ...props};
-    return {...state, enemies};
-};
+function updateEnemy(state, enemy, props) {
+    const idMap = {...state.idMap};
+    idMap[enemy.id] = {...enemy, ...props};
+    return {...state, idMap};
+}
 
-const addEnemyToState = (state, enemy) => {
+function addEnemyToState(state, enemy) {
     return {...state, newEnemies: [...(state.newEnemies || []), enemy] };
+}
+
+function removeEnemy(state, enemy) {
+    const idMap = {...state.idMap};
+    delete idMap[enemy.id];
+    return {...state, idMap};
 }
 
 const getEnemyAnimation = (enemy) => {
@@ -583,27 +568,29 @@ const getEnemyHitBox = (enemy) => {
     return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
 };
 
-const damageEnemy = (state, enemyIndex, attack = {}) => {
+
+const damageEnemy = (state, enemyId, attack = {}) => {
     let updatedState = {...state};
-    updatedState.enemies = [...updatedState.enemies];
-    updatedState.players = [...updatedState.players];
-    updatedState.newEffects = [...updatedState.newEffects];
-    let enemy = updatedState.enemies[enemyIndex];
+    updatedState.idMap = {...updatedState.idMap};
+    let enemy = updatedState.idMap[enemyId];
+    // Do nothing if the enemy is gone.
+    if (!enemy || enemy.dead) return updatedState;
     const damage = attack.damage || 1;
     const enemyIsInvulnerable =
-        enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemyIndex);
+        enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemy);
     if (!enemyIsInvulnerable) {
-            updatedState.enemies[enemyIndex] = {
+        updatedState.idMap[enemyId] = {
             ...enemy,
             life: enemy.life - damage,
             dead: enemy.life <= damage,
             animationTime: enemy.life <= damage ? 0 : enemy.animationTime,
         };
+        enemy = updatedState.idMap[enemyId];
     }
-    if (updatedState.enemies[enemyIndex].dead) {
+    if (updatedState.idMap[enemyId].dead) {
         if (attack.playerIndex >= 0) {
-            let hits = attack.hitIds ? 1 + Object.keys(attack.hitIds).length : 1;
-            let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 10 * hits);
+            let hits = attack.hitIds ? Object.keys(attack.hitIds).length : 0;
+            let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 5 + 10 * hits);
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });
         }
         updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
@@ -629,14 +616,14 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
                 hitIds: {[enemy.id]: true},
             });
             // Remove the enemy, it is replaced by the defeatedEnemyAttack.
-            updatedState.enemies[enemyIndex] = {...enemy, done: true};
+            delete updatedState.idMap[enemyId];
             updatedState = addPlayerAttackToState(updatedState, defeatedEnemyAttack);
         }
 
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
-        if (enemy.grounded && attack.type !== 'fall') {
-            updatedState = updateEnemy(updatedState, enemyIndex, {vx: 6, vy: -6});
-            enemy = updatedState.enemies[enemyIndex];
+        if (updatedState.idMap[enemyId] && enemy.grounded && attack.type !== 'fall') {
+            updatedState = updateEnemy(updatedState, enemy, {vx: 6, vy: -6});
+            enemy = updatedState.idMap[enemyId];
         }
         if (Math.random() < enemy.score / 200) {
             const loot = createLoot(LOOT_COIN);
@@ -647,7 +634,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
         if (enemyData[enemy.type].onDeathEffect) {
             // This actuall changes the enemy index, so we do it last. In the long term it is probably
             // better to use the unique enemy id instead of the index.
-            updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemyIndex);
+            updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemy);
         }
     } else {
         if (enemyIsInvulnerable) {
@@ -657,7 +644,7 @@ const damageEnemy = (state, enemyIndex, attack = {}) => {
             if (enemyData[enemy.type].onDamageEffect) {
                 // This actuall changes the enemy index, so we do it last. In the long term it is probably
                 // better to use the unique enemy id instead of the index.
-                updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemyIndex);
+                updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemy);
             }
             if (attack.left) {
                 const damage = createEffect(EFFECT_DAMAGE, {
@@ -679,7 +666,7 @@ const renderEnemy = (context, enemy) => {
     let animation = getEnemyAnimation(enemy);
     const frame = getFrame(animation, enemy.animationTime);
     context.save();
-    if (enemy.dead) {
+    if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
     if (enemy.vx > 0 && !enemy.doNotFlip) {
@@ -719,30 +706,29 @@ const renderEnemy = (context, enemy) => {
     context.restore();
 };
 
-const advanceEnemy = (state, enemyIndex) => {
-    let enemy = state.enemies[enemyIndex];
+const advanceEnemy = (state, enemy) => {
     if (enemy.delay > 0) {
-        return updateEnemy(state, enemyIndex, {delay: enemy.delay - 1});
+        return updateEnemy(state, enemy, {delay: enemy.delay - 1});
     }
     // This is kind of a hack to support fall damage being applied to newly created enemies.
     if (enemy.pendingDamage) {
-        state = damageEnemy(state, enemyIndex, {playerIndex: 0, damage: enemy.pendingDamage, type: 'fall'});
-        enemy = state.enemies[enemyIndex];
+        state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: enemy.pendingDamage, type: 'fall'});
+        enemy = state.idMap[enemy.id];
     }
 
-    if (enemy.stationary) {
+    if (enemy && enemy.stationary) {
         // Stationary enemies are fixed to the nearground (so they move with the nearground).
-        state = updateEnemy(state, enemyIndex, {
+        state = updateEnemy(state, enemy, {
             top: enemy.top - state.world.nearground.yFactor * state.world.vy,
             left: enemy.left - state.world.nearground.xFactor * state.world.vx,
         });
-        enemy = state.enemies[enemyIndex];
+        enemy = state.idMap[enemy.id];
     } else if (enemy.grounded) {
         // Grounded enemies should move relative to the ground.
-        state = updateEnemy(state, enemyIndex, {
+        state = updateEnemy(state, enemy, {
             left: enemy.left - state.world.nearground.xFactor * state.world.vx,
         });
-        enemy = state.enemies[enemyIndex];
+        enemy = state.idMap[enemy.id];
     }
 
     let {left, top, animationTime, spawned} = enemy;
@@ -753,53 +739,56 @@ const advanceEnemy = (state, enemyIndex) => {
             spawned = true;
         } else {
             // Only update the enemies animation time while spawning.
-            return updateEnemy(state, enemyIndex, {animationTime});
+            return updateEnemy(state, enemy, {animationTime});
         }
     }
     left += enemy.vx;
     top += enemy.vy;
-    state = updateEnemy(state, enemyIndex, {left, top, animationTime, spawned});
-    enemy = state.enemies[enemyIndex];
+    state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
+    enemy = state.idMap[enemy.id];
     const hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
     if (!enemy.dead) {
         top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
     }
-    state = updateEnemy(state, enemyIndex, {left, top, animationTime, spawned});
-    enemy = state.enemies[enemyIndex];
+    state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
+    enemy = state.idMap[enemy.id];
 
-    if ((!enemy.stationary && enemy.dead) || enemy.grounded) {
+    if (enemy && ((!enemy.stationary && enemy.dead) || enemy.grounded)) {
         // Flying enemies fall when they are dead, grounded enemies always fall unless they are on the ground.
         const touchingGround = (enemy.vy >= 0) && (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state));
-        state = updateEnemy(state, enemyIndex, {
+        state = updateEnemy(state, enemy, {
             vy: (!touchingGround || !enemy.grounded) ? enemy.vy + 1 : 0,
             // Dead bodies shouldn't slide along the ground
             vx: touchingGround && enemy.dead ? enemy.vx * .5 : enemy.vx,
         });
-        enemy = state.enemies[enemyIndex];
-        if (!enemy.grounded) {
+        enemy = state.idMap[enemy.id];
+        if (enemy && !enemy.grounded) {
             const onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
                 if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state)) {
-                    state = onHitGroundEffect(state, enemyIndex);
-                    enemy = state.enemies[enemyIndex];
-
-                    // Add a dust cloud to signify something happened when the enemy hit the ground.
-                    const dust = createEffect(EFFECT_DUST, {
-                        sfx: 'sfx/hit.mp3',
-                    });
-                    dust.left = enemy.left + (enemy.width - dust.width ) / 2;
-                    // Add dust at the bottom of the enemy frame.
-                    dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state)) - dust.height;
-                    state = addEffectToState(state, dust);
-                    enemy = state.enemies[enemyIndex];
+                    state = onHitGroundEffect(state, enemy);
+                    enemy = state.idMap[enemy.id];
+                    if (enemy) {
+                        // Add a dust cloud to signify something happened when the enemy hit the ground.
+                        const dust = createEffect(EFFECT_DUST, {
+                            sfx: 'sfx/hit.mp3',
+                        });
+                        dust.left = enemy.left + (enemy.width - dust.width ) / 2;
+                        // Add dust at the bottom of the enemy frame.
+                        dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state)) - dust.height;
+                        state = addEffectToState(state, dust);
+                        enemy = state.idMap[enemy.id];
+                    }
                 }
             }
         }
     }
+    if (!enemy) return state;
     if (!enemy.dead && enemyData[enemy.type].accelerate) {
-        state = updateEnemy(state, enemyIndex, enemyData[enemy.type].accelerate(state, enemy));
+        state = updateEnemy(state, enemy, enemyData[enemy.type].accelerate(state, enemy));
+        enemy = state.idMap[enemy.id];
     }
-    let {ttl, done, attackCooldownFramesLeft} = enemy;
+    let {ttl, attackCooldownFramesLeft} = enemy;
     if (attackCooldownFramesLeft) {
         attackCooldownFramesLeft--;
     }
@@ -807,20 +796,26 @@ const advanceEnemy = (state, enemyIndex) => {
         // Enemies that we need to cleanup before they hit the edge of the screen can be marked
         // with a TTL in milliseconds.
         ttl -= FRAME_LENGTH;
-        if (ttl <= 0) {
-            done = true;
-        }
-    } else if (!done) {
+        if (ttl <= 0) return removeEnemy(state, enemy);
+    } else {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
-        done = (enemy.dead || !enemy.permanent) &&
-            (enemy.left + enemy.width < -OFFSCREEN_PADDING || (enemy.vx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
+        let effectiveVx = enemy.vx;
+        if (enemy.grounded) {
+            effectiveVx -= state.world.nearground.xFactor * state.world.vx;
+        }
+        const enemyIsBelowScreen = enemy.top > GAME_HEIGHT;
+        const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&
+            (enemy.left + enemy.width < -OFFSCREEN_PADDING || (effectiveVx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
             (enemy.vy < 0 && enemy.top + enemy.height < -OFFSCREEN_PADDING) || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
-        if (done && !enemy.dead) {
+        // Don't penalize players for grounded enemies disappearing when they aren't visible on the screen.
+        if (done && !enemy.dead && !(enemy.grounded && enemyIsBelowScreen)) {
             let comboScore = Math.max(0, state.players[0].comboScore - 50);
             state = updatePlayer(state, 0, { comboScore });
+            // console.log('lost points:', enemy.type);
         }
+        if (done) return removeEnemy(state, enemy);
     }
-    return updateEnemy(state, enemyIndex, {done, ttl, attackCooldownFramesLeft, pendingDamage: 0});
+    return updateEnemy(state, enemy, {ttl, attackCooldownFramesLeft, pendingDamage: 0});
 };
 
 module.exports = {

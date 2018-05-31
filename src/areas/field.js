@@ -11,30 +11,30 @@ const {
 const random = require('random');
 const { requireImage, createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { getGroundHeight, getNewLayer, allWorlds } = require('world');
+const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
 
-const plainsBg = createAnimation('gfx/scene/plainsbg.png', r(800, 800));
-const groundAnimation = createAnimation('gfx/scene/groundloop.png', r(200, 60));
-const townAnimation = createAnimation('gfx/scene/town.png', r(300, 300));
+const plainsBg = createAnimation('gfx/scene/field/plainsbg.png', r(800, 800));
+const groundAnimation = createAnimation('gfx/scene/field/groundloop.png', r(200, 60));
+const townAnimation = createAnimation('gfx/scene/field/town.png', r(300, 300));
 const dandyHitBox = r(36, 36, {left: 7});
 const dandyRectangle = r(80, 98, {hitBox: dandyHitBox});
-const dandyAAnimation = createAnimation('gfx/scene/dandyidleabc.png', dandyRectangle, {cols: 2, duration: 30});
-const dandyAPoofAnimation = createAnimation('gfx/scene/dandya.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
-const dandyBAnimation = createAnimation('gfx/scene/dandyidleabc.png', dandyRectangle, {x: 2, cols: 2, duration: 30});
-const dandyBPoofAnimation = createAnimation('gfx/scene/dandyb.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
-const dandyCAnimation = createAnimation('gfx/scene/dandyidleabc.png', dandyRectangle, {x: 4, cols: 2, duration: 30});
-const dandyCPoofAnimation = createAnimation('gfx/scene/dandyc.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
-const grassTuft = createAnimation('gfx/scene/tuft.png', r(92, 64), {cols: 3, duration: 20, frameMap:[0, 2, 1, 2]});
-const grassAnimation = createAnimation('gfx/scene/plainsfg1.png', r(200, 100));
-const grass2Animation = createAnimation('gfx/scene/plainsfg4.png', r(110, 51));
-const grass3Animation = createAnimation('gfx/scene/plainsfg5.png', r(122, 52));
-const smallCloverAnimation = createAnimation('gfx/scene/plainsfg6.png', r(69, 38));
-const leavesAnimation = createAnimation('gfx/scene/plainsfg2.png', r(200, 100));
-const berriesAnimation = createAnimation('gfx/scene/plainsfg3.png', r(200, 100));
-const wheatAnimation = createAnimation('gfx/scene/plainsmg1.png', r(200, 100));
-const thickGrass = createAnimation('gfx/scene/plainsmg.png', r(300, 300));
-const darkGrass = createAnimation('gfx/scene/plainsmg2.png', r(300, 300));
-// const lightGrass = createAnimation('gfx/scene/plainsmg3.png', r(300, 300));
+const dandyAAnimation = createAnimation('gfx/scene/field/dandyidleabc.png', dandyRectangle, {cols: 2, duration: 30});
+const dandyAPoofAnimation = createAnimation('gfx/scene/field/dandya.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
+const dandyBAnimation = createAnimation('gfx/scene/field/dandyidleabc.png', dandyRectangle, {x: 2, cols: 2, duration: 30});
+const dandyBPoofAnimation = createAnimation('gfx/scene/field/dandyb.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
+const dandyCAnimation = createAnimation('gfx/scene/field/dandyidleabc.png', dandyRectangle, {x: 4, cols: 2, duration: 30});
+const dandyCPoofAnimation = createAnimation('gfx/scene/field/dandyc.png', dandyRectangle, {cols: 6, duration: 8}, {loop: false});
+const grassTuft = createAnimation('gfx/scene/field/tuft.png', r(92, 64), {cols: 3, duration: 30, frameMap:[0, 2, 1, 2]});
+const grassAnimation = createAnimation('gfx/scene/field/plainsfg1.png', r(200, 100));
+const grass2Animation = createAnimation('gfx/scene/field/plainsfg4.png', r(110, 51));
+const grass3Animation = createAnimation('gfx/scene/field/plainsfg5.png', r(122, 52));
+const smallCloverAnimation = createAnimation('gfx/scene/field/plainsfg6.png', r(69, 38));
+const leavesAnimation = createAnimation('gfx/scene/field/plainsfg2.png', r(200, 100));
+const berriesAnimation = createAnimation('gfx/scene/field/plainsfg3.png', r(200, 100));
+const wheatAnimation = createAnimation('gfx/scene/field/plainsmg1.png', r(200, 100));
+const thickGrass = createAnimation('gfx/scene/field/plainsmg.png', r(300, 300));
+const darkGrass = createAnimation('gfx/scene/field/plainsmg2.png', r(300, 300));
+// const lightGrass = createAnimation('gfx/scene/field/plainsmg3.png', r(300, 300));
 
 
 const WORLD_FIELD = 'field';
@@ -60,13 +60,36 @@ const setEvent = (state, event) => {
 const FIELD_DURATION = 120000;
 const FIELD_EASY_DURATION = 30000;
 
+// Add check points for:
+const CHECK_POINT_FIELD_START = 'fieldStart';
+const CHECK_POINT_FIELD_MIDDLE = 'fieldMiddle';
+const CHECK_POINT_FIELD_END = 'fieldEnd';
+checkpoints[CHECK_POINT_FIELD_START] = function (state) {
+    const world = getFieldWorldStart();
+    return {...state, world};
+};
+checkpoints[CHECK_POINT_FIELD_MIDDLE] = function (state) {
+    const world = getFieldWorld();
+    // Start the midpoint in the sky so it is visually distinct from other check points.
+    world.time = 40000;
+    world.y = 390;
+    return {...state, world};
+};
+checkpoints[CHECK_POINT_FIELD_END] = function (state) {
+    const world = getFieldWorld();
+    // This is just enough time for a few powerups + large enemies before the boss fight.
+    world.time = 100000;
+    return {...state, world};
+};
+// start of level 'nothing' getFieldWorldStart
+// sky 40 seconds 'nothing' getFieldWorld
+// groud before boss ~100 seconds 'nothing' getFieldWorld
 allWorlds[WORLD_FIELD] = {
     initialEvent: 'nothing',
     events: {
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
                 if (state.players[0].powerups.length) {
-                    state = {...state, world: {...state.world, time: FIELD_DURATION / 2}};
                     return setEvent(state, 'flies');
                 }
                 return setEvent(state, 'easyFlies');
@@ -176,7 +199,7 @@ allWorlds[WORLD_FIELD] = {
             let numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable === 0) {
                 const enemyType = (state.world.time >= 0.5 * FIELD_DURATION) ? ENEMY_HORNET_SOLDIER : ENEMY_HORNET;
-                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: random.element([GAME_HEIGHT / 4, 3 * GAME_HEIGHT / 4])});
+                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: random.element([GAME_HEIGHT / 3, 2 * GAME_HEIGHT / 3])});
                 numFormidable++;
                 return state;
             }
@@ -190,7 +213,7 @@ allWorlds[WORLD_FIELD] = {
             let numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable <= 1) {
                 const enemyType = (state.world.time >= 0.5 * FIELD_DURATION) ? ENEMY_LOCUST_SOLDIER : ENEMY_LOCUST;
-                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: GAME_HEIGHT / 4 + Math.random() * GAME_HEIGHT });
+                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: GAME_HEIGHT / 3 + Math.random() * GAME_HEIGHT / 3 });
                 numFormidable += 2;
                 return state;
             }
@@ -202,30 +225,32 @@ allWorlds[WORLD_FIELD] = {
         },
         bossPrep: (state) => {
             if (state.enemies.length === 0) {
+                state = setCheckpoint(state, CHECK_POINT_FIELD_END);
                 return transitionToFieldBoss(state);
             }
         },
     },
     advanceWorld: (state) => {
+        // return transitionToFieldBoss(state);
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
         const targetFrames = 50 * 5;
         const targetX = world.x + 1000;
         let targetY = world.y;
-        if (world.time % 60000 > 45000) targetY = world.y;
-        else if (world.time % 60000 > 30000) targetY = 400;
-        else if (world.time % 60000 > 15000) targetY = world.y;
-        else targetY = -100;
+        // 30-45s raise into the sky, stay until 60s, then lower back to the ground.
+        if (world.time > 30000 && world.time < 45000) targetY = 400
+        else if (world.time > 60000 && world.time < 80000) targetY = -100;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        // After 90 seconds, stop spawning enemies, and transition to the boss once all enemies are
+        // After 120 seconds, stop spawning enemies, and transition to the boss once all enemies are
         // defeated.
         if (world.type === WORLD_FIELD && world.time >= FIELD_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');
         }
+        if (world.time === 40000) state = setCheckpoint(state, CHECK_POINT_FIELD_MIDDLE);
         if (TEST_ENEMY) {
             if (!state.enemies.length) {
                 state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 700)});
@@ -357,9 +382,9 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 state = addEnemyToState(state, newEnemy);
             }
         }
-        const turrets = state.enemies.filter(enemy => enemy.type === ENEMY_SMALL_TURRET);
+        const turrets = state.enemies.filter(enemy => !enemy.dead && enemy.type === ENEMY_SMALL_TURRET);
         if (time > 2500) {
-            if (state.enemies.filter(enemy => enemy.type === ENEMY_LARGE_TURRET).length === 0) {
+            if (state.enemies.filter(enemy => !enemy.dead && enemy.type === ENEMY_LARGE_TURRET).length === 0) {
                 return enterStarWorldEnd(state);
             }
             if (state.enemies.filter(enemy => enemy.type === ENEMY_DOOR).length === 0) {
@@ -374,7 +399,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                     // Normally monks walk slowly left to right to keep up with scrolling,
                     // but when the screen is still, the need to walk right to left to
                     // approach the player.
-                    speed: -2,
+                    speed: -1.5,
                 });
                 newEnemy.left -= newEnemy.width / 2;
                 newEnemy.top -= newEnemy.height / 2;
@@ -398,7 +423,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                     left: spawnX,
                     top: -100,
                     vy: 0,
-                    delay: 10,
+                    delay: 15,
                 });
                 stick.left -= stick.width / 2;
                 state = addEnemyToState(state, stick);
@@ -473,7 +498,7 @@ const getFieldLayers = () => ({
     foreground: getNewLayer({
         xFactor: 1, yFactor: 0.5, yOffset: -5,
         spriteData: {
-            grass: {animation: grassTuft, scale: 1.5, next: ['grass'], offset: [-10, 400, 550, 610]},
+            grass: {animation: grassTuft, onContact: speedupAnimation, scale: 1.5, next: ['grass'], offset: [-10, 400, 550, 610]},
         },
     }),
     // Background layers start at the top left corner of the screen.
@@ -531,8 +556,14 @@ const onHitDandy = (state, layerName, spriteIndex) => {
     return {...state, world};
 };
 
+function speedupAnimation(state, layerName, spriteIndex) {
+    const sprite = state.world[layerName].sprites[spriteIndex];
+    return updateLayerSprite(state, layerName, spriteIndex, {animationTime: sprite.animationTime + 2 * FRAME_LENGTH});
+}
+
 module.exports = {
     getFieldWorld, getFieldWorldStart,
+    CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
 };
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
@@ -551,12 +582,10 @@ enemyData[ENEMY_SMALL_TURRET] = {
         frameDuration: 12,
     },
     deathSound: 'sfx/robedeath1.mp3',
-    isInvulnerable(state, enemyIndex) {
-        const enemy = state.enemies[enemyIndex];
+    isInvulnerable(state, enemy) {
         return !(enemy.attackCooldownFramesLeft > 0);
     },
-    shoot(state, enemyIndex) {
-        let enemy = {...state.enemies[enemyIndex]};
+    shoot(state, enemy) {
         if (enemy.left > WIDTH + 10) return state;
         // This is pretty ad hoc, but this code delays creating the bullet until the second
         // frame of the attack animation, since the first frame is a preparation frame.
@@ -581,13 +610,10 @@ enemyData[ENEMY_SMALL_TURRET] = {
             shotCooldown = random.element(enemy.shotCooldownFrames);
         }
         if (shotCooldown > 0) {
-            return updateEnemy(state, enemyIndex, {shotCooldown: shotCooldown - 1});
+            return updateEnemy(state, enemy, {shotCooldown: shotCooldown - 1});
         }
         shotCooldown = random.element(enemy.shotCooldownFrames);
-        return updateEnemy(state, enemyIndex, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
-    },
-    onDeathEffect(state, enemyIndex) {
-        return updateEnemy(state, enemyIndex, {ttl: 600});
+        return updateEnemy(state, enemy, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     },
     props: {
         life: 6,
@@ -596,6 +622,7 @@ enemyData[ENEMY_SMALL_TURRET] = {
         bulletSpeed: 5,
         attackCooldownFrames: 36,
         shotCooldownFrames: [80, 120],
+        persist: true,
     },
 };
 
@@ -618,14 +645,12 @@ enemyData[ENEMY_LARGE_TURRET] = {
         frameDuration: 12,
     },
     deathSound: 'sfx/robedeath1.mp3',
-    isInvulnerable(state, enemyIndex) {
-        const enemy = state.enemies[enemyIndex];
+    isInvulnerable(state, enemy) {
         return !(enemy.attackCooldownFramesLeft > 0);
     },
-    shoot(state, enemyIndex) {
-        let enemy = {...state.enemies[enemyIndex]};
+    shoot(state, enemy) {
         // Don't open up until 2 or fewer turrets are left.
-        if (state.enemies.filter(enemy => enemy.type === ENEMY_SMALL_TURRET).length > 2) return state;
+        if (state.enemies.filter(enemy => !enemy.dead && enemy.type === ENEMY_SMALL_TURRET).length > 2) return state;
         // This turret shoots four different times during its attack animation.
         if (enemy.attackCooldownFramesLeft === 54 || enemy.attackCooldownFramesLeft === 36) {
             let target = state.players[0].sprite;
@@ -663,13 +688,10 @@ enemyData[ENEMY_LARGE_TURRET] = {
             shotCooldown = random.element(enemy.shotCooldownFrames);
         }
         if (shotCooldown > 0) {
-            return updateEnemy(state, enemyIndex, {shotCooldown: shotCooldown - 1});
+            return updateEnemy(state, enemy, {shotCooldown: shotCooldown - 1});
         }
         shotCooldown = random.element(enemy.shotCooldownFrames);
-        return updateEnemy(state, enemyIndex, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
-    },
-    onDeathEffect(state, enemyIndex) {
-        return updateEnemy(state, enemyIndex, {ttl: 1000});
+        return updateEnemy(state, enemy, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     },
     props: {
         life: 30,
@@ -678,12 +700,13 @@ enemyData[ENEMY_LARGE_TURRET] = {
         bulletSpeed: 6,
         attackCooldownFrames: 96,
         shotCooldownFrames: [120, 160],
+        persist: true,
     },
 };
 const ENEMY_GROUND_MONK = 'groundMonk';
 enemyData[ENEMY_GROUND_MONK] = {
     ...enemyData[ENEMY_MONK],
-    spawnAnimation: createAnimation('gfx/enemies/robesclimb.png', r(49, 31), {duration: 120}),
+    spawnAnimation: createAnimation('gfx/enemies/robesclimb.png', r(49, 31), {duration: 500}),
     props: {
         ...enemyData[ENEMY_MONK].props,
         life: 2,
@@ -706,15 +729,15 @@ enemyData[ENEMY_DOOR] = {
         if (enemy.life > enemy.maxLife / 3) return {...enemy, animationTime: FRAME_LENGTH * 12};
         return {...enemy, animationTime: 2 * FRAME_LENGTH * 12};
     },
-    onDeathEffect(state, enemyIndex) {
-        return updateEnemy(state, enemyIndex, {stationary: false});
+    onDeathEffect(state, enemy) {
+        return updateEnemy(state, enemy, {stationary: false});
     },
-    onDamageEffect(state, enemyIndex) {
-        if (state.enemies[enemyIndex].life % 3) return state;
+    onDamageEffect(state, enemy) {
+        if (enemy.life % 3) return state;
         for (let i = 0; i < 2; i++) {
             const effect = createEffect(EFFECT_DOOR_DAMAGE, {
-                top: state.enemies[enemyIndex].top + 20 + 120 * i + Math.random() * 40,
-                left: state.enemies[enemyIndex].left + 20 + Math.random() * 90,
+                top: enemy.top + 20 + 120 * i + Math.random() * 40,
+                left: enemy.left + 20 + Math.random() * 90,
             });
             effect.top -= effect.height / 2;
             effect.left -= effect.width / 2;
@@ -739,7 +762,7 @@ enemyData[ENEMY_STICK_1] = {
         if (enemy.top + enemy.height >= getGroundHeight(state)) {
             return {...enemy, dead: true, vx: 3+ Math.random() * 3, vy: -4};
         }
-        return {...enemy, vy: enemy.vy + .6};
+        return {...enemy, vy: enemy.vy + .3};
     },
     props: {
         life: 1,

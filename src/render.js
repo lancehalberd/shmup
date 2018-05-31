@@ -28,7 +28,6 @@ const {
     selectNeedleImage,
     startGameImage,
     optionsImage,
-    gameOverImage,
     getFrame,
 } = require('animations');
 
@@ -49,17 +48,8 @@ const render = (state) => {
         playTrack(state.bgm, state.world.time);
         state.bgm = false;
     }
-    if (state.title) {
-        renderTitle(context, state);
-        return;
-    }
-    if (state.gameover) {
-        context.fillStyle = 'black';
-        context.fillRect(0, 0, WIDTH, HEIGHT);
-        drawImage(context, gameOverImage.image, gameOverImage, new Rectangle(gameOverImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2));
-        renderHUD(context, state);
-        return;
-    }
+    if (state.title) return renderTitle(context, state);
+    if (state.gameover) return renderGameOver(context, state);
     context.save();
         if (state.world.transitionFrames > 0) {
             const p = state.world.transitionFrames / 100;
@@ -246,7 +236,7 @@ const renderTitle = (context, state) => {
     const target = targets[state.titleIndex];
     drawImage(context, selectNeedleImage.image, selectNeedleImage,
         new Rectangle(selectNeedleImage).scale(2).moveCenterTo(
-            WIDTH / 2 - (3 * selectNeedleImage.width + target.width) / 2 + 5 * Math.sin(Date.now() / 150) + 10,
+            WIDTH / 2 - (2 * selectNeedleImage.width + target.width) / 2 + 5 * Math.sin(Date.now() / 150) - 15,
             target.top + target.height / 2,
         ),
     );
@@ -259,6 +249,35 @@ const renderTitle = (context, state) => {
     //);
     // renderForeground(state.world);
 };
+
+const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png')});
+const continueImage = r(82, 30, {image: requireImage('gfx/continue.png')});
+const yesImage = r(20, 20, {image: requireImage('gfx/yes.png')});
+const noImage = r(20, 20, {image: requireImage('gfx/no.png')});
+function renderGameOver(context, state) {
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, WIDTH, HEIGHT);
+    drawImage(context, gameOverImage.image, gameOverImage,
+        new Rectangle(gameOverImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 5));
+    drawImage(context, continueImage.image, continueImage,
+        new Rectangle(continueImage).scale(3).moveCenterTo(WIDTH / 2, 2 * HEIGHT / 5));
+    const targets = [
+        new Rectangle(yesImage).scale(3).moveCenterTo(WIDTH / 2, 3 * HEIGHT / 5),
+        new Rectangle(noImage).scale(3).moveCenterTo(WIDTH / 2, 4 * HEIGHT / 5),
+    ];
+    drawImage(context, yesImage.image, yesImage, targets[0]);
+    drawImage(context, noImage.image, noImage, targets[1]);
+
+    const target = targets[state.continueIndex];
+    drawImage(context, selectNeedleImage.image, selectNeedleImage,
+        new Rectangle(selectNeedleImage).scale(2).moveCenterTo(
+            WIDTH / 2 - (2 * selectNeedleImage.width + target.width) / 2 + 5 * Math.sin(Date.now() / 150) - 15,
+            target.top + target.height / 2,
+        ),
+    );
+
+    renderHUD(context, state);
+}
 
 
 module.exports = render;

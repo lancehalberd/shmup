@@ -13,7 +13,7 @@ const render = require('render');
 
 const { isKeyDown,
     KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE,
-    KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V,
+    KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V, KEY_SHIFT,
 } = require('keyboard');
 
 // Currently we only support a single player.
@@ -27,12 +27,13 @@ let state = getNewState();
 const update = () => {
     state = applyPlayerActions(state, playerIndex, {
         // Make sure up/down only trigger once per press during the title sequence.
-        up: isKeyDown(KEY_UP, state.title), down: isKeyDown(KEY_DOWN, state.title),
+        up: isKeyDown(KEY_UP, state.title || state.gameover), down: isKeyDown(KEY_DOWN, state.title || state.gameover),
         left: isKeyDown(KEY_LEFT), right: isKeyDown(KEY_RIGHT),
         shoot: isKeyDown(KEY_SPACE),
         melee: isKeyDown(KEY_C),
         special: isKeyDown(KEY_V),
         switch: isKeyDown(KEY_X),
+        toggleRight: isKeyDown(KEY_SHIFT),
         start: isKeyDown(KEY_ENTER, true),
     });
 

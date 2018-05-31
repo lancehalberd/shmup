@@ -327,10 +327,10 @@ const ladybugTypes = [LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRAT
 const getAdaptivePowerupType = (state) => {
     if (TEST_ITEMS) return random.element(TEST_ITEMS);
     //if (!state.players[0].relics[LOOT_HELMET]) return LOOT_HELMET;
-    if (getComboMultiplier(state, 0) === 5) return LOOT_PORTAL;
+    if (getComboMultiplier(state, 0) === 5 && !state.players[0].relics[LOOT_HELMET]) return LOOT_PORTAL;
     // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
     if (state.players[0].powerups.length < 1) return random.element(powerupTypes);
-    if (state.players[0].ladybugs.length < 1) return random.element(ladybugTypes);
+    if (state.players[0].ladybugs.length < 1) return LOOT_NORMAL_LADYBUG;
     if (state.players[0].powerups.length < 3) return random.element(powerupTypes);
     if (state.players[0].ladybugs.length < 2) return random.element(ladybugTypes);
     if (state.players[0].powerups.length < 5) return random.element(powerupTypes);
@@ -344,9 +344,9 @@ const getComboMultiplier = (state, playerIndex) => {
     const comboScore = state.players[playerIndex].comboScore;
     if (comboScore >= 1000) return 5;
     if (comboScore >= 600) return 4;
-    if (comboScore >= 400) return 3;
-    if (comboScore >= 200) return 2;
-    if (comboScore >= 100) return 1.5;
+    if (comboScore >= 300) return 3;
+    if (comboScore >= 150) return 2;
+    if (comboScore >= 50) return 1.5;
     return 1;
 };
 

@@ -454,16 +454,9 @@ const getHitBox = (animation, animationTime) => {
     return new Rectangle(frame.hitBox || frame);
 };
 
-const plainsBackground = r(1200, 600, {image: requireImage('gfx/scene/plains_bg.png')});
-const plainsMidground = r(2000, 600, {image: requireImage('gfx/scene/plains_mg.png')});
-const plainsNearground = r(1200, 600, {image: requireImage('gfx/scene/plains_ng.png')});
-const backgroundSky = r(1600, 600, {image: requireImage('gfx/scene/background_sky.png')});
-
 const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png')});
 const startGameImage = r(58, 13, {image: requireImage('gfx/startgame.png')});
 const optionsImage = r(43, 13, {image: requireImage('gfx/options.png')});
-
-const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png')});
 
 const startImage = r(58, 30, {image: requireImage('gfx/start.png')});
 
@@ -477,10 +470,6 @@ module.exports = {
     createFrames,
     createVerticalFrames,
     getHitBox,
-    backgroundSky,
-    plainsBackground,
-    plainsMidground,
-    plainsNearground,
     needleFlipAnimation,
     blastStartAnimation,
     blastLoopAnimation,
@@ -518,5 +507,4 @@ module.exports = {
     startGameImage,
     optionsImage,
     startImage,
-    gameOverImage,
 };

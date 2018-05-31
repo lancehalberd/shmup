@@ -1,6 +1,7 @@
 const fs = require('fs');
 const browserify = require('browserify');
 const watchify = require('watchify');
+const eslintify = require('eslintify');
 
 const bundler = browserify({
     entries: ['./src/client.js'],
@@ -9,7 +10,7 @@ const bundler = browserify({
     cache: {},
     packageCache: {},
     plugin: [watchify]
-}).transform("eslintify")
+}).transform({passthrough: 'warnings'}, eslintify)
   .transform("babelify");
 
 bundler.on('update', updateBundle);
@@ -21,6 +22,7 @@ function updateBundle() {
     console.log('Updating public/client.js...');
     bundler.bundle().on("error", function(err) {
         console.log("Browserify error:", err.message);
+        console.log(err);
     }).pipe(fs.createWriteStream("public/client.js"));
 }
 

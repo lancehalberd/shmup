@@ -112,7 +112,7 @@ const advanceStarWorld = (state) => {
     }
     time -= 3000;
     if (!time) {
-        state = starWorldTransition(updatePlayer(state, 0, {comboScore: 0}), getFieldWorld);
+        state = starWorldTransition(applyCheckpointToState(state, state.world.returnPoint));
     }
     return state;
 };
@@ -155,31 +155,43 @@ const getStarWorld = () => ({
 });
 
 const enterStarWorld = (state) => {
-    const world = getStarWorld();
-    world.transitionFrames = 100;
-    return updatePlayer(clearSprites({...state, world, bgm: world.bgm}), 0, {comboScore: 0});
+    return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FIELD_STARS_START));
 };
 
 const enterStarWorldEnd = (state) => {
-    const world = getStarWorld();
-    world.transitionFrames = 100;
-    world.time = 25000;
-    return updatePlayer(clearSprites({...state, world, bgm: world.bgm}), 0, {comboScore: 700});
+    return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FIELD_STARS_END));
 };
 
-const starWorldTransition = (state, getWorld) => {
-    const world = getWorld();
-    world.transitionFrames = 100;
-    return clearSprites({...state, world, bgm: world.bgm});
+const starWorldTransition = (state) => {
+    return {...state, world: {...state.world, transitionFrames: 100}};
 };
+
+const CHECK_POINT_FIELD_STARS_START = 'fieldStarsStart';
+const CHECK_POINT_FIELD_STARS_END = 'fieldStarsEnd';
 
 module.exports = {
-    getStarWorld, enterStarWorld, enterStarWorldEnd,
+    enterStarWorld, enterStarWorldEnd, starWorldTransition,
+    CHECK_POINT_FIELD_STARS_START, CHECK_POINT_FIELD_STARS_END,
 };
 
-const { clearSprites } = require('world');
 
-const { getFieldWorld } = require('areas/field');
+const { applyCheckpointToState, checkpoints } = require('world');
+
+checkpoints[CHECK_POINT_FIELD_STARS_START] = function (state) {
+    const world = getStarWorld();
+    world.returnPoint = CHECK_POINT_FIELD_END;
+    return updatePlayer({...state, world}, 0, {comboScore: 0});
+};
+checkpoints[CHECK_POINT_FIELD_STARS_END] = function (state) {
+    const world = getStarWorld();
+    world.time = 25000;
+    world.returnPoint = CHECK_POINT_FIELD_START;
+    return updatePlayer({...state, world}, 0, {comboScore: 700});
+};
+
+
+
+const { CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_END } = require('areas/field');
 
 const {createLoot, addLootToState, getComboMultiplier, ladybugTypes} = require('loot');
 

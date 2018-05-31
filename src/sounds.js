@@ -12,35 +12,38 @@ function ifdefor(value, defaultValue) {
     return null;
 }
 
-const requireSound = source => {
-    let offset, volume, duration, limit;
-    if (typeof source === 'string') {
-        [source, offset, volume] = source.split('+');
+const requireSound = key => {
+    let source, offset, volume, duration, limit;
+    if (typeof key === 'string') {
+        [source, offset, volume] = key.split('+');
+        key = source;
     } else {
-        offset = source.offset;
-        volume = source.volume;
-        limit = source.limit;
-        source = source.source;
+        offset = key.offset;
+        volume = key.volume;
+        limit = key.limit;
+        source = key.source;
+        key = key.key || source;
     }
+    if (sounds.has(key)) return sounds.get(key);
     if (offset) [offset, duration] = String(offset).split(':').map(Number);
-    if (sounds.has(source)) return sounds.get(source);
     const newSound = new Audio(source);
     newSound.instances = new Set();
     newSound.offset = offset || 0;
     newSound.customDuration = duration || 0;
     newSound.defaultVolume = volume || 1;
     newSound.instanceLimit = limit || 5;
-    sounds.set(source, newSound);
+    sounds.set(key, newSound);
     return newSound;
 };
 
 const playingSounds = new Set();
-const playSound = (source) => {
+const playSound = (key) => {
     if (soundsMuted) return;
-    let offset,volume, duration;
-    [source, offset, volume] = source.split('+');
+    let source, offset,volume, duration;
+    [source, offset, volume] = key.split('+');
+    key = source;
     if (offset) [offset, duration] = offset.split(':');
-    const sound = requireSound(source);
+    const sound = requireSound(key);
     // Custom sound objects just have a play and forget method on them.
     if (!(sound instanceof Audio)) {
         sound.play();
@@ -129,9 +132,12 @@ const preloadSounds = () => {
         'sfx/portaltravel.mp3+0+4',
         'sfx/explosion.mp3+0+1',
         'sfx/dash.mp3+0+1',
+        {key: 'arclightning', source: 'sfx/fastlightning.mp3', volume: 0.3, limit: 8},
         {source: 'sfx/fastlightning.mp3', volume: 3, limit: 1},
         {source: 'sfx/dash.mp3', volume: 10, limit: 1},
         {source: 'sfx/special.mp3', volume: 3, limit: 1},
+        {key: 'activateInvisibility', source: 'sfx/invisibility.mp3', volume: 1, limit: 1},
+        {key: 'warnInvisibilityIsEnding', source: 'sfx/warninginvisibile.mp3', volume: 0.3, limit: 1},
         // See credits.html for: mobbrobb.
         'bgm/river.mp3+0+1',
         'bgm/area.mp3+0+2',

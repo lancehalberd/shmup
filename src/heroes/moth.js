@@ -1,9 +1,9 @@
 const {
-    ATTACK_OFFSET,
+    ATTACK_OFFSET, SHOT_COOLDOWN,
     ATTACK_SPRAY_UP, ATTACK_SPRAY_RIGHT, ATTACK_SPRAY_DOWN, ATTACK_SLASH,
     EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
     HERO_MOTH,
-    LOOT_ATTACK_POWER,
+    LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const {
@@ -52,7 +52,7 @@ heroesData[HERO_MOTH] = {
     meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_MOTH,
     deathSfx: 'sfx/exclamation2.mp3',
-    specialSfx: 'sfx/special.mp3',
+    specialSfx: 'activateInvisibility',
     switchEffect: EFFECT_SWITCH_MOTH,
     portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
     defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
@@ -74,7 +74,11 @@ heroesData[HERO_MOTH] = {
     },
     shotCooldown: 16,
     shoot(state, playerIndex) {
-        const player = state.players[playerIndex];
+        let player = state.players[playerIndex];
+        const attackSpeedPowers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length
+        const shotCooldown = (this.shotCooldown || SHOT_COOLDOWN) - attackSpeedPowers;
+        state = updatePlayer(state, playerIndex, {shotCooldown});
+        player = state.players[playerIndex];
         const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
         const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
         const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;

@@ -1,9 +1,9 @@
 const {
-    ATTACK_OFFSET,
+    ATTACK_OFFSET, SHOT_COOLDOWN,
     ATTACK_BLAST, ATTACK_SLASH,
     EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
     HERO_DRAGONFLY,
-    LOOT_ATTACK_POWER,
+    LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const Rectangle = require('Rectangle');
@@ -68,10 +68,10 @@ heroesData[HERO_DRAGONFLY] = {
         for (let i = 0; i < state.enemies.length; i++) {
             let enemy = state.enemies[i];
             const enemyHitBox = getEnemyHitBox(enemy);
-            if (enemy && !enemy.done && !enemy.dead &&
+            if (enemy && state.idMap[enemy.id] && !enemy.dead &&
                 Rectangle.collision(enemyHitBox, getHeroHitBox(player))
             ) {
-                state = damageEnemy(state, i, {playerIndex});
+                state = damageEnemy(state, enemy.id, {playerIndex});
             }
         }
         if (player.specialFrames <= 20) {
@@ -86,7 +86,12 @@ heroesData[HERO_DRAGONFLY] = {
         );
     },
     shoot(state, playerIndex) {
-        const player = state.players[playerIndex];
+        let player = state.players[playerIndex];
+        const attackSpeedPowers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length
+        const shotCooldown = (this.shotCooldown || SHOT_COOLDOWN) - attackSpeedPowers;
+        state = updatePlayer(state, playerIndex, {shotCooldown});
+        player = state.players[playerIndex];
+
         const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
         const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
         const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;

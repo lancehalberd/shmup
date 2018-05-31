@@ -4,7 +4,6 @@ const {
     FRAME_LENGTH,
     DEATH_COOLDOWN,
     SHOT_COOLDOWN, ATTACK_OFFSET,
-    SPAWN_INV_TIME,
     ACCELERATION,
     ATTACK_ORB, ATTACK_LASER,
     EFFECT_NEEDLE_FLIP,
@@ -35,6 +34,15 @@ const {
 
 const heroesData = { };
 
+/*const testLightningBug = {
+    color:"#4860A0",
+    animationTime: 0,
+    width:25, height:20,
+    left: 0, top: 0,
+    type:"lightningLadybug",
+    vx:0, vy:0,
+};*/
+
 const getNewPlayerState = () => ({
     score: 0,
     powerupPoints: 0,
@@ -45,10 +53,11 @@ const getNewPlayerState = () => ({
         targetLeft: 170, targetTop: 200,
         spawnSpeed: 7,
     }),
-    heroes: [HERO_MOTH, HERO_DRAGONFLY, HERO_BEE, ],
+    heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH, ],
     [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
-    [HERO_BEE]: {energy: 0, deaths: 0},
+    [HERO_BEE]: {energy: 0, deaths: 0, targets: []},
     [HERO_MOTH]: {energy: 0, deaths: 0},
+    time: 0,
     invulnerableFor: 0,
     spawning: true,
     shotCooldown: 0,
@@ -73,6 +82,30 @@ const updatePlayer = (state, playerIndex, props, spriteProps = null) => {
     players[playerIndex] = {...players[playerIndex], ...props};
     return {...state, players};
 };
+
+function updatePlayerOnContinue(state, playerIndex) {
+    return updatePlayer(state, playerIndex, {
+        score: 0,
+        powerupPoints: 0,
+        powerupIndex: 0,
+        comboScore: 0,
+        dead: false,
+        done: false,
+        [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
+        [HERO_BEE]: {energy: 0, deaths: 0, targets: []},
+        [HERO_MOTH]: {energy: 0, deaths: 0},
+        time: 0,
+        invulnerableFor: 0,
+        spawning: true,
+        shotCooldown: 0,
+        powerups: [],
+        ladybugs: []
+    }, {
+        left: -100, top: 300,
+        targetLeft: 170, targetTop: 200,
+        spawnSpeed: 7,
+    });
+}
 
 const isPlayerInvulnerable = (state, playerIndex) => {
     const player = state.players[playerIndex];
@@ -112,6 +145,7 @@ const advanceHero = (state, playerIndex) => {
         return state;
     }
     state = advanceLadybugs(state, playerIndex);
+    state = updatePlayer(state, playerIndex, {time: state.players[playerIndex].time + FRAME_LENGTH});
     let player = state.players[playerIndex];
     // Restore energy for all heroes each frame.
     for (const heroType of player.heroes) {
@@ -123,9 +157,12 @@ const advanceHero = (state, playerIndex) => {
             );
         }
     }
-    let {shotCooldown, invulnerableFor, specialCooldownFrames} = player;
     const heroType = player.heroes[0];
     const heroData = heroesData[heroType];
+    if (heroData.advanceHero) {
+        state = heroData.advanceHero(state, playerIndex);
+    }
+    let {shotCooldown, invulnerableFor, specialCooldownFrames} = player;
     if (player.usingSpecial) {
         state = updatePlayer(state, playerIndex, {}, {animationTime: player.sprite.animationTime + FRAME_LENGTH});
         return heroData.applySpecial(state, playerIndex);
@@ -153,9 +190,9 @@ const advanceHero = (state, playerIndex) => {
         state = useMeleeAttack(state, playerIndex);
         player = state.players[playerIndex];
     } else if (shotCooldown > 0) {
-        shotCooldown--;
+        state = updatePlayer({...state, sfx}, playerIndex, {shotCooldown: shotCooldown - 1});
+        player = state.players[playerIndex];
     } else if (player.actions.shoot) {
-        shotCooldown = (heroData.shotCooldown || SHOT_COOLDOWN) - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
         state = heroData.shoot(state, playerIndex);
         player = state.players[playerIndex];
     }
@@ -180,10 +217,41 @@ const advanceHero = (state, playerIndex) => {
     if (player.actions.switch) {
         return switchHeroes(state, playerIndex);
     }
+    if (player.actions.shoot) {
+        if (!player.toggledFormation) {
+            let formation = 4;
+            if (player.actions.right) formation = 0;
+            else if (player.actions.up) formation = 1;
+            else if (player.actions.down) formation = 2;
+            else if (player.actions.left) formation = 3;
+            state = updatePlayer(state, playerIndex, {
+                toggledFormation: true,
+                [HERO_BEE]: {...player[HERO_BEE],
+                    formation
+                    //formation: (player[HERO_BEE].formation + 1) % heroesData[HERO_BEE].formations.length
+                },
+            });
+        }
+    } else if (player.toggledFormation) {
+        state = updatePlayer(state, playerIndex, {toggledFormation: false});
+    }
+    /*if (!player.actions.shoot) {
+        let formation = 4;
+        if (player.actions.right) formation = 0;
+        else if (player.actions.up) formation = 1;
+        else if (player.actions.down) formation = 2;
+        else if (player.actions.left) formation = 3;
+        state = updatePlayer(state, playerIndex, {
+            toggledFormation: true,
+            [HERO_BEE]: {...player[HERO_BEE],
+                formation
+            },
+        });
+    }*/
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
     const tripleSpeedPowerups = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO).length;
-    const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups * 2;
-    const accleration = ACCELERATION + speedPowerups + tripleSpeedPowerups;
+    const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups;
+    const accleration = ACCELERATION + speedPowerups / 2 + tripleSpeedPowerups;
     // Accelerate player based on their input.
     if (player.actions.up) vy -= accleration;
     if (player.actions.down) vy += accleration;
@@ -234,8 +302,11 @@ const advanceHero = (state, playerIndex) => {
             meleeAttackTime = undefined;
         }
     }
+    if (invulnerableFor === 1000) {
+        sfx['warnInvisibilityIsEnding'] = true;
+    }
     const updatedProps = {
-        shotCooldown, meleeAttackTime,
+        meleeAttackTime,
         specialCooldownFrames,
         invulnerableFor, sprite,
         chasingNeedle, catchingNeedleFrames,
@@ -395,7 +466,7 @@ const damageHero = (updatedState, playerIndex) => {
         dead: true,
         usingSpecial: false,
         done,
-        invulnerableFor: SPAWN_INV_TIME,
+        invulnerableFor: 2000,
         spawning: true,
         chasingNeedle: true,
         powerupIndex: 0,
@@ -464,6 +535,9 @@ const renderHero = (context, player) => {
         context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         context.restore();
     }
+    if (heroData.render) {
+        heroData.render(context, player);
+    }
     for (const ladybug of ladybugs) {
         renderLadybug(context, ladybug);
     }
@@ -486,6 +560,7 @@ module.exports = {
     renderHero,
     heroesData,
     updatePlayer,
+    updatePlayerOnContinue,
     isPlayerInvulnerable,
     ladybugAnimation,
     useMeleeAttack,

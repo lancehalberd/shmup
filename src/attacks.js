@@ -171,13 +171,21 @@ const renderAttack = (context, attack) => {
     const frame = getFrame(animation, animationTime);
     if (attack.explosion && attack.delay) return;
     // These should only apply to player attacks since any damage defeats a player.
-    if (attack.explosion || attack.damage === 1 || !attack.damage) drawImage(context, frame.image, frame, attack);
-    else if (attack.damage >= 6) drawTintedImage(context, frame.image, 'white', .9, frame, attack);
-    else if (attack.damage === 5) drawTintedImage(context, frame.image, 'black', .9, frame, attack);
-    else if (attack.damage === 4) drawTintedImage(context, frame.image, 'blue', .5, frame, attack);
-    else if (attack.damage === 3) drawTintedImage(context, frame.image, 'red', .4, frame, attack);
-    else if (attack.damage === 2) drawTintedImage(context, frame.image, 'orange', .5, frame, attack);
+    const {color, amount} = getAttackTint(attack);
+    if (!amount) drawImage(context, frame.image, frame, attack);
+    else drawTintedImage(context, frame.image, color, amount, frame, attack);
 };
+
+function getAttackTint(attack) {
+    const damage = attack.damage;
+    if (attack.explosion || !damage || damage <= 1) return {};
+    if (damage >= 6) return {color: 'white', amount: 0.9};
+    if (damage >= 5) return {color: 'black', amount: 0.9};
+    if (damage >= 4) return {color: 'blue', amount: 0.5};
+    if (damage >= 3) return {color: 'green', amount: 0.4};
+    if (damage >= 2) return {color: 'orange', amount: 0.5};
+    return {};
+}
 
 const advanceAttack = (state, attack) => {
     let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, melee, explosion, ttl} = attack;
@@ -217,4 +225,5 @@ module.exports = {
     addEnemyAttackToState,
     advanceAttack,
     renderAttack,
+    getAttackTint,
 };

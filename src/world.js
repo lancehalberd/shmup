@@ -6,6 +6,7 @@ const { getFrame } = require('animations');
 const { getNewSpriteState } = require('sprites');
 
 const allWorlds = {};
+const checkpoints = {};
 window.allWorlds = allWorlds;
 
 const getNewLayer = (props) => ({
@@ -72,38 +73,60 @@ const addElementToLayer = (state, layerName) => {
     return {...state, world};
 };
 
+function updateLayerSprite(state, layerName, spriteIndex, newProperties) {
+    const sprites = [...state.world[layerName].sprites];
+    sprites[spriteIndex] = {...sprites[spriteIndex], ...newProperties};
+    const layer = {...state.world[layerName], sprites};
+    const world = {...state.world, [layerName]: layer};
+    return {...state, world};
+}
+
 const advanceLayer = (state, layerName) => {
+    // Check to add a new element to scroll onto the screen.
     state = addElementToLayer(state, layerName);
-    let layer = {...state.world[layerName]};
-    if (!layer) {
-        return state;
-    }
-    if (!layer.sprites)console.log(layerName, layer);
-    let sprites = [...layer.sprites];
-    for (let i = 0; i < sprites.length; i++) {
-        const sprite = sprites[i];
-        sprites[i] = {
+    const layer = {...state.world[layerName]};
+    if (!layer) return state;
+    if (!layer.sprites) console.log(layerName, layer);
+
+    for (let i = 0; i < state.world[layerName].sprites.length; i++) {
+        let sprite = state.world[layerName].sprites[i];
+        state = updateLayerSprite(state, layerName, i, {
             ...sprite,
             left: sprite.left + sprite.vx - state.world.vx * layer.xFactor,
             top: sprite.top + sprite.vy + state.world.vy * layer.yFactor,
             animationTime: sprite.animationTime + FRAME_LENGTH,
-        };
-        if (sprites[i].onHit) {
-            const frame = getFrame(sprites[i].animation, sprites[i].animationTime);
-            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprites[i].scale).moveTo(sprites[i].left, sprites[i].top);
+        });
+        sprite = state.world[layerName].sprites[i];
+        if (sprite.onHit) {
+            const frame = getFrame(sprite.animation, sprite.animationTime);
+            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
             for (const attack of state.playerAttacks) {
                 if (Rectangle.collision(hitBox, attack)) {
-                    state = sprites[i].onHit(state, layerName, i);
-                    layer = {...state.world[layerName]};
-                    sprites = [...(layer.sprites || [])];
+                    state = sprite.onHit(state, layerName, i);
+                    sprite = state.world[layerName].sprites[i];
                     break;
                 }
             }
         }
+        if (sprite.onContact) {
+            const frame = getFrame(sprite.animation, sprite.animationTime);
+            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
+            const player = state.players[0];
+            const heroHitBox = new Rectangle(getHeroHitBox(player));
+            if (Rectangle.collision(hitBox, heroHitBox)) {
+                state = sprite.onContact(state, layerName, i);
+            } else {
+                for (const enemy of state.enemies) {
+                    if (Rectangle.collision(hitBox, getEnemyHitBox(enemy))) {
+                        state = sprite.onContact(state, layerName, i);
+                        break;
+                    }
+                }
+            }
+        }
     }
-    sprites = sprites.filter(sprite => sprite.left + sprite.width > 0);
-    const world = {...state.world, [layerName]: {...layer, sprites}};
-    return {...state, world };
+    const sprites = state.world[layerName].sprites.filter(sprite => sprite.left + sprite.width > 0);
+    return {...state, world: {...state.world, [layerName]: {...state.world[layerName], sprites}}};
 };
 
 const advanceWorld = (state) => {
@@ -203,8 +226,19 @@ const renderLayer = (context, state, layerName) => {
     }
 };
 
+function setCheckpoint(state, checkpoint) {
+    return {...state, checkpoint};
+}
+
+function applyCheckpointToState(state, checkpoint) {
+    if (!checkpoint) checkpoint = state.checkpoint || CHECK_POINT_FIELD_START;
+    state = checkpoints[checkpoint](state);
+    return clearSprites({...state, bgm: state.world.bgm});
+}
+
 module.exports = {
     allWorlds,
+    checkpoints,
     getNewWorld,
     getNewLayer,
     advanceWorld,
@@ -212,6 +246,11 @@ module.exports = {
     renderBackground,
     renderForeground,
     clearSprites,
+    updateLayerSprite,
+    setCheckpoint,
+    applyCheckpointToState,
 };
 
-const { getFieldWorldStart } = require('areas/field');
+const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
+const { getEnemyHitBox } = require('enemies');
+const { getHeroHitBox } = require('heroes');
