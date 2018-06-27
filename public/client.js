@@ -4782,7 +4782,7 @@ var beeRectangle = r(88, 56, { hitBox: beeHitBox });
 var crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30));
 var crosshairLockedAnimation = {
     frames: [_extends({}, r(30, 30), { image: requireImage('gfx/heroes/bee/crosshair2.png') }), _extends({}, r(30, 30), { image: requireImage('gfx/heroes/bee/crosshair3.png') })],
-    frameDuration: 3
+    frameDuration: 10
 };
 
 heroesData[HERO_BEE] = {
