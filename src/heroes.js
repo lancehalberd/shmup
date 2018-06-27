@@ -109,7 +109,7 @@ function updatePlayerOnContinue(state, playerIndex) {
 
 const isPlayerInvulnerable = (state, playerIndex) => {
     const player = state.players[playerIndex];
-    return player.invulnerableFor || player.usingSpecial;
+    return player.invulnerableFor > 0 || player.usingSpecial;
 };
 
 const useMeleeAttack = (state, playerIndex) => {
@@ -217,37 +217,6 @@ const advanceHero = (state, playerIndex) => {
     if (player.actions.switch) {
         return switchHeroes(state, playerIndex);
     }
-    if (player.actions.shoot) {
-        if (!player.toggledFormation) {
-            let formation = 4;
-            if (player.actions.right) formation = 0;
-            else if (player.actions.up) formation = 1;
-            else if (player.actions.down) formation = 2;
-            else if (player.actions.left) formation = 3;
-            state = updatePlayer(state, playerIndex, {
-                toggledFormation: true,
-                [HERO_BEE]: {...player[HERO_BEE],
-                    formation
-                    //formation: (player[HERO_BEE].formation + 1) % heroesData[HERO_BEE].formations.length
-                },
-            });
-        }
-    } else if (player.toggledFormation) {
-        state = updatePlayer(state, playerIndex, {toggledFormation: false});
-    }
-    /*if (!player.actions.shoot) {
-        let formation = 4;
-        if (player.actions.right) formation = 0;
-        else if (player.actions.up) formation = 1;
-        else if (player.actions.down) formation = 2;
-        else if (player.actions.left) formation = 3;
-        state = updatePlayer(state, playerIndex, {
-            toggledFormation: true,
-            [HERO_BEE]: {...player[HERO_BEE],
-                formation
-            },
-        });
-    }*/
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
     const tripleSpeedPowerups = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO).length;
     const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups;
@@ -279,8 +248,10 @@ const advanceHero = (state, playerIndex) => {
         left = -hitBox.left;
         vx = 0;
     }
-    if (left + hitBox.left + hitBox.width > WIDTH ) {
-        left = WIDTH - (hitBox.left + hitBox.width);
+    let rightEdge = state.world.rightEdge || WIDTH;
+    rightEdge = Math.min(rightEdge, WIDTH);
+    if (left + hitBox.left + hitBox.width > rightEdge) {
+        left = rightEdge - (hitBox.left + hitBox.width);
         vx = 0;
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
@@ -302,7 +273,9 @@ const advanceHero = (state, playerIndex) => {
             meleeAttackTime = undefined;
         }
     }
-    if (invulnerableFor === 1000) {
+    // Hack, this applies only to the Moth special because of the extra
+    // 1 millisecond added to that timer.
+    if (invulnerableFor === 1001) {
         sfx['warnInvisibilityIsEnding'] = true;
     }
     const updatedProps = {
@@ -425,7 +398,7 @@ const damageHero = (updatedState, playerIndex) => {
     let player = updatedState.players[playerIndex];
     const sprite = player.sprite;
     const ladybugs = [...player.ladybugs];
-    ladybugs.shift();
+    // ladybugs.shift();
 
     // Display the dying character as a single animation effect.
     const deadHeroData = heroesData[player.heroes[0]];
@@ -457,7 +430,7 @@ const damageHero = (updatedState, playerIndex) => {
     }
     const targetLeft = sprite.left, targetTop = sprite.top;
     const powerups = [...player.powerups];
-    powerups.pop();
+    // powerups.pop();
     const left = -100, top = GAME_HEIGHT - 100;
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
@@ -469,8 +442,8 @@ const damageHero = (updatedState, playerIndex) => {
         invulnerableFor: 2000,
         spawning: true,
         chasingNeedle: true,
-        powerupIndex: 0,
-        powerupPoints: 0,
+        // powerupIndex: 0,
+        // powerupPoints: 0,
         comboScore: 0,
         powerups,
         ladybugs,

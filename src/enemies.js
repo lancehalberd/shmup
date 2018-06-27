@@ -575,7 +575,10 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     let enemy = updatedState.idMap[enemyId];
     // Do nothing if the enemy is gone.
     if (!enemy || enemy.dead) return updatedState;
-    const damage = attack.damage || 1;
+    let damage = attack.damage || 1;
+    if (attack.type && enemy.weakness && enemy.weakness[attack.type]) {
+        damage = enemy.weakness[attack.type];
+    }
     const enemyIsInvulnerable =
         enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemy);
     if (!enemyIsInvulnerable) {
@@ -601,7 +604,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         explosion.top = enemy.top + (enemy.height - explosion.height ) / 2;
         updatedState = addEffectToState(updatedState, explosion);
 
-        if (attack.melee) {
+        if (attack.melee && !enemy.stationary) {
             const playerSprite = updatedState.players[attack.playerIndex].sprite;
             const {dx, dy} = getTargetVector(playerSprite, enemy);
             const theta = Math.atan2(dy, dx);
@@ -625,7 +628,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             updatedState = updateEnemy(updatedState, enemy, {vx: 6, vy: -6});
             enemy = updatedState.idMap[enemyId];
         }
-        if (Math.random() < enemy.score / 200) {
+        if (!state.world.spawnsDisabled && Math.random() < enemy.score / 200) {
             const loot = createLoot(LOOT_COIN);
             loot.left = enemy.left + (enemy.width - loot.width ) / 2;
             loot.top = enemy.top + (enemy.height - loot.height ) / 2;
@@ -668,6 +671,9 @@ const renderEnemy = (context, enemy) => {
     context.save();
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
+    }
+    if (enemyData[enemy.type].drawUnder) {
+        enemyData[enemy.type].drawUnder(context, enemy);
     }
     if (enemy.vx > 0 && !enemy.doNotFlip) {
         let hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
@@ -716,17 +722,22 @@ const advanceEnemy = (state, enemy) => {
         enemy = state.idMap[enemy.id];
     }
 
-    if (enemy && enemy.stationary) {
-        // Stationary enemies are fixed to the nearground (so they move with the nearground).
+
+    // Stationary enemies are fixed to the nearground (so they move with the nearground).
+    const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
+    const xFactor = state.world[neargroundKey].xFactor;
+    const yFactor = state.world[neargroundKey].yFactor;
+
+    if (enemy && (enemy.stationary || enemy.hanging)) {
         state = updateEnemy(state, enemy, {
-            top: enemy.top - state.world.nearground.yFactor * state.world.vy,
-            left: enemy.left - state.world.nearground.xFactor * state.world.vx,
+            top: enemy.top + yFactor * state.world.vy,
+            left: enemy.left - xFactor * state.world.vx,
         });
         enemy = state.idMap[enemy.id];
     } else if (enemy.grounded) {
         // Grounded enemies should move relative to the ground.
         state = updateEnemy(state, enemy, {
-            left: enemy.left - state.world.nearground.xFactor * state.world.vx,
+            left: enemy.left - xFactor * state.world.vx,
         });
         enemy = state.idMap[enemy.id];
     }
@@ -762,7 +773,7 @@ const advanceEnemy = (state, enemy) => {
             vx: touchingGround && enemy.dead ? enemy.vx * .5 : enemy.vx,
         });
         enemy = state.idMap[enemy.id];
-        if (enemy && !enemy.grounded) {
+        if (enemy && enemy.dead && !enemy.hitGround) {
             const onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
                 if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state)) {
@@ -801,7 +812,7 @@ const advanceEnemy = (state, enemy) => {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         let effectiveVx = enemy.vx;
         if (enemy.grounded) {
-            effectiveVx -= state.world.nearground.xFactor * state.world.vx;
+            effectiveVx -= xFactor * state.world.vx;
         }
         const enemyIsBelowScreen = enemy.top > GAME_HEIGHT;
         const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&

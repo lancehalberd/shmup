@@ -1,5 +1,9 @@
 
 module.exports = {
+    chance(percent = 0.5) {
+        return Math.random() < percent;
+    },
+
     /**
      * @param {Number} min  The smallest returned value
      * @param {Number} max  The largest returned value

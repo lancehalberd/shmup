@@ -64,9 +64,11 @@ const addElementToLayer = (state, layerName) => {
         });
         newSprite.height *= scale;
         newSprite.width *= scale;
+        //console.log(getBaseHeight(state), layer.yOffset, yOffset, -newSprite.height);
         newSprite.top -= newSprite.height;
         if (!lastSprite) newSprite.left -= newSprite.width / 2; // Start with the first sprite half off of the screen.
         layer.sprites = [...layer.sprites, newSprite];
+        //console.log(newSprite.left, newSprite.top, newSprite.width, newSprite.height);
         lastSprite = newSprite;
     }
     world = {...world, [layerName]: layer};
@@ -175,8 +177,9 @@ const renderBackgroundLayer = (context, {frame, x, y, maxY}) => {
     if (typeof maxY === 'number') {
         y = Math.min(maxY, y);
     }
-    const left = (x) % frame.width;
-    const right = (x + WIDTH) % frame.width;
+    const scale = frame.scale || 1;
+    const left = Math.floor(x / scale) % frame.width;
+    const right = Math.floor(x + WIDTH / scale) % frame.width;
     if (right <= left) {
         let leftWidth = frame.width - left;
         context.drawImage(frame.image, left, 0, leftWidth, frame.height,
@@ -252,5 +255,6 @@ module.exports = {
 };
 
 const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
+require('areas/forestUpper');
 const { getEnemyHitBox } = require('enemies');
 const { getHeroHitBox } = require('heroes');

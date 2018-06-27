@@ -112,6 +112,7 @@ const advanceStarWorld = (state) => {
     }
     time -= 3000;
     if (!time) {
+        state = updatePlayer(state, 0, {comboScore: 0});
         state = starWorldTransition(applyCheckpointToState(state, state.world.returnPoint));
     }
     return state;

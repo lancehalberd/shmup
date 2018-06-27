@@ -4,7 +4,13 @@ const {
     FRAME_LENGTH,
     EFFECT_DEFLECT_BULLET,
 } = require('gameConstants');
-const { applyCheckpointToState, getNewWorld, advanceWorld, clearSprites } = require('world');
+const {
+    applyCheckpointToState,
+    setCheckpoint,
+    checkpoints,
+    getNewWorld,
+    advanceWorld,
+} = require('world');
 
 const getNewState = () => (advanceWorld({
     idMap: {},
@@ -20,6 +26,7 @@ const getNewState = () => (advanceWorld({
     sfx: {},
     title: true,
     titleIndex: 0,
+    stageSelectIndex: 0,
     paused: false,
     gameover: false,
     continueIndex: 0,
@@ -37,18 +44,27 @@ const advanceState = (state) => {
         state.world.time = TEST_TIME;
     }
     if (updatedState.title) {
-        let titleIndex = updatedState.titleIndex;
+        const checkpointKeys = Object.keys(checkpoints);
+        let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
         if (updatedState.players[0].actions.start && titleIndex === 0) {
             let world = updatedState.world;
+            if (stageSelectIndex) {
+                updatedState = {...updatedState, title: false};
+                const checkpoint = checkpointKeys[stageSelectIndex];
+                updatedState = setCheckpoint(updatedState, checkpoint);
+                return applyCheckpointToState(updatedState);
+            }
             return {...updatedState, title: false, world, bgm: world.bgm};
         }
-        if (updatedState.players[0].actions.up) {
-            titleIndex = (titleIndex + 2 - 1) % 2;
+        if (updatedState.players[0].actions.up) titleIndex = (titleIndex + 2 - 1) % 2;
+        if (updatedState.players[0].actions.down) titleIndex = (titleIndex + 1) % 2;
+        if (updatedState.players[0].actions.left) {
+            stageSelectIndex = (stageSelectIndex + checkpointKeys.length - 1) % checkpointKeys.length;
         }
-        if (updatedState.players[0].actions.down) {
-            titleIndex = (titleIndex + 1) % 2;
+        if (updatedState.players[0].actions.right) {
+            stageSelectIndex = (stageSelectIndex + 1) % checkpointKeys.length;
         }
-        return {...updatedState, titleIndex};
+        return {...updatedState, titleIndex, stageSelectIndex};
     }
     if (state.gameover) {
         let continueIndex = updatedState.continueIndex;

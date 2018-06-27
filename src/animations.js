@@ -451,7 +451,9 @@ const getFrame = (animation, animationTime) => {
 const getAnimationLength = (animation) => animation.frames.length * animation.frameDuration;
 const getHitBox = (animation, animationTime) => {
     const frame = getFrame(animation, animationTime);
-    return new Rectangle(frame.hitBox || frame);
+    return frame.hitBox ?
+        new Rectangle(frame.hitBox) :
+        new Rectangle(frame).moveTo(0, 0);
 };
 
 const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png')});

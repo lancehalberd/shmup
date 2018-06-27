@@ -68,8 +68,10 @@ heroesData[HERO_MOTH] = {
                 {specialFrames: player.specialFrames + 1},
             );
         }
+        // Using 4001 will trigger a warning noise from code in
+        // heroes.js when there is 1 second left.
         return updatePlayer(state, playerIndex,
-            {usingSpecial: false, invulnerableFor: 4000},
+            {usingSpecial: false, invulnerableFor: 4001},
         );
     },
     shotCooldown: 16,

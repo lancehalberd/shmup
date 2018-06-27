@@ -83,6 +83,23 @@ const render = (state) => {
 
     context.restore();
 
+    for (let enemyId in (state.world.lifebars || {})) {
+        const lifebar = state.world.lifebars[enemyId];
+        const enemy = state.idMap[enemyId];
+        const P = Math.min(1, (state.world.time - lifebar.startTime) / 3000);
+        const width = Math.ceil(lifebar.width * P);
+        const p = enemy ? enemy.life / (enemy.maxLife || lifebar.maxLife) : 0;
+        context.fillStyle = 'black';
+        context.fillRect(lifebar.left, lifebar.top, width, lifebar.height);
+        context.fillStyle = ['green', 'yellow', 'orange', 'red', 'black'][Math.floor((1 - p) / 0.25)];
+        context.fillRect(lifebar.left, lifebar.top, Math.min(width, Math.ceil(lifebar.width * p)), lifebar.height);
+        context.strokeStyle = 'white';
+        context.lineWidth = 2;
+        context.beginPath();
+        context.rect(lifebar.left, lifebar.top, width, lifebar.height);
+        context.stroke();
+    }
+
     if (state.deathCooldown > 0) stopTrack();
     if (state.deathCooldown > 0 && state.deathCooldown < 500) {
         context.save();
@@ -165,7 +182,7 @@ const renderHUD = (context, state) => {
     });
 
     let {powerupPoints, powerupIndex} = state.players[0];
-    let powerupBarWidth = Math.floor(98 * powerupPoints / powerupGoals[powerupIndex]);
+    let powerupBarWidth = Math.floor(98 * Math.min(1, powerupPoints / powerupGoals[powerupIndex]));
     context.fillStyle = '#0070A0';
     let frame = getFrame(powerupBarAnimation, state.world.time);
     context.fillRect(150 + 1, 8, powerupBarWidth, frame.height);
@@ -233,6 +250,18 @@ const renderTitle = (context, state) => {
     for (let i = 0; i < options.length; i++) {
         drawImage(context, options[i].image, options[i], targets[i]);
     }
+    if (state.stageSelectIndex) {
+        const checkpoint = Object.keys(checkpoints)[state.stageSelectIndex];
+        context.textBaseline = 'middle';
+        context.textAlign = 'left';
+        context.font = "30px sans-serif";
+        embossText(context, {
+            text: checkpoint,
+            left: targets[0].right + 10,
+            top: targets[0].top + targets[0].height / 2,
+            backgroundColor: '#AAA',
+        });
+    }
     const target = targets[state.titleIndex];
     drawImage(context, selectNeedleImage.image, selectNeedleImage,
         new Rectangle(selectNeedleImage).scale(2).moveCenterTo(
@@ -283,7 +312,7 @@ function renderGameOver(context, state) {
 module.exports = render;
 
 const {
-    renderBackground, renderForeground,
+    checkpoints, renderBackground, renderForeground,
 } = require('world');
 
 const {
@@ -300,6 +329,7 @@ const {
 } = require('loot');
 
 const {
+    enemyData,
     renderEnemy
 } = require('enemies');
 

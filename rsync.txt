@@ -1,0 +1,1 @@
+rsync --rsh=ssh -a --rsync-path="mkdir -p ~/chrisflash.com/shooter && rsync" --exclude='node_modules' --exclude='etc' ~/Sites/shmup/public/ mevolve@ps264245.dreamhostps.com:~/chrisflash.com/shooter/;

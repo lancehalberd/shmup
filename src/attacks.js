@@ -22,7 +22,6 @@ const {
 
 const { getNewSpriteState } = require('sprites');
 
-
 const orbRectangle = r(10, 10);
 const orbAnimation = {
     frames: [

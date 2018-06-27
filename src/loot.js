@@ -131,6 +131,13 @@ const triplePowerupLoot = (type, animation) => ({
     collect(state, playerIndex) {
         let powerups = [...state.players[playerIndex].powerups, type];
         if (powerups.length > 5) powerups.shift();
+        let comboType = getCombinedType(powerups);
+        if (comboType) {
+            powerups.pop();
+            powerups.pop();
+            powerups.pop();
+            powerups.push(comboType);
+        }
         return updatePlayer(state, playerIndex, {powerups});
     },
     collectSfx: 'sfx/powerup.mp3',
@@ -357,7 +364,7 @@ const gainPoints = (state, playerIndex, points) => {
     let score = state.players[playerIndex].score + points;
     let powerupPoints = state.players[playerIndex].powerupPoints + points;
     let powerupIndex = state.players[playerIndex].powerupIndex;
-    if (powerupPoints >= powerupGoals[powerupIndex]) {
+    if (powerupPoints >= powerupGoals[powerupIndex] && !state.world.spawnsDisabled) {
         powerupPoints -= powerupGoals[powerupIndex];
         powerupIndex = Math.min(powerupIndex + 1, powerupGoals.length - 1);
         const cargoBeetle = createEnemy(ENEMY_CARGO_BEETLE, {

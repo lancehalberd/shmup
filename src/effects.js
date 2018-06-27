@@ -160,7 +160,7 @@ const createEffect = (type, props) => {
 
 const addEffectToState = (state, effect) => {
     let sfx = state.sfx;
-    if (effect.sfx) sfx = {...sfx, [effect.sfx]: true};
+    if (effect.sfx && !(effect.delay > 0)) sfx = {...sfx, [effect.sfx]: true};
     return {...state, newEffects: [...state.newEffects, effect], sfx };
 };
 
@@ -176,6 +176,7 @@ function renderEffectFrame(context, frame, target, effect) {
 }
 
 const renderEffect = (context, effect) => {
+    if (effect.delay > 0) return;
     const frame = getFrame(effects[effect.type].animation, effect.animationTime);
     if ((effect.xScale || 1) === 1 && (effect.yScale || 1) === 1 && (effect.rotation || 0) === 0) {
         renderEffectFrame(context, frame, effect, effect);
@@ -197,19 +198,28 @@ const renderEffect = (context, effect) => {
 };
 
 const advanceEffect = (state, effectIndex) => {
-    const effectInfo = effects[state.effects[effectIndex].type];
+    const effect = state.effects[effectIndex];
+    const effectInfo = effects[effect.type];
     if (effectInfo.advanceEffect) {
         state = effectInfo.advanceEffect(state, effectIndex);
     }
     let { done, left, top, width, height, vx, vy, animationTime,
-        relativeToGround, loops,
+        relativeToGround, loops, delay,
     } = state.effects[effectIndex];
+    if (delay > 0) {
+        delay--;
+        if (effect.sfx && delay === 0) {
+            state = {...state, sfx: {...state.sfx, [effect.sfx]: true}};
+        }
+        return updateEffect(state, effectIndex, {delay});
+    }
     const animation = effectInfo.animation;
     left += vx;
     top += vy;
     if (relativeToGround) {
-        left -= state.world.nearground.xFactor * state.world.vx;
-        top += state.world.nearground.yFactor * state.world.vy;
+        const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
+        left -= state.world[neargroundKey].xFactor * state.world.vx;
+        top += state.world[neargroundKey].yFactor * state.world.vy;
     }
     animationTime += FRAME_LENGTH;
 

@@ -11,14 +11,25 @@ const {
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
+const { drawImage } = require('draw');
 const {
     requireImage, r,
     createAnimation,
+    getFrame,
 } = require('animations');
 const { heroesData, updatePlayer } = require('heroes');
 
 const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
 const beeRectangle = r(88, 56, {hitBox: beeHitBox});
+
+const crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30));
+const crosshairLockedAnimation = {
+    frames: [
+        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair2.png')},
+        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair3.png')},
+    ],
+    frameDuration: 3,
+};
 
 heroesData[HERO_BEE] = {
     animation: {
@@ -78,58 +89,6 @@ heroesData[HERO_BEE] = {
             {usingSpecial: false, invulnerableFor: 500},
         );
     },
-    formations: [
-        (player, numTargets) => {
-            const points = [];
-            const minAngle = -(numTargets - 1) * Math.PI / 18;
-            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
-            for (let i = 0; i < numTargets; i++) {
-                const theta = minAngle + i * angleBetween;
-                points.push({x: 160 * Math.cos(theta), y: 160 * Math.sin(theta)});
-            }
-            return points;
-        },
-        (player, numTargets) => {
-            const points = [];
-            const minAngle = -(numTargets - 1) * Math.PI / 18;
-            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
-            for (let i = 0; i < numTargets; i++) {
-                const theta = minAngle + i * angleBetween - Math.PI / 2;
-                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
-            }
-            return points;
-        },
-        (player, numTargets) => {
-            const points = [];
-            const minAngle = -(numTargets - 1) * Math.PI / 18;
-            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
-            for (let i = 0; i < numTargets; i++) {
-                const theta = minAngle + i * angleBetween + Math.PI / 2;
-                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
-            }
-            return points;
-        },
-        (player, numTargets) => {
-            const points = [];
-            const minAngle = -(numTargets - 1) * Math.PI / 18;
-            const angleBetween = 2 * -minAngle / Math.max(1, (numTargets - 1));
-            for (let i = 0; i < numTargets; i++) {
-                const theta = minAngle + i * angleBetween + Math.PI;
-                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
-            }
-            return points;
-        },
-        (player, numTargets) => {
-            const points = [];
-            const minAngle = 0;// - player.time / (500 - numTargets * 20);
-            const angleBetween = 2 * Math.PI / numTargets;
-            for (let i = 0; i < numTargets; i++) {
-                const theta = minAngle + i * angleBetween;
-                points.push({x: 140 * Math.cos(theta), y: 140 * Math.sin(theta)});
-            }
-            return points;
-        },
-    ],
     advanceHero(state, playerIndex) {
         const player = state.players[playerIndex];
         const sprite = player.sprite;
@@ -209,26 +168,18 @@ heroesData[HERO_BEE] = {
         }
         return updatePlayer(state, playerIndex, {[HERO_BEE]: {...player[HERO_BEE], targets}});
     },
-    getFormationRectangles(player) {
-        return player[HERO_BEE].targets;
-        /*const formation = this.formations[player[HERO_BEE].formation];
-        const rectangles = [];
-        const sprite = player.sprite;
-        const middle = {x: sprite.left + sprite.width / 2, y: sprite.top + sprite.height / 2};
-        for (const data of formation(player, numTargets)) {
-            rectangles.push(
-                new Rectangle(0, 0, size, size).moveCenterTo(middle.x + data.x, middle.y + data.y)
-            );
-        }
-        return rectangles;*/
-    },
     render(context, player) {
         context.save();
-        context.globalAlpha = 0.5;
-        context.fillStyle = 'orange';
-        for (const formation of this.getFormationRectangles(player)) {
-            context.fillRect(formation.left, formation.top, formation.width, formation.height);
+        for (const target of player[HERO_BEE].targets) {
+            const animation = target.enemyId ? crosshairLockedAnimation : crosshairAnimation;
+            const frame = getFrame(animation, player.sprite.animationTime);
+            drawImage(context, frame.image, frame, target);
         }
+        /*context.globalAlpha = 0.5;
+        context.fillStyle = 'orange';
+        for (const target of player[HERO_BEE].targets) {
+            context.fillRect(target.left, target.top, target.width, target.height);
+        }*/
         context.restore();
     },
     shoot(state, playerIndex) {
@@ -241,7 +192,6 @@ heroesData[HERO_BEE] = {
         const tint = getAttackTint({damage});
         let hit = false;
         const targets = [...player[HERO_BEE].targets];
-        //const targetHitBoxes = this.getFormationRectangles(player);
         for (let i = 0; i < targets.length; i++) {
             const targetHitBox = targets[i];
             for (let j = 0; j < state.enemies.length; j++) {
@@ -254,9 +204,9 @@ heroesData[HERO_BEE] = {
                         playerIndex, enemyId: enemy.id,
                         sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
                         sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
-                        dx: Math.random() * 20 +
+                        dx: Math.random() * 50 +
                             2 * ((targetHitBox.left + targetHitBox.width / 2) - (hitBox.left + hitBox.width / 2)),
-                        dy: Math.random() * 20 +
+                        dy: Math.random() * 50 +
                             2 * ((targetHitBox.top + targetHitBox.height / 2) - (hitBox.top + hitBox.height / 2)),
                         duration: 6 * FRAME_LENGTH,
                         // This will be rendered before it is positioned correctly,

@@ -22,13 +22,15 @@ const playerIndex = 0;
 preloadSounds();
 let preloadedSounds = true;
 let stateQueue = [];
-let state = getNewState();
+let state = {};
 
 const update = () => {
+    if (!state.world) state = getNewState();
+    const singlePressOnly = state.title || state.gameover;
     state = applyPlayerActions(state, playerIndex, {
         // Make sure up/down only trigger once per press during the title sequence.
-        up: isKeyDown(KEY_UP, state.title || state.gameover), down: isKeyDown(KEY_DOWN, state.title || state.gameover),
-        left: isKeyDown(KEY_LEFT), right: isKeyDown(KEY_RIGHT),
+        up: isKeyDown(KEY_UP, singlePressOnly), down: isKeyDown(KEY_DOWN, singlePressOnly),
+        left: isKeyDown(KEY_LEFT, singlePressOnly), right: isKeyDown(KEY_RIGHT, singlePressOnly),
         shoot: isKeyDown(KEY_SPACE),
         melee: isKeyDown(KEY_C),
         special: isKeyDown(KEY_V),
@@ -60,7 +62,7 @@ setInterval(update, FRAME_LENGTH);
 
 const renderLoop = () => {
     try {
-        render(state);
+        if (state.world) render(state);
         window.requestAnimationFrame(renderLoop);
     } catch (e) {
         console.log(e);
