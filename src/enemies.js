@@ -1,4 +1,5 @@
 
+const random = require('random');
 const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 
@@ -596,7 +597,9 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 5 + 10 * hits);
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });
         }
-        updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
+        if (enemy.score) {
+            updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
+        }
         const explosion = createEffect(EFFECT_EXPLOSION, {
             sfx: enemyData[enemy.type].deathSound,
         });
@@ -647,7 +650,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             if (enemyData[enemy.type].onDamageEffect) {
                 // This actuall changes the enemy index, so we do it last. In the long term it is probably
                 // better to use the unique enemy id instead of the index.
-                updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemy);
+                updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemy, attack);
             }
             if (attack.left) {
                 const damage = createEffect(EFFECT_DAMAGE, {
@@ -676,7 +679,7 @@ const renderEnemy = (context, enemy) => {
         enemyData[enemy.type].drawUnder(context, enemy);
     }
     if (enemy.vx > 0 && !enemy.doNotFlip) {
-        let hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
+        let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
@@ -689,7 +692,7 @@ const renderEnemy = (context, enemy) => {
         drawImage(context, frame.image, frame, target);
         context.restore();
     } else {
-        let hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
+        let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
         context.save();
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
         const target = new Rectangle(frame).moveTo(
@@ -757,7 +760,7 @@ const advanceEnemy = (state, enemy) => {
     top += enemy.vy;
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
-    const hitBox = getEnemyHitBox(enemy).moveTo(0, 0);
+    const hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
     if (!enemy.dead) {
         top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
     }

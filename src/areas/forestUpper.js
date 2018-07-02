@@ -40,8 +40,21 @@ const setEvent = (state, event) => {
 
 // Add check points for:
 const CHECK_POINT_FOREST_UPPER_START = 'forestUpperStart';
+const CHECK_POINT_UPPER_FOREST_END = 'forestUpperEnd'
+const CHECK_POINT_UPPER_BOSS = 'forestUpperBoss'
 checkpoints[CHECK_POINT_FOREST_UPPER_START] = function (state) {
     const world = getForestUpperWorld();
+    return {...state, world};
+};
+checkpoints[CHECK_POINT_UPPER_FOREST_END] = function (state) {
+    const world = getForestUpperWorld();
+    // This is just enough time for a few powerups + large enemies before the boss fight.
+    world.time = 100000;
+    return {...state, world};
+};
+checkpoints[CHECK_POINT_UPPER_BOSS] = function (state) {
+    const world = getForestUpperWorld();
+    world.time = 120000;
     return {...state, world};
 };
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
@@ -149,6 +162,12 @@ allWorlds[WORLD_FOREST_UPPER] = {
                 return setEvent(state, random.element(['brownSpider', 'flyingAnts', 'hornet']));
             }
         },
+        bossPrep: (state) => {
+            if (state.enemies.length === 0) {
+                state = setCheckpoint(state, CHECK_POINT_UPPER_FOREST_END);
+                return transitionToForestUpperBoss(state);
+            }
+        },
     },
     advanceWorld: (state) => {
         let world = state.world;
@@ -157,13 +176,13 @@ allWorlds[WORLD_FOREST_UPPER] = {
         const targetFrames = 70 * 5;
         const targetX = world.x + 1000;
         let targetY = world.y;
-        // 30-45s raise into the sky, stay until 60s, then lower back to the ground.
-        //if (world.time > 30000 && world.time < 45000) targetY = 400
-        //else if (world.time > 60000 && world.time < 80000) targetY = -100;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
+        if (world.type === WORLD_FOREST_UPPER && world.time >= FOREST_UPPER_DURATION && world.event !== 'bossPrep') {
+            return setEvent(state, 'bossPrep');
+        }
 
         if (!world.event) world = {...world, event: allWorlds[world.type].initialEvent, eventTime: 0};
         else world = {...world, eventTime: world.eventTime + FRAME_LENGTH};
@@ -206,7 +225,7 @@ const getForestUpperLayers = () => ({
         },
     }),
     willows: getNewLayer({
-        xFactor: 0.5, yFactor: 0.5, yOffset: -200,
+        xFactor: 1, yFactor: 1, yOffset: -200,
         spriteData: {
             willow: {animation: willowAnimation, scale: 2, next: ['willow'], offset: [100, 200, 300]},
         },
@@ -271,3 +290,4 @@ enemyData[ENEMY_FLOOR_THORNS] = {
     animation: createAnimation('gfx/scene/forest/thorn2.png', floorThornsRectangle),
 };
 
+const { transitionToForestUpperBoss } = require('areas/forestUpperBoss');

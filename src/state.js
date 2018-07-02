@@ -107,10 +107,10 @@ const advanceState = (state) => {
     updatedState.newPlayerAttacks = [];
     updatedState.newEnemyAttacks = [];
     updatedState.newNeutralAttacks = [];
+    updatedState = advanceWorld(updatedState);
     for (let playerIndex = 0; playerIndex < updatedState.players.length; playerIndex++) {
         updatedState = advanceHero(updatedState, playerIndex);
     }
-    updatedState = advanceWorld(updatedState);
     let currentPlayerAttacks = updatedState.playerAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
     for (let enemy of updatedState.enemies) {
         enemy = updatedState.idMap[enemy.id];

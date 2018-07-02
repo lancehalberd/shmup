@@ -133,10 +133,9 @@ const advanceLayer = (state, layerName) => {
 
 const advanceWorld = (state) => {
     let world = state.world;
+    world = {...world, x: world.x + world.vx, y: Math.max(0, world.y + world.vy)};
+    state = {...state, world};
     let {x, y, vx, vy, targetX, targetY, targetFrames, transitionFrames} = world
-    x += vx;
-    y += vy;
-    y = Math.max(0, y);
     if (transitionFrames > 0) {
         transitionFrames--;
     }
