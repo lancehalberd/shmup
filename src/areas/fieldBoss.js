@@ -229,7 +229,7 @@ enemyData[ENEMY_SMALL_TURRET] = {
         return updateEnemy(state, enemy, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     },
     props: {
-        life: 1,
+        life: 6,
         score: 200,
         stationary: true,
         bulletSpeed: 5,
@@ -314,7 +314,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
         return updateEnemy(state, enemy, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     },
     props: {
-        life: 10,
+        life: 100,
         score: 1000,
         stationary: true,
         bulletSpeed: 6,
