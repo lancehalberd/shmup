@@ -557,6 +557,10 @@ function removeEnemy(state, enemy) {
 }
 
 const getEnemyAnimation = (enemy) => {
+    if (enemyData[enemy.type].getAnimation) return enemyData[enemy.type].getAnimation(enemy);
+    return getDefaultEnemyAnimation(enemy);
+};
+const getDefaultEnemyAnimation = (enemy) => {
     let animation = enemyData[enemy.type].animation;
     if (enemy.dead) return enemyData[enemy.type].deathAnimation || animation;
     if (enemy.attackCooldownFramesLeft > 0) return enemyData[enemy.type].attackAnimation || animation;
@@ -841,6 +845,7 @@ module.exports = {
     renderEnemy,
     getEnemyHitBox,
     updateEnemy,
+    getDefaultEnemyAnimation,
 };
 
 // Move possible circular imports to after exports.

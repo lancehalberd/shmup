@@ -28,7 +28,7 @@ const crosshairLockedAnimation = {
         {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair2.png')},
         {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair3.png')},
     ],
-    frameDuration: 10,
+    frameDuration: 12,
 };
 
 heroesData[HERO_BEE] = {
