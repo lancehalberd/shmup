@@ -118,7 +118,7 @@ const advanceState = (state) => {
     }
     for (let enemy of updatedState.enemies) {
         enemy = updatedState.idMap[enemy.id];
-        if (enemy && !enemy.dead && enemyData[enemy.type].shoot && enemy.left > 0) {
+        if (enemyIsActive(updatedState, enemy) && enemyData[enemy.type].shoot && enemy.left > 0) {
             // Don't shoot while spawning.
             if (!enemyData[enemy.type].spawnAnimation || enemy.spawned) {
                 updatedState = enemyData[enemy.type].shoot(updatedState, enemy);
@@ -132,7 +132,7 @@ const advanceState = (state) => {
         let enemy = updatedState.idMap[updatedState.enemies[i].id];
         if (!enemy) continue;
         const enemyHitBox = getEnemyHitBox(enemy);
-        for (let j = 0; j < currentPlayerAttacks.length && enemy && !enemy.dead && updatedState.idMap[enemy.id]; j++) {
+        for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
             if (!attack.done && !attack.hitIds[enemy.id] && Rectangle.collision(enemyHitBox, attack)) {
                 if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy)) {
@@ -150,7 +150,7 @@ const advanceState = (state) => {
         }
         for (let j = 0; j < updatedState.players.length; j++) {
             if (!isPlayerInvulnerable(updatedState, j) && !updatedState.players[j].done &&
-                enemy && updatedState.idMap[enemy.id] && !enemy.dead &&
+                enemyIsActive(updatedState, enemy) &&
                 Rectangle.collision(enemyHitBox, getHeroHitBox(updatedState.players[j]))
             ) {
                 updatedState = damageHero(updatedState, j);
@@ -209,7 +209,7 @@ const advanceState = (state) => {
         }
         for (let j = 0; j < updatedState.enemies.length; j++) {
             const enemy = updatedState.idMap[updatedState.enemies[j].id];
-            if (!enemy || enemy.dead || attack.hitIds[enemy.id]) continue;
+            if (!enemyIsActive(updatedState, enemy) || attack.hitIds[enemy.id]) continue;
             const enemyHitBox = getEnemyHitBox(enemy);
             if (Rectangle.collision(enemyHitBox, attack)) {
                 currentNeutralAttacks[i] = {...attack,
@@ -264,6 +264,6 @@ const {
     advanceAttack,
 } = require('attacks');
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
-const { enemyData, damageEnemy, advanceEnemy, getEnemyHitBox } = require('enemies');
+const { enemyData, damageEnemy, advanceEnemy, getEnemyHitBox, enemyIsActive } = require('enemies');
 const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');

@@ -1,13 +1,14 @@
 
 const {
-    FRAME_LENGTH, WIDTH, HEIGHT,
+    FRAME_LENGTH, WIDTH, HEIGHT, GAME_HEIGHT,
     EFFECT_EXPLOSION,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
 } = require('gameConstants');
 const random = require('random');
 const { requireImage, createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { applyCheckpointToState, allWorlds } = require('world');
+const { applyCheckpointToState, allWorlds, getHazardHeight } = require('world');
+const { enterStarWorldEnd, starWorldTransition } = require('areas/stars');
 
 const WORLD_UPPER_FOREST_BOSS = 'upperForestBoss';
 const layerNamesToClear = ['largeTrunks', 'willows'];
@@ -31,6 +32,18 @@ const nestBaseAnimation = createAnimation('gfx/enemies/hornetnest/hornetbase.png
 allWorlds[WORLD_UPPER_FOREST_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
+        if (world.hazardHeight > 30) {
+            const rate = 0.2;
+            const sprites = [...world.ground.sprites];
+            for (let i = 0; i < sprites.length; i++) {
+                sprites[i] = {...sprites[i], top: sprites[i].top + rate};
+            }
+            world = {...world,
+                hazardHeight: world.hazardHeight - rate,
+                ground: {...world.ground, yOffset: world.ground.yOffset + rate, sprites},
+            };
+
+        }
         if (world.time < 500 &&
             (layerNamesToClear.some(layerName => world[layerName].sprites.length) ||
                 world.y > 0)
@@ -43,6 +56,7 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
             }
         }
         const time = world.time + FRAME_LENGTH;
+        let lastSpawnTime = world.lastSpawnTime;
         if (time === 500) {
             world.willows.sprites = [
                 getNewSpriteState({
@@ -96,8 +110,27 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
             });
             connectedIds.push(newEnemy.id);
             state = addEnemyToState(state, newEnemy);
+            lastSpawnTime = 2500;
         }
-        world = {...world, time};
+        const nest = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_NEST_1)[0];
+        if (time > 2500 && nest) {
+            const spawnPeriod = 1500 + 3500 * nest.life / NEST_LIFE;
+            let enemyTypes = [ENEMY_HORNET_CIRCLER];
+            if (nest.life < 0.66 * NEST_LIFE) enemyTypes.push(ENEMY_HORNET_DASHER);
+            else if (nest.life < 0.25) enemyTypes = [ENEMY_HORNET_DASHER];
+            if (time >= lastSpawnTime + spawnPeriod) {
+                const newEnemy = createEnemy(random.element(enemyTypes), {
+                    left: WIDTH,
+                    top: random.range(1, 3) * getHazardHeight(state) / 5,
+                });
+                state = addEnemyToState(state, newEnemy);
+                lastSpawnTime = time;
+            }
+        }
+        if (time > 2500 && !nest && state.enemies.length === 0) {
+            return enterStarWorldEnd(state);
+        }
+        world = {...world, time, lastSpawnTime};
         state = {...state, world};
         return state;
     },
@@ -108,8 +141,9 @@ module.exports = {
 };
 
 const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitBox } = require('enemies');
+const { ENEMY_HORNET, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_DASHER } = require('enemies/hornets');
 
-const NEST_HEALTH = 200;
+const NEST_LIFE = 300;
 const ENEMY_HORNET_NEST_1 = 'horentNest1';
 const ENEMY_HORNET_NEST_2 = 'horentNest2';
 const ENEMY_HORNET_NEST_3 = 'horentNest3';
@@ -147,12 +181,26 @@ enemyData[ENEMY_HORNET_NEST_1] = {
             explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2 + random.range(-15, 15);
             state = addEffectToState(state, explosion);
         }
+        delay = 3;
+        for (const enemyType of enemy.spawns) {
+            let newEnemy = createEnemy(enemyType, {
+                left: hitBox.left + hitBox.width / 2,
+                top: hitBox.top + hitBox.height / 2,
+                delay,
+            });
+            state = addEnemyToState(state, newEnemy);
+            delay += 50;
+        }
         return state;
     },
     props: {
-        life: NEST_HEALTH,
+        life: NEST_LIFE,
         score: 200,
         hanging: true,
+        spawns: [
+            ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET,
+            ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET
+        ],
     },
 };
 enemyData[ENEMY_HORNET_NEST_2] = {
@@ -160,28 +208,28 @@ enemyData[ENEMY_HORNET_NEST_2] = {
     animation: createAnimation('gfx/enemies/hornetnest/nest4.png',
         r(300, 600, {hitBox: {left: 32, top: 134, width: 215, height:120}})
     ),
-    props: { life: NEST_HEALTH * 0.8, hanging: true, },
+    props: { life: NEST_LIFE * 0.8, hanging: true, spawns: [ENEMY_HORNET_CIRCLER, ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_CIRCLER, ENEMY_HORNET] },
 };
 enemyData[ENEMY_HORNET_NEST_3] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest3.png',
         r(300, 600, {hitBox: {left: 45, top: 195, width: 160, height:120}})
     ),
-    props: { life: NEST_HEALTH * 0.6, hanging: true, },
+    props: { life: NEST_LIFE * 0.6, hanging: true, spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER] },
 };
 enemyData[ENEMY_HORNET_NEST_4] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest2.png',
         r(300, 600, {hitBox: {left: 43, top: 204, width: 240, height:140}})
     ),
-    props: { life: NEST_HEALTH * 0.4, hanging: true, },
+    props: { life: NEST_LIFE * 0.4, hanging: true, spawns: [ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_DASHER] },
 };
 enemyData[ENEMY_HORNET_NEST_5] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest1.png',
         r(300, 600, {hitBox: {left: 130, top: 302, width: 130, height:85}})
     ),
-    props: { life: NEST_HEALTH * 0.2, hanging: true, },
+    props: { life: NEST_LIFE * 0.2, hanging: true, spawns: [ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER]},
 };
 
 const { createEffect, addEffectToState, } = require('effects');

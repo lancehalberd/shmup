@@ -2,7 +2,6 @@
 const {
     TEST_ENEMY, FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ENEMY_FLY, ENEMY_MONK,
-    ENEMY_HORNET, ENEMY_HORNET_SOLDIER,
     ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
@@ -13,6 +12,7 @@ const random = require('random');
 const { requireImage, createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
+const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 
 const plainsBg = createAnimation('gfx/scene/field/plainsbg.png', r(800, 800));
 const groundAnimation = createAnimation('gfx/scene/field/groundloop.png', r(200, 60));

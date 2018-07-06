@@ -154,40 +154,6 @@ const flyDeathAnimation = {
     frameDuration: 3,
 };
 
-const hornetRectangle = r(120, 120);
-const hornetHitBox = {left: 0, top: 33, width: 110, height: 87};
-const hornetAnimation = {
-    frames: [
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornet1.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornet2.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornet3.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornet4.png')},
-    ],
-    frameDuration: 3,
-};
-const hornetDeathAnimation = {
-    frames: [
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornetded.png')},
-    ],
-    frameDuration: 3,
-};
-const hornetSoldierAnimation = {
-    frames: [
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet1.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet2.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet3.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/mhornet4.png')},
-    ],
-    frameDuration: 3,
-};
-const fallingHornetSoldierHitBox = {left: 46, top: 48, width: 40, height: 40};
-const hornetSoldierDeathAnimation = {
-    frames: [
-        {...hornetRectangle, hitBox: fallingHornetSoldierHitBox, image: requireImage('gfx/enemies/mhornetded.png')},
-    ],
-    frameDuration: 3,
-};
-
 const locustRectangle = r(100, 100, {hitBox: {left: 0, top: 40, width: 100, height: 60}});
 const locustAnimation = {
     frames: createFrames(locustRectangle, 3, 'gfx/enemies/locust.png', 1), frameDuration: 3,
@@ -496,8 +462,6 @@ module.exports = {
     sizeTextAnimation,
     speedTextAnimation,
     flyAnimation, flyDeathAnimation,
-    hornetAnimation, hornetDeathAnimation,
-    hornetSoldierAnimation, hornetSoldierDeathAnimation,
     locustAnimation, locustDeathAnimation,
     locustSoldierAnimation, locustSoldierDeathAnimation,
     flyingAntAnimation, flyingAntDeathAnimation,

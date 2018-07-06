@@ -1,7 +1,6 @@
 const {
     TEST_ENEMY, FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ENEMY_FLY, ENEMY_MONK,
-    ENEMY_HORNET, ENEMY_HORNET_SOLDIER,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
@@ -13,6 +12,7 @@ const random = require('random');
 const { createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
+const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 
 const willowAnimation = createAnimation('gfx/scene/forest/willowsheet.png', r(200, 200), {cols: 6, duration: 30});
 
@@ -40,10 +40,18 @@ const setEvent = (state, event) => {
 
 // Add check points for:
 const CHECK_POINT_FOREST_UPPER_START = 'forestUpperStart';
+const CHECK_POINT_FOREST_UPPER_MIDDLE = 'forestUpperMiddle';
+const CHECK_POINT_FOREST_UPPER_MIDDLE_TIME = 40000;
 const CHECK_POINT_UPPER_FOREST_END = 'forestUpperEnd'
 const CHECK_POINT_UPPER_BOSS = 'forestUpperBoss'
 checkpoints[CHECK_POINT_FOREST_UPPER_START] = function (state) {
     const world = getForestUpperWorld();
+    return {...state, world};
+};
+checkpoints[CHECK_POINT_FOREST_UPPER_MIDDLE] = function (state) {
+    const world = getForestUpperWorld();
+    // This is 1/3 of the way through the stage.
+    world.time = CHECK_POINT_FOREST_UPPER_MIDDLE_TIME;
     return {...state, world};
 };
 checkpoints[CHECK_POINT_UPPER_FOREST_END] = function (state) {
@@ -62,11 +70,12 @@ const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENE
 const FOREST_UPPER_DURATION = 120000;
 const FOREST_UPPER_EASY_DURATION = 30000;
 
-
+const SAFE_HEIGHT = GAME_HEIGHT - 90;
 
 const WORLD_FOREST_UPPER = 'forestUpper';
 allWorlds[WORLD_FOREST_UPPER] = {
     initialEvent: 'nothing',
+
     events: {
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
@@ -76,18 +85,18 @@ allWorlds[WORLD_FOREST_UPPER] = {
         easyFlies: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
+                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
+                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
+                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
@@ -98,7 +107,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         powerup: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2});
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: SAFE_HEIGHT / 2});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
@@ -111,7 +120,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
             let spacing = state.world.time < FOREST_UPPER_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber - 1; i++) {
-                    state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
+                    state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
                 }
                 return state;
             }
@@ -119,7 +128,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber; i++) {
                     const enemyType = random.element([ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER]);
-                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
+                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
                 }
                 return state;
             }
@@ -131,7 +140,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         explodingBeetle: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
+                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_EXPLOSIVE_BEETLE, {left: WIDTH, top});
             }
             eventTime -= 3000;
@@ -143,7 +152,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable < 2) {
                 state = spawnThorns(state);
-                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
+                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_HORNET, {left: WIDTH, top});
             }
             eventTime -= 3000;
@@ -153,7 +162,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         },
         brownSpider: (state, eventTime) => {
             if (eventTime === 0) {
-                state = spawnEnemy(state, ENEMY_BROWN_SPIDER, {left: WIDTH + 10, top: random.range(2, 5) * GAME_HEIGHT / 6 });
+                state = spawnEnemy(state, ENEMY_BROWN_SPIDER, {left: WIDTH + 10, top: random.range(2, 5) * SAFE_HEIGHT / 6 });
                 return state;
             }
             let spacing = 1000;
@@ -183,6 +192,9 @@ allWorlds[WORLD_FOREST_UPPER] = {
         if (world.type === WORLD_FOREST_UPPER && world.time >= FOREST_UPPER_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');
         }
+        if (world.time === CHECK_POINT_FOREST_UPPER_MIDDLE_TIME) {
+            state = setCheckpoint(state, CHECK_POINT_FOREST_UPPER_MIDDLE);
+        }
 
         if (!world.event) world = {...world, event: allWorlds[world.type].initialEvent, eventTime: 0};
         else world = {...world, eventTime: world.eventTime + FRAME_LENGTH};
@@ -203,6 +215,7 @@ const getForestUpperWorld = () => ({
     time: 0,
     bgm: 'bgm/river.mp3',
     groundHeight: 30,
+    hazardHeight: 90,
     ...getForestUpperLayers(),
 });
 

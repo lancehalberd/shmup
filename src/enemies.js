@@ -7,7 +7,6 @@ const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH, OFFSCREEN_PADDING,
     ENEMY_FLY, ENEMY_MONK,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
-    ENEMY_HORNET, ENEMY_HORNET_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY, ATTACK_EXPLOSION,
@@ -22,8 +21,6 @@ const {
     getAnimationLength,
     getHitBox,
     flyAnimation, flyDeathAnimation,
-    hornetAnimation, hornetDeathAnimation,
-    hornetSoldierAnimation, hornetSoldierDeathAnimation,
     locustAnimation, locustDeathAnimation,
     locustSoldierAnimation, locustSoldierDeathAnimation,
     flyingAntAnimation, flyingAntDeathAnimation,
@@ -59,190 +56,6 @@ const enemyData = {
             life: 1,
             score: 20,
         },
-    },
-    [ENEMY_HORNET]: {
-        animation: hornetAnimation,
-        deathAnimation: hornetDeathAnimation,
-        deathSound: 'sfx/hornetdeath.mp3',
-        accelerate: (state, enemy) => {
-            let {vx, vy, seed, targetX, targetY, mode, modeTime} = enemy;
-            const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 2000;
-            const radius = seed * 2 + 2;
-            switch (mode) {
-                case 'enter':
-                    // Advance circling until almost fully in frame, then circle in place.
-                    vx = radius * Math.cos(theta);
-                    vy = radius * Math.sin(theta);
-                    if (vx < 0) vx *= 2;
-                    if (vx > 0) vx *= .5;
-                    if (modeTime > 2000) {
-                        mode = 'circle';
-                        modeTime = 0;
-                    }
-                    break;
-                case 'circle':
-                    // Advance circling until almost fully in frame, then circle in place.
-                    vx = radius * Math.cos(theta);
-                    vy = radius * Math.sin(theta);
-                    if (vy > 0 && enemy.top < 50) vy *= (1 + (50 - enemy.top) / 100);
-                    if (vy < 0 && enemy.top + enemy.height > GAME_HEIGHT - 50) {
-                        vy *= (1 + (enemy.top + enemy.height - (GAME_HEIGHT - 50)) / 100);
-                    }
-                    if (modeTime > 2000) {
-                        mode = 'attack';
-                        modeTime = 0;
-                    }
-                    break;
-                case 'attack':
-                    if (modeTime === FRAME_LENGTH) {
-                        const target = state.players[0].sprite;
-                        targetX = target.left + target.width / 2;
-                        targetY = target.top + target.height / 2;
-                        const {dx, dy} = getTargetVector(enemy, target);
-                        const theta = Math.atan2(dy, dx);
-                        vx = enemy.speed * Math.cos(theta);
-                        vy = enemy.speed * Math.sin(theta);
-                    } else {
-                        const {dx} = getTargetVector(enemy, {left: targetX, top: targetY});
-                        if (dx * vx < 0) {
-                            mode = 'retreat';
-                            modeTime = 0;
-                        }
-                    }
-                    break;
-                case 'retreat':
-                    if (modeTime === FRAME_LENGTH) {
-                        vx = 0;
-                        vy = 0;//-vy;
-                    } else if (modeTime === 200) {
-                        vx = enemy.speed * 1.5;
-                    } else if (enemy.left + enemy.width / 2 > WIDTH - 100){
-                        mode = 'circle';
-                        modeTime = 0;
-                    }
-            }
-            modeTime += FRAME_LENGTH;
-            return {...enemy, targetX, targetY, vx, vy, mode, modeTime};
-        },
-        props: {
-            life: 30,
-            score: 500,
-            speed: 10,
-            mode: 'enter',
-            modeTime: 0,
-            permanent: true,
-            doNotFlip: true,
-        }
-    },
-    [ENEMY_HORNET_SOLDIER]: {
-        animation: hornetSoldierAnimation,
-        deathAnimation: hornetSoldierDeathAnimation,
-        deathSound: 'sfx/hit.mp3',
-        accelerate: (state, enemy) => {
-            let {vx, vy, targetX, targetY, mode, modeTime} = enemy;
-            const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 8000;
-            const radius = 1;
-            switch (mode) {
-                case 'enter':
-                    // Advance circling until almost fully in frame, then circle in place.
-                    vx = radius * Math.cos(theta);
-                    vy = radius * Math.sin(theta);
-                    if (vx < 0) vx *= 2;
-                    if (vx > 0) vx *= .5;
-                    if (modeTime > 4000) {
-                        mode = 'circle';
-                        modeTime = 0;
-                    }
-                    break;
-                case 'circle':
-                    // Advance circling until almost fully in frame, then circle in place.
-                    vx = radius * Math.cos(theta);
-                    vy = radius * Math.sin(theta);
-                    if (vy > 0 && enemy.top < 100) vy *= (1 + (100 - enemy.top) / 100);
-                    if (vy < 0 && enemy.top + enemy.height > GAME_HEIGHT - 100) {
-                        vy *= (1 + (enemy.top + enemy.height - (GAME_HEIGHT - 100)) / 100);
-                    }
-                    if (modeTime > 4000) {
-                        mode = 'attack';
-                        modeTime = 0;
-                    }
-                    break;
-                case 'attack':
-                    if (modeTime === FRAME_LENGTH) {
-                        const target = state.players[0].sprite;
-                        targetX = target.left + target.width / 2;
-                        targetY = target.top + target.height / 2;
-                        const {dx, dy} = getTargetVector(enemy, target);
-                        const theta = Math.atan2(dy, dx);
-                        vx = enemy.speed * Math.cos(theta);
-                        vy = enemy.speed * Math.sin(theta);
-                    } else {
-                        const {dx} = getTargetVector(enemy, {left: targetX, top: targetY});
-                        if (dx * vx < 0) {
-                            mode = 'retreat';
-                            modeTime = 0;
-                        }
-                    }
-                    break;
-                case 'retreat':
-                    if (modeTime === FRAME_LENGTH) {
-                        vx = 0;
-                        vy = 0;//-vy;
-                    } else if (modeTime === 200) {
-                        vx = enemy.speed * 1.5;
-                    } else if (enemy.left + enemy.width / 2 > WIDTH - 100){
-                        mode = 'circle';
-                        modeTime = 0;
-                    }
-            }
-            modeTime += FRAME_LENGTH;
-            return {...enemy, targetX, targetY, vx, vy, mode, modeTime};
-        },
-        shoot(state, enemy) {
-            if (enemy.mode !== 'circle' && enemy.mode !== 'retreat') return state;
-            if (enemy.shotCooldown > 0) {
-                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-            }
-            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
-            const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-            const theta = Math.atan2(dy, dx);
-            const bullet = createAttack(ATTACK_BULLET, {
-                vx: enemy.bulletSpeed * Math.cos(theta),
-                vy: enemy.bulletSpeed * Math.sin(theta),
-                top: enemy.top + enemy.vy + enemy.height / 2,
-                left: enemy.left + enemy.vx,
-            });
-            bullet.top -= bullet.height / 2;
-            return addEnemyAttackToState(state, bullet);
-        },
-        onDeathEffect(state, enemy) {
-            const hornet = createEnemy(ENEMY_HORNET, {
-                life: 20,
-                score: enemyData[ENEMY_HORNET].props.score / 2,
-                left: enemy.left,
-                top: enemy.top,
-                vx: 0,
-                vy: 0,
-                mode: 'retreat',
-            })
-            // Delete the current enemy from the state so it can be
-            // added on top of the mount enemy.
-            state = removeEnemy(state, enemy);
-            state = addEnemyToState(state, hornet);
-            return addEnemyToState(state, enemy);
-        },
-        onHitGroundEffect: spawnMonkOnGround,
-        props: {
-            life: 40,
-            score: 500,
-            speed: 10,
-            bulletSpeed: 10,
-            mode: 'enter',
-            modeTime: 0,
-            permanent: true,
-            doNotFlip: true,
-            shotCooldownFrames: 50,
-        }
     },
     [ENEMY_LOCUST]: {
         animation: locustAnimation,
@@ -527,6 +340,7 @@ const enemyData = {
         },
     }
 };
+window.enemyData = enemyData;
 
 const createEnemy = (type, props) => {
     const frame = enemyData[type].animation.frames[0];
@@ -573,6 +387,11 @@ const getEnemyHitBox = (enemy) => {
     return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
 };
 
+function enemyIsActive(state, enemy) {
+    return enemy && state.idMap[enemy.id] && !enemy.dead &&
+        !(enemy.delay > 0) &&
+        !(enemyData[enemy.type].spawnAnimation && !enemy.spawned);
+}
 
 const damageEnemy = (state, enemyId, attack = {}) => {
     let updatedState = {...state};
@@ -673,6 +492,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
 }
 
 const renderEnemy = (context, enemy) => {
+    if (enemy.delay > 0) return;
     let animation = getEnemyAnimation(enemy);
     const frame = getFrame(animation, enemy.animationTime);
     context.save();
@@ -727,6 +547,7 @@ const advanceEnemy = (state, enemy) => {
     if (enemy.pendingDamage) {
         state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: enemy.pendingDamage, type: 'fall'});
         enemy = state.idMap[enemy.id];
+        if (!enemy) return state;
     }
 
 
@@ -735,7 +556,7 @@ const advanceEnemy = (state, enemy) => {
     const xFactor = state.world[neargroundKey].xFactor;
     const yFactor = state.world[neargroundKey].yFactor;
 
-    if (enemy && (enemy.stationary || enemy.hanging)) {
+    if (enemy.stationary || enemy.hanging) {
         state = updateEnemy(state, enemy, {
             top: enemy.top + yFactor * state.world.vy,
             left: enemy.left - xFactor * state.world.vx,
@@ -767,6 +588,11 @@ const advanceEnemy = (state, enemy) => {
     const hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
     if (!enemy.dead) {
         top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
+        if (top + hitBox.top + hitBox.height > getHazardHeight(state)) {
+            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
+            enemy = state.idMap[enemy.id];
+            if (!enemy) return state;
+        }
     }
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
@@ -846,11 +672,13 @@ module.exports = {
     getEnemyHitBox,
     updateEnemy,
     getDefaultEnemyAnimation,
+    spawnMonkOnGround,
+    enemyIsActive,
 };
 
 // Move possible circular imports to after exports.
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { getGroundHeight } = require('world');
+const { getGroundHeight, getHazardHeight } = require('world');
 
 const { createEffect, addEffectToState } = require('effects');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');

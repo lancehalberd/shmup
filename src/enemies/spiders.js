@@ -4,15 +4,7 @@ const { drawImage } = require('draw');
 const { createAnimation, r } = require('animations');
 
 const {
-    WIDTH, GAME_HEIGHT, FRAME_LENGTH, OFFSCREEN_PADDING,
-    ENEMY_FLY, ENEMY_MONK,
-    ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
-    ENEMY_HORNET, ENEMY_HORNET_SOLDIER,
-    ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    ATTACK_BULLET, ATTACK_DEFEATED_ENEMY, ATTACK_EXPLOSION,
-    EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
-    LOOT_COIN,
+    GAME_HEIGHT,
 } = require('gameConstants');
 
 const { enemyData, updateEnemy, getDefaultEnemyAnimation } = require('enemies');

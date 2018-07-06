@@ -68,7 +68,7 @@ heroesData[HERO_DRAGONFLY] = {
         for (let i = 0; i < state.enemies.length; i++) {
             let enemy = state.enemies[i];
             const enemyHitBox = getEnemyHitBox(enemy);
-            if (enemy && state.idMap[enemy.id] && !enemy.dead &&
+            if (enemyIsActive(state, enemy) &&
                 Rectangle.collision(enemyHitBox, getHeroHitBox(player))
             ) {
                 state = damageEnemy(state, enemy.id, {playerIndex});
@@ -131,5 +131,5 @@ heroesData[HERO_DRAGONFLY] = {
 };
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { getEnemyHitBox, damageEnemy } = require('enemies');
+const { getEnemyHitBox, damageEnemy, enemyIsActive } = require('enemies');
 

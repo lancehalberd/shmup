@@ -160,6 +160,11 @@ const advanceWorld = (state) => {
     return state;
 };
 
+const getHazardHeight = (state) => {
+    if (!state.world.hazardHeight) return 10000;
+    return GAME_HEIGHT - state.world.hazardHeight + state.world.y * state.world.ground.yFactor;
+};
+
 const getGroundHeight = (state) => {
     // If the world has no ground layer, just return a very large number here.
     if (!state.world.ground) return 10000;
@@ -244,6 +249,7 @@ module.exports = {
     getNewWorld,
     getNewLayer,
     advanceWorld,
+    getHazardHeight,
     getGroundHeight,
     renderBackground,
     renderForeground,

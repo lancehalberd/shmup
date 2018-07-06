@@ -201,6 +201,8 @@ const advanceHero = (state, playerIndex) => {
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
+    } else if (top + player.sprite.height > getHazardHeight(state)) {
+        return damageHero(state, playerIndex);
     }
     if (targetLeft != false) {
         const theta = Math.atan2(targetTop - top, targetLeft - left);
@@ -539,7 +541,7 @@ module.exports = {
     useMeleeAttack,
 };
 
-const { getGroundHeight } = require('world');
+const { getGroundHeight, getHazardHeight } = require('world');
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
 const { createEffect, addEffectToState } = require('effects');

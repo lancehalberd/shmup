@@ -46,7 +46,7 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     const targetRotations = [];
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.idMap[state.enemies[i].id];
-        if (!enemy || enemy.dead) continue;
+        if (!enemyIsActive(state, enemy)) continue;
         // The large lightning attack can only hit enemies in front of each bolt.
         if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
         const hitBox = getEnemyHitBox(enemy);
@@ -82,7 +82,7 @@ module.exports = {
 };
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
-const { getEnemyHitBox, damageEnemy } = require('enemies');
+const { getEnemyHitBox, damageEnemy, enemyIsActive } = require('enemies');
 effects[EFFECT_LIGHTNING] = {
     animation: {
         frames: lightningFrames,

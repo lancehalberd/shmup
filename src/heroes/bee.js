@@ -196,7 +196,7 @@ heroesData[HERO_BEE] = {
             const targetHitBox = targets[i];
             for (let j = 0; j < state.enemies.length; j++) {
                 const enemy = state.idMap[state.enemies[j].id];
-                if (!enemy || enemy.dead) continue;
+                if (!enemyIsActive(state, enemy)) continue;
                 if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
                 const hitBox = getEnemyHitBox(enemy);
                 if (Rectangle.collision(targetHitBox, hitBox)) {
@@ -247,6 +247,6 @@ heroesData[HERO_BEE] = {
 
 const { getAttackTint } = require('attacks');
 const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitBox } = require('enemies');
+const { getEnemyHitBox, enemyIsActive } = require('enemies');
 const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 
