@@ -7,7 +7,7 @@ const {
     EFFECT_EXPLOSION,
     ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
-const { ENEMY_BROWN_SPIDER } = require('enemies/spiders');
+const { ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 const random = require('random');
 const { createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
@@ -26,7 +26,7 @@ const spawnEnemy = (state, enemyType, props) => {
 
 const spawnThorns = (state) => {
     //if (random.chance(0.5)) {
-        return spawnEnemy(state, ENEMY_CEILING_THORNS, {left: WIDTH + random.range(0, 100), top: random.range(0, 100)});
+        return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: GAME_HEIGHT});
     //} else {
     //    return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: 300});
     //}
@@ -39,41 +39,42 @@ const setEvent = (state, event) => {
 };
 
 // Add check points for:
-const CHECK_POINT_FOREST_UPPER_START = 'forestUpperStart';
-const CHECK_POINT_FOREST_UPPER_MIDDLE = 'forestUpperMiddle';
-const CHECK_POINT_FOREST_UPPER_MIDDLE_TIME = 40000;
-const CHECK_POINT_FOREST_UPPER_END = 'forestUpperEnd'
-const CHECK_POINT_FOREST_UPPER_BOSS = 'forestUpperBoss'
-checkpoints[CHECK_POINT_FOREST_UPPER_START] = function (state) {
-    const world = getForestUpperWorld();
+const THORN_HEIGHT = 40;
+const CHECK_POINT_FOREST_LOWER_START = 'forestLowerStart';
+const CHECK_POINT_FOREST_LOWER_MIDDLE = 'forestLowerMiddle';
+const CHECK_POINT_FOREST_LOWER_MIDDLE_TIME = 40000;
+const CHECK_POINT_FOREST_LOWER_END = 'forestLowerEnd'
+const CHECK_POINT_FOREST_LOWER_BOSS = 'forestLowerBoss'
+checkpoints[CHECK_POINT_FOREST_LOWER_START] = function (state) {
+    const world = getForestLowerWorld();
     return {...state, world};
 };
-checkpoints[CHECK_POINT_FOREST_UPPER_MIDDLE] = function (state) {
-    const world = getForestUpperWorld();
+checkpoints[CHECK_POINT_FOREST_LOWER_MIDDLE] = function (state) {
+    const world = getForestLowerWorld();
     // This is 1/3 of the way through the stage.
-    world.time = CHECK_POINT_FOREST_UPPER_MIDDLE_TIME;
+    world.time = CHECK_POINT_FOREST_LOWER_MIDDLE_TIME;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_FOREST_UPPER_END] = function (state) {
-    const world = getForestUpperWorld();
+checkpoints[CHECK_POINT_FOREST_LOWER_END] = function (state) {
+    const world = getForestLowerWorld();
     // This is just enough time for a few powerups + large enemies before the boss fight.
     world.time = 100000;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_FOREST_UPPER_BOSS] = function (state) {
-    const world = getForestUpperWorld();
+checkpoints[CHECK_POINT_FOREST_LOWER_BOSS] = function (state) {
+    const world = getForestLowerWorld();
     world.time = 120000;
     return {...state, world};
 };
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
 
-const FOREST_UPPER_DURATION = 120000;
-const FOREST_UPPER_EASY_DURATION = 30000;
+const FOREST_LOWER_DURATION = 120000;
+const FOREST_LOWER_EASY_DURATION = 30000;
 
-const SAFE_HEIGHT = GAME_HEIGHT - 90;
+const SAFE_HEIGHT = GAME_HEIGHT - THORN_HEIGHT;
 
-const WORLD_FOREST_UPPER = 'forestUpper';
-allWorlds[WORLD_FOREST_UPPER] = {
+const WORLD_FOREST_LOWER = 'forestLower';
+allWorlds[WORLD_FOREST_LOWER] = {
     initialEvent: 'nothing',
 
     events: {
@@ -85,18 +86,18 @@ allWorlds[WORLD_FOREST_UPPER] = {
         easyFlies: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
+                let top = THORN_HEIGHT + random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
+                let top = THORN_HEIGHT + random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
+                let top = THORN_HEIGHT + random.element([1,2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
             }
             eventTime -= 2000;
@@ -107,7 +108,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         powerup: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: SAFE_HEIGHT / 2});
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: THORN_HEIGHT + SAFE_HEIGHT / 2});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
@@ -117,10 +118,10 @@ allWorlds[WORLD_FOREST_UPPER] = {
         flyingAnts: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 2 - numFormidable;
-            let spacing = state.world.time < FOREST_UPPER_EASY_DURATION ? 3000 : 1000;
+            let spacing = state.world.time < FOREST_LOWER_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber - 1; i++) {
-                    state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
+                    state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: THORN_HEIGHT + SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
                 }
                 return state;
             }
@@ -128,31 +129,31 @@ allWorlds[WORLD_FOREST_UPPER] = {
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber; i++) {
                     const enemyType = random.element([ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER]);
-                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
+                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: THORN_HEIGHT + SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
                 }
                 return state;
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['brownSpider']));
+                return setEvent(state, random.element(['jumpingSpider']));
             }
         },
         explodingBeetle: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
-                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
+                let top = THORN_HEIGHT + random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_EXPLOSIVE_BEETLE, {left: WIDTH, top});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'brownSpider');
+                return setEvent(state, 'jumpingSpider');
             }
         },
         hornet: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable < 2) {
                 state = spawnThorns(state);
-                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
+                let top = THORN_HEIGHT + random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
                 return spawnEnemy(state, ENEMY_HORNET, {left: WIDTH, top});
             }
             eventTime -= 3000;
@@ -160,21 +161,21 @@ allWorlds[WORLD_FOREST_UPPER] = {
                 return setEvent(state, 'flyingAnts');
             }
         },
-        brownSpider: (state, eventTime) => {
+        jumpingSpider: (state, eventTime) => {
             if (eventTime === 0) {
-                state = spawnEnemy(state, ENEMY_BROWN_SPIDER, {left: WIDTH + 10, top: random.range(2, 5) * SAFE_HEIGHT / 6 });
+                state = spawnEnemy(state, ENEMY_JUMPING_SPIDER, {left: WIDTH + 10, top: THORN_HEIGHT + random.range(2, 5) * SAFE_HEIGHT / 6 });
                 return state;
             }
             let spacing = 1000;
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['brownSpider', 'flyingAnts', 'hornet']));
+                return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'hornet']));
             }
         },
         bossPrep: (state) => {
             if (state.enemies.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_FOREST_UPPER_END);
-                return transitionToForestUpperBoss(state);
+                state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_END);
+                // return transitionToForestLowerBoss(state);
             }
         },
     },
@@ -189,11 +190,11 @@ allWorlds[WORLD_FOREST_UPPER] = {
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        if (world.type === WORLD_FOREST_UPPER && world.time >= FOREST_UPPER_DURATION && world.event !== 'bossPrep') {
+        if (world.type === WORLD_FOREST_LOWER && world.time >= FOREST_LOWER_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');
         }
-        if (world.time === CHECK_POINT_FOREST_UPPER_MIDDLE_TIME) {
-            state = setCheckpoint(state, CHECK_POINT_FOREST_UPPER_MIDDLE);
+        if (world.time === CHECK_POINT_FOREST_LOWER_MIDDLE_TIME) {
+            state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_MIDDLE);
         }
 
         if (!world.event) world = {...world, event: allWorlds[world.type].initialEvent, eventTime: 0};
@@ -203,8 +204,8 @@ allWorlds[WORLD_FOREST_UPPER] = {
     },
 };
 
-const getForestUpperWorld = () => ({
-    type: WORLD_FOREST_UPPER,
+const getForestLowerWorld = () => ({
+    type: WORLD_FOREST_LOWER,
     x: 0,
     y: 0,
     vx: 0,
@@ -215,15 +216,15 @@ const getForestUpperWorld = () => ({
     time: 0,
     bgm: 'bgm/river.mp3',
     groundHeight: 30,
-    hazardHeight: 90,
-    ...getForestUpperLayers(),
+    hazardCeilingHeight: THORN_HEIGHT,
+    ...getForestLowerLayers(),
 });
 
 const thornloop = createAnimation('gfx/scene/forest/thornloop.png', r(200, 60));
-const forestbackTop = createAnimation('gfx/scene/forest/back.png', r(800, 400));
+const forestbackTop = createAnimation('gfx/scene/forest/back.png', r(800, 400), {y: 1});
 const thickTrunk = createAnimation('gfx/scene/forest/forestmg3.png', r(100, 400));
 const skinnyTrunk = createAnimation('gfx/scene/forest/forestmg5.png', r(100, 400));
-const getForestUpperLayers = () => ({
+const getForestLowerLayers = () => ({
     background: getNewLayer({
         xFactor: 0, yFactor: 0, yOffset: 0, maxY: 0,
         spriteData: {
@@ -237,16 +238,16 @@ const getForestUpperLayers = () => ({
             skinnyTrunk: {animation: skinnyTrunk, scale: 1.6, next: ['skinnyTrunk', 'thickTrunk'], offset: [70, 150, 250], yOffset: [0, 10, 20]},
         },
     }),
-    willows: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -200,
-        spriteData: {
-            willow: {animation: willowAnimation, scale: 2, next: ['willow'], offset: [100, 200, 300]},
-        },
-    }),
     ground: getNewLayer({
         xFactor: 1, yFactor: 0.5, yOffset: 0,
         spriteData: {
-            ground: {animation: thornloop, scale: 2, next: ['ground'], offset: 0},
+            ground: {animation: createAnimation('gfx/scene/field/groundloop.png', r(200, 60)), scale: 1, next: ['ground'], offset: 0},
+        },
+    }),
+    thorns: getNewLayer({
+        xFactor: 1, yFactor: 0.5, yOffset: -GAME_HEIGHT + THORN_HEIGHT,
+        spriteData: {
+            thorns: {animation: thornloop, scale: 2, next: ['thorns'], offset: 0},
         },
     }),
     largeTrunks: getNewLayer({
@@ -260,15 +261,15 @@ const getForestUpperLayers = () => ({
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background', 'trunks', 'willows', 'ground'],
+    mgLayerNames: ['background', 'trunks', 'ground', 'thorns'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: ['largeTrunks'],
 });
 
 
 module.exports = {
-    CHECK_POINT_FOREST_UPPER_START,
-    getForestUpperWorld,
+    CHECK_POINT_FOREST_LOWER_START,
+    getForestLowerWorld,
 };
 
 const { createEnemy, addEnemyToState, enemyData, updateEnemy } = require('enemies');
@@ -297,4 +298,4 @@ enemyData[ENEMY_FLOOR_THORNS] = {
     animation: createAnimation('gfx/scene/forest/thorn2.png', floorThornsRectangle),
 };
 
-const { transitionToForestUpperBoss } = require('areas/forestUpperBoss');
+// const { transitionToForestLowerBoss } = require('areas/forestLowerBoss');

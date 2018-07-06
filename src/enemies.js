@@ -593,6 +593,11 @@ const advanceEnemy = (state, enemy) => {
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
+        if (top + hitBox.top < getHazardCeilingHeight(state)) {
+            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
+            enemy = state.idMap[enemy.id];
+            if (!enemy) return state;
+        }
     }
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
@@ -678,7 +683,7 @@ module.exports = {
 
 // Move possible circular imports to after exports.
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { getGroundHeight, getHazardHeight } = require('world');
+const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
 
 const { createEffect, addEffectToState } = require('effects');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');

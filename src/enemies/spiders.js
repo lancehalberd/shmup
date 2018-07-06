@@ -8,7 +8,11 @@ const {
 } = require('gameConstants');
 
 const { enemyData, updateEnemy, getDefaultEnemyAnimation } = require('enemies');
-const { getGroundHeight } = require('world');
+const { getGroundHeight, getHazardCeilingHeight } = require('world');
+
+function getMinHeight(state) {
+    return Math.max(-10, getHazardCeilingHeight(state) + 5);
+}
 
 const ENEMY_JUMPING_SPIDER = 'jumpingSpider';
 enemyData[ENEMY_JUMPING_SPIDER] = {
@@ -48,7 +52,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
                 ) {
                     //set spider state as grounded to let go of web and fall
                     return {...enemy, grounded: true, hanging: false, mode: 'jumping'};
-                } else if (enemy.top > -10) {
+                } else if (enemy.top > getMinHeight(state)) {
                     vy = Math.max(-2, vy - 1);
                 } else {
                     vy = Math.min(0, vy + 1);
@@ -155,7 +159,7 @@ enemyData[ENEMY_BROWN_SPIDER] = {
                 ) {
                     mode = 'plunging';
                     targetY = playerSprite.top + playerSprite.height;
-                } else if (enemy.top > -10) {
+                } else if (enemy.top > getMinHeight(state)) {
                     vy = Math.max(-2, vy - 1);
                 } else {
                     vy = Math.min(0, vy + 1);

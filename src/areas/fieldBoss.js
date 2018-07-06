@@ -111,7 +111,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FOREST_UPPER_START));
             }
             if (state.enemies.filter(enemy => enemy.type === ENEMY_DOOR).length === 0) {
-                return enterStarWorldEnd(state);
+                return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FOREST_LOWER_START));
             }
             const treeSprite = world.nearground.sprites[0];
             world = {...world, rightEdge: treeSprite.left + 630, spawnsDisabled: true};
@@ -424,8 +424,9 @@ enemyData[ENEMY_STICK_3] = {
     animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24)),
 };
 
-const { enterStarWorldEnd, starWorldTransition } = require('areas/stars');
+const { starWorldTransition } = require('areas/stars');
 const { CHECK_POINT_FOREST_UPPER_START } = require('areas/forestUpper');
+const { CHECK_POINT_FOREST_LOWER_START } = require('areas/forestLower');
 
 const { createAttack, addEnemyAttackToState } = require('attacks');
 
