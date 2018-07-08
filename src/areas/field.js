@@ -319,7 +319,7 @@ const getFieldWorld = () => ({
     targetY: 0,
     targetFrames: 50 * 10,
     time: 0,
-    bgm: 'bgm/river.mp3',
+    bgm: 'bgm/field.mp3',
     groundHeight: 30,
     ...getFieldLayers(),
 });

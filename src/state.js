@@ -31,7 +31,7 @@ const getNewState = () => (advanceWorld({
     gameover: false,
     continueIndex: 0,
     world: getNewWorld(),
-    bgm: 'bgm/area.mp3',
+    bgm: 'bgm/title.mp3',
     interacted: false,
     checkpoint: null,
 }));

@@ -76,24 +76,45 @@ const playSound = (key) => {
 
 let previousTrack = null;
 const playTrack = (source, timeOffset) => {
-    let offset, volume;
+    let offset, volume, duration;
     [source, offset, volume] = source.split('+');
     if (previousTrack) {
         previousTrack.pause();
+        if (previousTrack.timeoutId) clearTimeout(previousTrack.timeoutId);
     }
+    if (offset) [offset, duration] = offset.split(':').map(Number);
     const sound = requireSound(source);
-    sound.currentTime = (ifdefor(offset, sound.offset) || 0) / 1000 + timeOffset / 1000;
+    const startOffset = (ifdefor(offset, sound.offset) || 0) / 1000;
+    const customDuration = (duration || sound.customDuration || 0) / 1000;
     sound.volume = Math.min(1, (ifdefor(volume, sound.defaultVolume) || 1) / 50);
     if (soundsMuted) {
         sound.volume = 0;
     }
-    sound.play();
+    function startTrack(offset) {
+        // console.log({source, offset, actual: startOffset + offset, customDuration});
+        sound.currentTime = startOffset + offset;
+        sound.play().then(() => {
+            // If a custom duration is set, restart the song at that point.
+            if (customDuration) {
+                sound.timeoutId = setTimeout(() => {
+                    sound.pause();
+                    startTrack(0);
+                }, (customDuration - offset) * 1000);
+            }
+            sound.onended = () => {
+                if (sound.timeoutId) clearTimeout(sound.timeoutId);
+                startTrack(0);
+            }
+        });
+    }
+    startTrack((timeOffset / 1000) % (customDuration || sound.duration));
     previousTrack = sound;
 };
 
 const stopTrack = () => {
     if (previousTrack) {
         previousTrack.pause();
+        if (previousTrack.timeoutId) clearTimeout(previousTrack.timeoutId);
     }
 };
 
@@ -139,11 +160,12 @@ const preloadSounds = () => {
         {key: 'activateInvisibility', source: 'sfx/invisibility.mp3', volume: 1, limit: 1},
         {key: 'warnInvisibilityIsEnding', source: 'sfx/warninginvisibile.mp3', volume: 0.3, limit: 1},
         // See credits.html for: mobbrobb.
-        'bgm/river.mp3+0+1',
-        'bgm/area.mp3+0+2',
-        'bgm/forest.mp3+0+2',
-        'bgm/space.mp3+0+2',
+        'bgm/title.mp3+0+2',
+        'bgm/field.mp3+0+1',
+        'bgm/lowerForest.mp3+0+2',
+        'bgm/upperForest.mp3+0:104000+2',
         'bgm/boss.mp3+0+2',
+        'bgm/space.mp3+0+2',
     ].forEach(requireSound);
 };
 
