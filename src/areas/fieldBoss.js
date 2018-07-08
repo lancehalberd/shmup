@@ -326,7 +326,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
 const ENEMY_GROUND_MONK = 'groundMonk';
 enemyData[ENEMY_GROUND_MONK] = {
     ...enemyData[ENEMY_MONK],
-    spawnAnimation: createAnimation('gfx/enemies/robesclimb.png', r(49, 31), {duration: 500}),
+    spawnAnimation: createAnimation('gfx/enemies/monks/robesclimb.png', r(49, 31), {duration: 500}),
     props: {
         ...enemyData[ENEMY_MONK].props,
         life: 2,

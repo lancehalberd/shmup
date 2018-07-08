@@ -672,6 +672,7 @@ module.exports = {
     createEnemy,
     addEnemyToState,
     damageEnemy,
+    removeEnemy,
     advanceEnemy,
     renderEnemy,
     getEnemyHitBox,

@@ -140,16 +140,16 @@ const deflectAnimation = {
 const flyRectangle = r(55, 40);
 const flyAnimation = {
     frames: [
-        {...flyRectangle, image: requireImage('gfx/enemies/fly1.png')},
-        {...flyRectangle, image: requireImage('gfx/enemies/fly2.png')},
-        {...flyRectangle, image: requireImage('gfx/enemies/fly3.png')},
-        {...flyRectangle, image: requireImage('gfx/enemies/fly4.png')},
+        {...flyRectangle, image: requireImage('gfx/enemies/flies/fly1.png')},
+        {...flyRectangle, image: requireImage('gfx/enemies/flies/fly2.png')},
+        {...flyRectangle, image: requireImage('gfx/enemies/flies/fly3.png')},
+        {...flyRectangle, image: requireImage('gfx/enemies/flies/fly4.png')},
     ],
     frameDuration: 3,
 };
 const flyDeathAnimation = {
     frames: [
-        {...flyRectangle, image: requireImage('gfx/enemies/flyded.png')},
+        {...flyRectangle, image: requireImage('gfx/enemies/flies/flyded.png')},
     ],
     frameDuration: 3,
 };
@@ -173,16 +173,16 @@ const flyingAntHitBox = {left: 0, top: 20, width: 35, height: 20};
 const flyingAntRectangle = r(46, 41, {hitBox: flyingAntHitBox});
 const flyingAntAnimation = {
     frames: [
-        {...flyingAntRectangle, image: requireImage('gfx/enemies/fant1.png')},
-        {...flyingAntRectangle, image: requireImage('gfx/enemies/fant2.png')},
-        {...flyingAntRectangle, image: requireImage('gfx/enemies/fant3.png')},
-        {...flyingAntRectangle, image: requireImage('gfx/enemies/fant4.png')},
+        {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fant1.png')},
+        {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fant2.png')},
+        {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fant3.png')},
+        {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fant4.png')},
     ],
     frameDuration: 3,
 };
 const flyingAntDeathAnimation = {
     frames: [
-        {...flyingAntRectangle, image: requireImage('gfx/enemies/fantded.png')},
+        {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fantded.png')},
     ],
     frameDuration: 3,
 };
@@ -191,16 +191,16 @@ const flyingAntSoldierHitBox = {left: 0, top: 4, width: 35, height: 36};
 const flyingAntSoldierRectangle = r(46, 41, {hitBox: flyingAntSoldierHitBox});
 const flyingAntSoldierAnimation = {
     frames: [
-        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/mfant1.png')},
-        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/mfant2.png')},
-        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/mfant3.png')},
-        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/mfant4.png')},
+        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfant1.png')},
+        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfant2.png')},
+        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfant3.png')},
+        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfant4.png')},
     ],
     frameDuration: 3,
 };
 const flyingAntSoldierDeathAnimation = {
     frames: [
-        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/mfantded.png')},
+        {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfantded.png')},
     ],
     frameDuration: 3,
 };
@@ -209,22 +209,22 @@ const monkHitBox = {left: 0, top: 8, width: 42, height: 42};
 const monkRectangle = r(42, 50, {hitBox: monkHitBox});
 const monkAnimation = {
     frames: [
-        {...monkRectangle, image: requireImage('gfx/enemies/robe1.png')},
-        {...monkRectangle, image: requireImage('gfx/enemies/robe2.png')},
-        {...monkRectangle, image: requireImage('gfx/enemies/robe3.png')},
-        {...monkRectangle, image: requireImage('gfx/enemies/robe4.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/monks/robe1.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/monks/robe2.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/monks/robe3.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/monks/robe4.png')},
     ],
     frameDuration: 6,
 };
 const monkAttackAnimation = {
     frames: [
-        {...monkRectangle, image: requireImage('gfx/enemies/robeAttack.png')},
+        {...monkRectangle, image: requireImage('gfx/enemies/monks/robeAttack.png')},
     ],
     frameDuration: 5,
 };
 const monkDeathAnimation = {
     frames: [
-        {...r(46, 41), image: requireImage('gfx/enemies/robeded.png')},
+        {...r(46, 41), image: requireImage('gfx/enemies/monks/robeded.png')},
     ],
     frameDuration: 5,
 };
@@ -233,31 +233,31 @@ const cargoBeetleHitBox = {left: 0, top: 16, width: 100, height: 84};
 const cargoBeetleRectangle = r(100, 100, {hitBox: cargoBeetleHitBox});
 const cargoBeetleAnimation = {
     frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly1.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly2.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly3.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bfly4.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly1.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly2.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly3.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly4.png')},
     ],
     frameDuration: 6,
 };
 const cargoBeetleDeathAnimation = {
     frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/bflyded.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bflyded.png')},
     ],
     frameDuration: 5,
 };
 const explosiveBeetleAnimation = {
     frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/expbfly1.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/expbfly2.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/expbfly3.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/expbfly4.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly1.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly2.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly3.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly4.png')},
     ],
     frameDuration: 6,
 };
 const explosiveBeetleDeathAnimation = {
     frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/expbflyded.png')},
+        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbflyded.png')},
     ],
     frameDuration: 5,
 };

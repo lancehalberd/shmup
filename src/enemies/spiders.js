@@ -16,10 +16,10 @@ function getMinHeight(state) {
 
 const ENEMY_JUMPING_SPIDER = 'jumpingSpider';
 enemyData[ENEMY_JUMPING_SPIDER] = {
-    animation: createAnimation('gfx/enemies/jspider.png', r(55, 40), {rows: 2, duration: 30}),
-    deathAnimation: createAnimation('gfx/enemies/jspider.png', r(55, 40), {y: 2, duration: 30}),
-    crouchingAnimation: createAnimation('gfx/enemies/jspider.png', r(55, 40), {y: 3, duration: 30}),
-    jumpingAnimation: createAnimation('gfx/enemies/jspider.png', r(55, 40), {y: 4, duration: 30}),
+    animation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {rows: 2, duration: 30}),
+    deathAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 2, duration: 30}),
+    crouchingAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 3, duration: 30}),
+    jumpingAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 4, duration: 30}),
     getAnimation(enemy) {
         if (enemy.grounded && !enemy.dead) {
             return enemy.vy < 0 ? this.jumpingAnimation: this.crouchingAnimation;
@@ -130,8 +130,8 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
 
 const ENEMY_BROWN_SPIDER = 'brownSpider';
 enemyData[ENEMY_BROWN_SPIDER] = {
-    animation: createAnimation('gfx/enemies/bspidersheet.png', r(70, 55), {cols: 2, duration: 30}),
-    deathAnimation: createAnimation('gfx/enemies/bspidersheet.png', r(70, 55), {x: 2, duration: 30}),
+    animation: createAnimation('gfx/enemies/spiders/bspidersheet.png', r(70, 55), {cols: 2, duration: 30}),
+    deathAnimation: createAnimation('gfx/enemies/spiders/bspidersheet.png', r(70, 55), {x: 2, duration: 30}),
 
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
