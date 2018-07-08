@@ -213,7 +213,7 @@ const getForestUpperWorld = () => ({
     targetY: 0,
     targetFrames: 50 * 10,
     time: 0,
-    bgm: 'bgm/river.mp3',
+    bgm: 'bgm/forest.mp3',
     groundHeight: 30,
     hazardHeight: 90,
     ...getForestUpperLayers(),

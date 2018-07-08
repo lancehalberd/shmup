@@ -141,6 +141,7 @@ const preloadSounds = () => {
         // See credits.html for: mobbrobb.
         'bgm/river.mp3+0+1',
         'bgm/area.mp3+0+2',
+        'bgm/forest.mp3+0+2',
         'bgm/space.mp3+0+2',
         'bgm/boss.mp3+0+2',
     ].forEach(requireSound);
