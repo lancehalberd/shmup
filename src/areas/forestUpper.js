@@ -1,16 +1,14 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ENEMY_FLY, ENEMY_MONK,
+    ENEMY_FLY,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    EFFECT_EXPLOSION,
     ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
 const { ENEMY_BROWN_SPIDER } = require('enemies/spiders');
 const random = require('random');
 const { createAnimation, r } = require('animations');
-const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 
@@ -252,8 +250,8 @@ const getForestUpperLayers = () => ({
     largeTrunks: getNewLayer({
         xFactor: 1.5, yFactor: 1.5, yOffset: 200,
         spriteData: {
-            thickTrunk: {animation: thickTrunk, scale: 3, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
-            skinnyTrunk: {animation: skinnyTrunk, scale: 3, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
+            thickTrunk: {animation: thickTrunk, scale: 3, alpha: 0.8, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
+            skinnyTrunk: {animation: skinnyTrunk, scale: 3, alpha: 0.8, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
         },
     }),
     // Background layers start at the top left corner of the screen.

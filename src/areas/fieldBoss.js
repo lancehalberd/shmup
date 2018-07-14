@@ -321,6 +321,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
         attackCooldownFrames: 96,
         shotCooldownFrames: [120, 160],
         persist: true,
+        boss: true,
     },
 };
 const ENEMY_GROUND_MONK = 'groundMonk';
@@ -390,12 +391,13 @@ enemyData[ENEMY_DOOR] = {
         return state;
     },
     props: {
-        maxLife: 2000,
-        life: 2000,
+        maxLife: 20,
+        life: 20,
         score: 500,
         stationary: true,
         doNotFlip: true,
         weakness: {[ATTACK_DEFEATED_ENEMY]: 300},
+        boss: true,
     },
 };
 const ENEMY_STICK_1 = 'stick1';

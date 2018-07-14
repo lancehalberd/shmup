@@ -5,12 +5,10 @@ const {
     ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    EFFECT_EXPLOSION,
-    ATTACK_BULLET,
 } = require('gameConstants');
 const random = require('random');
-const { requireImage, createAnimation, r } = require('animations');
-const { getNewSpriteState, getTargetVector } = require('sprites');
+const { createAnimation, r } = require('animations');
+const { getNewSpriteState } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 
@@ -37,10 +35,7 @@ const thickGrass = createAnimation('gfx/scene/field/plainsmg.png', r(300, 300));
 const darkGrass = createAnimation('gfx/scene/field/plainsmg2.png', r(300, 300));
 // const lightGrass = createAnimation('gfx/scene/field/plainsmg3.png', r(300, 300));
 
-
 const WORLD_FIELD = 'field';
-const WORLD_FIELD_BOSS = 'fieldBoss';
-
 
 const spawnEnemy = (state, enemyType, props) => {
     const newEnemy = createEnemy(enemyType, props);

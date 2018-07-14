@@ -251,10 +251,10 @@ const getForestLowerLayers = () => ({
         },
     }),
     largeTrunks: getNewLayer({
-        xFactor: 1.5, yFactor: 1.5, yOffset: 200,
+        xFactor: 1.5, yFactor: 1.5, yOffset: 0,
         spriteData: {
-            thickTrunk: {animation: thickTrunk, scale: 3, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
-            skinnyTrunk: {animation: skinnyTrunk, scale: 3, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
+            thickTrunk: {animation: thickTrunk, scale: 3, alpha: 0.8, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
+            skinnyTrunk: {animation: skinnyTrunk, scale: 3, alpha: 0.8, next: ['skinnyTrunk', 'thickTrunk'], offset: [300, 500], yOffset: [0, 50, 100]},
         },
     }),
     // Background layers start at the top left corner of the screen.

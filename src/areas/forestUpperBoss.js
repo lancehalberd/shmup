@@ -1,14 +1,13 @@
 
 const {
-    FRAME_LENGTH, WIDTH, HEIGHT, GAME_HEIGHT,
+    FRAME_LENGTH, WIDTH, HEIGHT,
     EFFECT_EXPLOSION,
-    ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
 } = require('gameConstants');
 const random = require('random');
-const { requireImage, createAnimation, r } = require('animations');
-const { getNewSpriteState, getTargetVector } = require('sprites');
-const { applyCheckpointToState, allWorlds, getHazardHeight } = require('world');
-const { enterStarWorldEnd, starWorldTransition } = require('areas/stars');
+const { createAnimation, r } = require('animations');
+const { getNewSpriteState } = require('sprites');
+const { allWorlds, getHazardHeight } = require('world');
+const { enterStarWorldEnd } = require('areas/stars');
 
 const WORLD_UPPER_FOREST_BOSS = 'upperForestBoss';
 const layerNamesToClear = ['largeTrunks', 'willows'];
@@ -113,6 +112,22 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
             lastSpawnTime = 2500;
         }
         const nest = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_NEST_1)[0];
+        const queen = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_QUEEN)[0];
+        // Spawn the hornet queen at 60% health of nest
+        if (nest && !queen && nest.life / NEST_LIFE < 0.6 ) {
+            const newEnemy = createEnemy(ENEMY_HORNET_QUEEN, {
+                left: WIDTH,
+                top: random.range(1, 3) * getHazardHeight(state) / 5,
+            });
+            state = addEnemyToState(state, newEnemy);
+            lastSpawnTime = time;
+            const lifebars = world.lifebars;
+            lifebars[newEnemy.id] = {
+                left: 100, top: HEIGHT - 24, width: 600, height: 8, maxLife: newEnemy.life,
+                startTime: time,
+            };
+            world = {...world, lifebars};
+        }
         if (time > 2500 && nest) {
             const spawnPeriod = 1500 + 3500 * nest.life / NEST_LIFE;
             let enemyTypes = [ENEMY_HORNET_CIRCLER];
@@ -130,6 +145,9 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
         if (time > 2500 && !nest && state.enemies.length === 0) {
             return enterStarWorldEnd(state);
         }
+        if (time > 2500 && queen && queen.dead) {
+            return enterStarWorldEnd(state);
+        }
         world = {...world, time, lastSpawnTime};
         state = {...state, world};
         return state;
@@ -141,9 +159,14 @@ module.exports = {
 };
 
 const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitBox } = require('enemies');
-const { ENEMY_HORNET, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_DASHER } = require('enemies/hornets');
+const {
+    ENEMY_HORNET,
+    ENEMY_HORNET_CIRCLER,
+    ENEMY_HORNET_DASHER,
+    ENEMY_HORNET_QUEEN,
+} = require('enemies/hornets');
 
-const NEST_LIFE = 300;
+const NEST_LIFE = 50;
 const ENEMY_HORNET_NEST_1 = 'horentNest1';
 const ENEMY_HORNET_NEST_2 = 'horentNest2';
 const ENEMY_HORNET_NEST_3 = 'horentNest3';
@@ -201,6 +224,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
             ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET,
             ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET
         ],
+        boss: true,
     },
 };
 enemyData[ENEMY_HORNET_NEST_2] = {
@@ -208,21 +232,21 @@ enemyData[ENEMY_HORNET_NEST_2] = {
     animation: createAnimation('gfx/enemies/hornetnest/nest4.png',
         r(300, 600, {hitBox: {left: 32, top: 134, width: 215, height:120}})
     ),
-    props: { life: NEST_LIFE * 0.8, hanging: true, spawns: [ENEMY_HORNET_CIRCLER, ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_CIRCLER, ENEMY_HORNET] },
+    props: { life: NEST_LIFE * 0.8, hanging: true, spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER] },
 };
 enemyData[ENEMY_HORNET_NEST_3] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest3.png',
         r(300, 600, {hitBox: {left: 45, top: 195, width: 160, height:120}})
     ),
-    props: { life: NEST_LIFE * 0.6, hanging: true, spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER] },
+    props: { life: NEST_LIFE * 0.6, hanging: true, spawns: [ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_DASHER] },
 };
 enemyData[ENEMY_HORNET_NEST_4] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest2.png',
         r(300, 600, {hitBox: {left: 43, top: 204, width: 240, height:140}})
     ),
-    props: { life: NEST_LIFE * 0.4, hanging: true, spawns: [ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_DASHER] },
+    props: { life: NEST_LIFE * 0.4, hanging: true, spawns: [/* queen spawns here */] },
 };
 enemyData[ENEMY_HORNET_NEST_5] = {
     ...enemyData[ENEMY_HORNET_NEST_1],

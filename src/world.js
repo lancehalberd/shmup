@@ -234,7 +234,10 @@ const renderLayer = (context, state, layerName) => {
     }
     for (const sprite of layer.sprites) {
         frame = getFrame(sprite.animation, sprite.animationTime);
+        context.save();
+        if (sprite.alpha) context.globalAlpha = sprite.alpha;
         drawImage(context, frame.image, frame, sprite);
+        context.restore();
     }
 };
 

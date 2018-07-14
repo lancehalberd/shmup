@@ -328,10 +328,7 @@ const {
     helmetAnimation,
 } = require('loot');
 
-const {
-    enemyData,
-    renderEnemy
-} = require('enemies');
+const { renderEnemy } = require('enemies');
 
 const {
     renderEffect

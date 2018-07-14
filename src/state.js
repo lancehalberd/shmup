@@ -139,8 +139,8 @@ const advanceState = (state) => {
                     currentPlayerAttacks[j] = {...attack, done: !attack.piercing, hitIds: {...attack.hitIds, [enemy.id]: true}};
                 } else {
                     currentPlayerAttacks[j] = {...attack,
-                        damage: attack.piercing ? attack.damage : attack.damage - enemy.life,
-                        done: !attack.piercing && (attack.damage - enemy.life) <= 0,
+                        damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
+                        done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
                         hitIds: {...attack.hitIds, [enemy.id]: true},
                     };
                 }
@@ -213,8 +213,8 @@ const advanceState = (state) => {
             const enemyHitBox = getEnemyHitBox(enemy);
             if (Rectangle.collision(enemyHitBox, attack)) {
                 currentNeutralAttacks[i] = {...attack,
-                    damage: attack.piercing ? attack.damage : attack.damage - enemy.life,
-                    done: !attack.piercing && (attack.damage - enemy.life) <= 0,
+                    damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
+                    done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
                     hitIds: {...attack.hitIds, [enemy.id]: true},
                 };
                 updatedState = damageEnemy(updatedState, enemy.id, attack);

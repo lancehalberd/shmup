@@ -357,7 +357,8 @@ const getComboMultiplier = (state, playerIndex) => {
     return 1;
 };
 
-const powerupGoals = [500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000];
+let powerupGoals = [500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000];
+powerupGoals = powerupGoals.map(g => g / 10);
 
 const gainPoints = (state, playerIndex, points) => {
     points *= getComboMultiplier(state, playerIndex);
@@ -367,9 +368,11 @@ const gainPoints = (state, playerIndex, points) => {
     if (powerupPoints >= powerupGoals[powerupIndex] && !state.world.spawnsDisabled) {
         powerupPoints -= powerupGoals[powerupIndex];
         powerupIndex = Math.min(powerupIndex + 1, powerupGoals.length - 1);
+        const ceiling = Math.max(getHazardCeilingHeight(state), 0);
+        const floor = Math.min(getHazardHeight(state), GAME_HEIGHT);
         const cargoBeetle = createEnemy(ENEMY_CARGO_BEETLE, {
             left: WIDTH + 10,
-            top: GAME_HEIGHT / 6 + Math.floor(Math.random() * 2 * GAME_HEIGHT / 3),
+            top: ceiling + (floor - ceiling) / 6 + Math.floor(Math.random() * 2 * (floor - ceiling) / 3),
         });
         cargoBeetle.top -= cargoBeetle.height / 2;
         state = addEnemyToState(state, cargoBeetle);
@@ -406,6 +409,7 @@ module.exports = {
 };
 
 // Move possible circular imports to after exports.
+const { getHazardHeight, getHazardCeilingHeight } = require('world');
 const { addEnemyToState, createEnemy } = require('enemies');
 
 const { updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');

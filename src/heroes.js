@@ -109,7 +109,7 @@ function updatePlayerOnContinue(state, playerIndex) {
 
 const isPlayerInvulnerable = (state, playerIndex) => {
     const player = state.players[playerIndex];
-    return player.invulnerableFor > 0 || player.usingSpecial;
+    return player.invulnerableFor > 0 || player.usingSpecial || player.usingFinisher;
 };
 
 const useMeleeAttack = (state, playerIndex) => {
@@ -140,6 +140,10 @@ const hasAnotherHero = (state, playerIndex) => {
     return null;
 };
 
+function isHeroSwapping(player) {
+    return player.sprite.targetLeft || player.chasingNeedle || player.catchingNeedleFrames > 0;
+}
+
 const advanceHero = (state, playerIndex) => {
     if (state.players[playerIndex].done) {
         return state;
@@ -147,6 +151,42 @@ const advanceHero = (state, playerIndex) => {
     state = advanceLadybugs(state, playerIndex);
     state = updatePlayer(state, playerIndex, {time: state.players[playerIndex].time + FRAME_LENGTH});
     let player = state.players[playerIndex];
+    if (!isHeroSwapping(player) && player.usingFinisher) {
+        const ballIndex = getEffectIndex(state, EFFECT_FINISHER_BALL);
+        const finisherBall = state.effects[ballIndex];
+        let baseScale = 0;
+        if (finisherBall.xScale >= 2) baseScale = 2;
+        else if (finisherBall.xScale >= 1) baseScale = 1;
+        const heroType = player.heroes[0];
+        let energy = state.players[playerIndex][heroType].energy;
+        // Drain energy from the player until it hits 0.
+        if (energy > 0) {
+            if (energy === MAX_ENERGY) {
+                state = {...state, sfx: {...state.sfx, [heroesData[heroType].specialSfx]: true}};
+            }
+            energy--;
+            state = updatePlayer(state, playerIndex, {[heroType]: {...player[heroType], energy}});
+        } else if (finisherBall.xScale < 3) {
+            return switchHeroes(state, playerIndex);
+        } else {
+            // fire beam here.
+        }
+        const heroHitBox = getHeroHitBox(player);
+        const xScale = baseScale + (MAX_ENERGY - energy) / MAX_ENERGY;
+        const yScale = xScale;
+        //console.log(heroHitBox.left + heroHitBox.width / 2, heroHitBox.top + heroHitBox.height / 2);
+        /*console.log({
+            x: finisherBall.left + finisherBall.xScale * finisherBall.width / 2,
+            y: finisherBall.top + finisherBall.yScale * finisherBall.height / 2,
+        });*/
+        const targetLeft = heroHitBox.left + heroHitBox.width / 2 + 50 - xScale * finisherBall.width / 2;
+        const targetTop = heroHitBox.top + heroHitBox.height / 2 - yScale * finisherBall.height / 2;
+        const left = (finisherBall.left + targetLeft) / 2;
+        const top = (finisherBall.top + targetTop) / 2;
+        state = updateEffect(state, ballIndex, { top, left, xScale, yScale });
+
+        return state;
+    }
     // Restore energy for all heroes each frame.
     for (const heroType of player.heroes) {
         if (player[heroType].energy < MAX_ENERGY &&
@@ -171,6 +211,29 @@ const advanceHero = (state, playerIndex) => {
     // after using it.
     if (player[player.heroes[0]].energy < 0 && !player.invulnerableFor) {
         return switchHeroes(state, playerIndex);
+    }
+    if (player.actions.special && !player.sprite.targetLeft) {
+        const heroHitBox = getHeroHitBox(player);
+        for (const finisherEffect of state.effects.filter(effect => effect.type === EFFECT_FINISHER)) {
+            if (Rectangle.collision(heroHitBox, getEffectHitBox(finisherEffect))) {
+                const enemy = state.idMap[finisherEffect.enemyId];
+                if (!enemy || enemy.dead) continue;
+                state = updateEffect(state, state.effects.indexOf(finisherEffect), {done: true});
+                state = updateEnemy(state, enemy, {snaredForFinisher: true});
+                for (const heroType of player.heroes) {
+                    state = updatePlayer(state, playerIndex,
+                        {[heroType]: {...player[heroType], energy: MAX_ENERGY}}
+                    );
+                }
+                const finisherBall = createEffect(EFFECT_FINISHER_BALL,
+                    {xScale: 0.01, yScale: 0.01,
+                        top: heroHitBox.top + heroHitBox.height / 2,
+                        left: heroHitBox.left + heroHitBox.width / 2 + 50,
+                });
+                state = addEffectToState(state, finisherBall);
+                return updatePlayer(state, playerIndex, {usingFinisher: true});
+            }
+        }
     }
     if (player.actions.special && heroData.applySpecial && !player.sprite.targetLeft
         && !player.invulnerableFor
@@ -218,7 +281,7 @@ const advanceHero = (state, playerIndex) => {
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
         }, {left, top, animationTime, targetLeft, targetTop});
     }
-    if (player.actions.switch) {
+    if (player.actions.switch && hasAnotherHero(state, playerIndex)) {
         return switchHeroes(state, playerIndex);
     }
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
@@ -372,16 +435,21 @@ const switchHeroes = (updatedState, playerIndex) => {
 
     const heroes = [...player.heroes];
     heroes.push(heroes.shift());
+    const hitBoxA = getHeroHitBox(player);
     // If the first hero has no energy, switch to the next hero.
     if (player[heroes[0]].energy < 0) {
         heroes.push(heroes.shift());
     }
-    const targetLeft = sprite.left, targetTop = sprite.top;
+    updatedState = updatePlayer(updatedState, playerIndex, {heroes});
+    player = updatedState.players[playerIndex];
+    const hitBoxB = getHeroHitBox(player);
+    // Set the target coords so that the center of the incoming hero matches the center of the leaving hero.
+    const targetLeft = sprite.left + hitBoxA.left + hitBoxA.width / 2 - hitBoxB.left - hitBoxB.width / 2;
+    const targetTop = sprite.top + hitBoxA.top + hitBoxA.height / 2 - hitBoxB.top - hitBoxB.height / 2;
     const left = -100, top = GAME_HEIGHT - 100;
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
-            heroes,
             invulnerableFor: 25 * FRAME_LENGTH,
             spawning: true,
             chasingNeedle: true,
@@ -480,6 +548,12 @@ const renderHero = (context, player) => {
     if (done) return;
     const heroData = heroesData[player.heroes[0]];
     let animation = heroData.animation, animationTime = sprite.animationTime;
+    if (!isHeroSwapping(player) && player.usingFinisher) {
+        animation = heroData.specialAnimation;
+        // Tie the animation frame to the depletion of the energy bar.
+        const p = (MAX_ENERGY - player[player.heroes[0]].energy) / MAX_ENERGY;
+        animationTime = Math.round(animation.frames.length * animation.frameDuration * FRAME_LENGTH * p);
+    }
     if (player.usingSpecial) {
         animation = heroData.specialAnimation;
     }
@@ -546,8 +620,16 @@ module.exports = {
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { createEffect, addEffectToState } = require('effects');
+const {
+    createEffect,
+    getEffectIndex,
+    addEffectToState,
+    getEffectHitBox,
+    updateEffect,
+    EFFECT_FINISHER, EFFECT_FINISHER_BALL,
+} = require('effects');
 const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
+const { updateEnemy } = require('enemies');
 
 require('heroes/bee');
 require('heroes/dragonfly');

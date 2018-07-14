@@ -1,5 +1,4 @@
 
-const random = require('random');
 const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 
@@ -408,9 +407,10 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     if (!enemyIsInvulnerable) {
         updatedState.idMap[enemyId] = {
             ...enemy,
-            life: enemy.life - damage,
-            dead: enemy.life <= damage,
-            animationTime: enemy.life <= damage ? 0 : enemy.animationTime,
+            life: Math.max(0, enemy.life - damage),
+            dead: enemy.life <= damage && !enemy.boss,
+            // reset animation time for death animation if the enemy is now dead.
+            animationTime: (enemy.life <= damage && !enemy.boss) ? 0 : enemy.animationTime,
         };
         enemy = updatedState.idMap[enemyId];
     }
@@ -543,6 +543,20 @@ const advanceEnemy = (state, enemy) => {
     if (enemy.delay > 0) {
         return updateEnemy(state, enemy, {delay: enemy.delay - 1});
     }
+    // Add a finisher effect to the screen when a boss hits zero health.
+    if (enemy.boss && enemy.life <= 0 && !enemy.snaredForFinisher) {
+        if (!state.effects.filter(effect =>
+            effect.type === EFFECT_FINISHER && effect.enemyId === enemy.id).length
+        ) {
+            let finisherEffect = createEffect(EFFECT_FINISHER, {enemyId: enemy.id});
+            // Make sure the finisher is position correctly on the first frame.
+            finisherEffect = {
+                ...finisherEffect,
+                ...getFinisherPosition(finisherEffect, enemy),
+            };
+            state = addEffectToState(state, finisherEffect);
+        }
+    }
     // This is kind of a hack to support fall damage being applied to newly created enemies.
     if (enemy.pendingDamage) {
         state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: enemy.pendingDamage, type: 'fall'});
@@ -581,8 +595,10 @@ const advanceEnemy = (state, enemy) => {
             return updateEnemy(state, enemy, {animationTime});
         }
     }
-    left += enemy.vx;
-    top += enemy.vy;
+    if (!enemy.snaredForFinisher) {
+        left += enemy.vx;
+        top += enemy.vy;
+    }
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
     const hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
@@ -686,7 +702,7 @@ module.exports = {
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
 
-const { createEffect, addEffectToState } = require('effects');
+const { createEffect, addEffectToState, EFFECT_FINISHER, getFinisherPosition, } = require('effects');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
 const { createLoot, addLootToState, getAdaptivePowerupType, gainPoints } = require('loot');
 const { updatePlayer } = require('heroes');

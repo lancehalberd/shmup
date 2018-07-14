@@ -10,6 +10,7 @@ const {
 } = require('enemies');
 const { createAttack, addEnemyAttackToState } = require('attacks');
 const { getTargetVector } = require('sprites');
+const { getHazardCeilingHeight, getHazardHeight } = require('world');
 
 const hornetRectangle = r(120, 120);
 const hornetHitBox = {left: 0, top: 33, width: 110, height: 87};
@@ -254,7 +255,7 @@ const ENEMY_HORNET_DASHER = 'hornetDasher';
 enemyData[ENEMY_HORNET_DASHER] = {
     ...enemyData[ENEMY_HORNET],
     accelerate: (state, enemy) => {
-        let {vx, vy, seed, animationTime, targetX, targetY, permanent} = enemy;
+        let {vx, vy, animationTime, targetX, targetY, permanent} = enemy;
         const target = state.players[0].sprite;
         // Don't update the targetX/Y values once the hornet starts charging.
         targetX = target.left + target.width / 2;
@@ -288,9 +289,56 @@ enemyData[ENEMY_HORNET_DASHER] = {
     }
 };
 
+const ENEMY_HORNET_QUEEN = 'hornetQueen';
+const queenRectangle = r(150, 150, {hitBox: {left: 14, top: 54, width: 125, height: 185}});
+enemyData[ENEMY_HORNET_QUEEN] = {
+    ...enemyData[ENEMY_HORNET],
+    animation: {
+        frames: [
+            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen1.png')},
+            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen2.png')},
+            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen3.png')},
+        ],
+        frameDuration: 3,
+    },
+    deathAnimation: createAnimation('gfx/enemies/hornets/hqueen4.png', queenRectangle),
+    accelerate: (state, enemy) => {
+        let {vx, vy} = enemy;
+        if (enemy.left + enemy.width > WIDTH) {
+            vx = -5;
+            vy = 0;
+            return {...enemy, vx, vy};
+        }
+        const ceiling = Math.max(getHazardCeilingHeight(state), 0);
+        const floor = Math.min(getHazardHeight(state), GAME_HEIGHT);
+        const height = floor - ceiling;
+        const y = (enemy.top + enemy.height / 2) - ceiling;
+        const dx = WIDTH * (y - height / 2);
+        const dy = height * ((enemy.left + enemy.width / 2) - WIDTH / 2);
+        const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+        vx = -5 * dx / mag;
+        vy = 5 * dy / mag;
+        return {...enemy, vx, vy};
+    },
+    props: {
+        life: 3,
+        score: 500,
+        speed: 10,
+        mode: 'enter',
+        modeTime: 0,
+        boss: true,
+        // This will be cleared when transitioning to the next area.
+        persist: true,
+        doNotFlip: true,
+        scale: 0.5,
+    }
+};
+
+
 module.exports = {
     ENEMY_HORNET,
     ENEMY_HORNET_SOLDIER,
     ENEMY_HORNET_CIRCLER,
     ENEMY_HORNET_DASHER,
+    ENEMY_HORNET_QUEEN,
 };

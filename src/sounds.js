@@ -107,7 +107,7 @@ const playTrack = (source, timeOffset) => {
             }
         });
     }
-    startTrack((timeOffset / 1000) % (customDuration || sound.duration));
+    startTrack((timeOffset / 1000) % (customDuration || sound.duration || 10000000));
     previousTrack = sound;
 };
 

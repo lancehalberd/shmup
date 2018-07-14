@@ -1,6 +1,4 @@
 
-const Rectangle = require('Rectangle');
-const { drawImage } = require('draw');
 const { createAnimation, r } = require('animations');
 
 const {
