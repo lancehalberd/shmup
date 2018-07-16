@@ -544,7 +544,7 @@ const advanceEnemy = (state, enemy) => {
         return updateEnemy(state, enemy, {delay: enemy.delay - 1});
     }
     // Add a finisher effect to the screen when a boss hits zero health.
-    if (enemy.boss && enemy.life <= 0 && !enemy.snaredForFinisher) {
+    if (enemy.boss && enemy.life <= 0 && !enemy.snaredForFinisher && !enemy.dead) {
         if (!state.effects.filter(effect =>
             effect.type === EFFECT_FINISHER && effect.enemyId === enemy.id).length
         ) {
@@ -702,7 +702,8 @@ module.exports = {
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
 
-const { createEffect, addEffectToState, EFFECT_FINISHER, getFinisherPosition, } = require('effects');
+const { createEffect, addEffectToState, } = require('effects');
+const { EFFECT_FINISHER, getFinisherPosition } = require('effects/finisher');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
 const { createLoot, addLootToState, getAdaptivePowerupType, gainPoints } = require('loot');
 const { updatePlayer } = require('heroes');

@@ -109,7 +109,7 @@ function updatePlayerOnContinue(state, playerIndex) {
 
 const isPlayerInvulnerable = (state, playerIndex) => {
     const player = state.players[playerIndex];
-    return player.invulnerableFor > 0 || player.usingSpecial || player.usingFinisher;
+    return player.invulnerableFor > 0 || player.usingSpecial || player.usingFinisher || player.sprite.targetLeft;
 };
 
 const useMeleeAttack = (state, playerIndex) => {
@@ -152,40 +152,7 @@ const advanceHero = (state, playerIndex) => {
     state = updatePlayer(state, playerIndex, {time: state.players[playerIndex].time + FRAME_LENGTH});
     let player = state.players[playerIndex];
     if (!isHeroSwapping(player) && player.usingFinisher) {
-        const ballIndex = getEffectIndex(state, EFFECT_FINISHER_BALL);
-        const finisherBall = state.effects[ballIndex];
-        let baseScale = 0;
-        if (finisherBall.xScale >= 2) baseScale = 2;
-        else if (finisherBall.xScale >= 1) baseScale = 1;
-        const heroType = player.heroes[0];
-        let energy = state.players[playerIndex][heroType].energy;
-        // Drain energy from the player until it hits 0.
-        if (energy > 0) {
-            if (energy === MAX_ENERGY) {
-                state = {...state, sfx: {...state.sfx, [heroesData[heroType].specialSfx]: true}};
-            }
-            energy--;
-            state = updatePlayer(state, playerIndex, {[heroType]: {...player[heroType], energy}});
-        } else if (finisherBall.xScale < 3) {
-            return switchHeroes(state, playerIndex);
-        } else {
-            // fire beam here.
-        }
-        const heroHitBox = getHeroHitBox(player);
-        const xScale = baseScale + (MAX_ENERGY - energy) / MAX_ENERGY;
-        const yScale = xScale;
-        //console.log(heroHitBox.left + heroHitBox.width / 2, heroHitBox.top + heroHitBox.height / 2);
-        /*console.log({
-            x: finisherBall.left + finisherBall.xScale * finisherBall.width / 2,
-            y: finisherBall.top + finisherBall.yScale * finisherBall.height / 2,
-        });*/
-        const targetLeft = heroHitBox.left + heroHitBox.width / 2 + 50 - xScale * finisherBall.width / 2;
-        const targetTop = heroHitBox.top + heroHitBox.height / 2 - yScale * finisherBall.height / 2;
-        const left = (finisherBall.left + targetLeft) / 2;
-        const top = (finisherBall.top + targetTop) / 2;
-        state = updateEffect(state, ballIndex, { top, left, xScale, yScale });
-
-        return state;
+        return advanceFinisher(state, playerIndex);
     }
     // Restore energy for all heroes each frame.
     for (const heroType of player.heroes) {
@@ -212,7 +179,7 @@ const advanceHero = (state, playerIndex) => {
     if (player[player.heroes[0]].energy < 0 && !player.invulnerableFor) {
         return switchHeroes(state, playerIndex);
     }
-    if (player.actions.special && !player.sprite.targetLeft) {
+    if (player.actions.special && !isHeroSwapping(player)) {
         const heroHitBox = getHeroHitBox(player);
         for (const finisherEffect of state.effects.filter(effect => effect.type === EFFECT_FINISHER)) {
             if (Rectangle.collision(heroHitBox, getEffectHitBox(finisherEffect))) {
@@ -220,22 +187,11 @@ const advanceHero = (state, playerIndex) => {
                 if (!enemy || enemy.dead) continue;
                 state = updateEffect(state, state.effects.indexOf(finisherEffect), {done: true});
                 state = updateEnemy(state, enemy, {snaredForFinisher: true});
-                for (const heroType of player.heroes) {
-                    state = updatePlayer(state, playerIndex,
-                        {[heroType]: {...player[heroType], energy: MAX_ENERGY}}
-                    );
-                }
-                const finisherBall = createEffect(EFFECT_FINISHER_BALL,
-                    {xScale: 0.01, yScale: 0.01,
-                        top: heroHitBox.top + heroHitBox.height / 2,
-                        left: heroHitBox.left + heroHitBox.width / 2 + 50,
-                });
-                state = addEffectToState(state, finisherBall);
-                return updatePlayer(state, playerIndex, {usingFinisher: true});
+                return startFinisher(state, playerIndex);
             }
         }
     }
-    if (player.actions.special && heroData.applySpecial && !player.sprite.targetLeft
+    if (player.actions.special && heroData.applySpecial && !isHeroSwapping(player)
         && !player.invulnerableFor
         // You can use a special when you don't have enough energy *if* another hero is available.
         && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))
@@ -249,13 +205,13 @@ const advanceHero = (state, playerIndex) => {
     if (player.meleeCooldown > 0) {
         state = updatePlayer(state, playerIndex, {meleeCooldown: player.meleeCooldown - 1});
         player = state.players[playerIndex];
-    } else if (player.actions.melee) {
+    } else if (player.actions.melee && !isHeroSwapping(player)) {
         state = useMeleeAttack(state, playerIndex);
         player = state.players[playerIndex];
     } else if (shotCooldown > 0) {
         state = updatePlayer({...state, sfx}, playerIndex, {shotCooldown: shotCooldown - 1});
         player = state.players[playerIndex];
-    } else if (player.actions.shoot) {
+    } else if (player.actions.shoot && !isHeroSwapping(player)) {
         state = heroData.shoot(state, playerIndex);
         player = state.players[playerIndex];
     }
@@ -271,8 +227,12 @@ const advanceHero = (state, playerIndex) => {
     }
     if (targetLeft != false) {
         const theta = Math.atan2(targetTop - top, targetLeft - left);
-        left = Math.min(left + player.sprite.spawnSpeed * Math.cos(theta), targetLeft);
-        top = Math.max(top + player.sprite.spawnSpeed * Math.sin(theta), targetTop);
+        const nextLeft = left + player.sprite.spawnSpeed * Math.cos(theta);
+        const nextTop = top + player.sprite.spawnSpeed * Math.sin(theta);
+        if (left < targetLeft) left = Math.min(nextLeft, targetLeft);
+        else left = Math.max(nextLeft, targetLeft);
+        if (top < targetTop) top = Math.min(nextTop, targetTop);
+        else top = Math.max(nextTop, targetTop);
         if (left === targetLeft && top === targetTop) {
             targetLeft = targetTop = false;
         }
@@ -281,7 +241,7 @@ const advanceHero = (state, playerIndex) => {
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
         }, {left, top, animationTime, targetLeft, targetTop});
     }
-    if (player.actions.switch && hasAnotherHero(state, playerIndex)) {
+    if (player.actions.switch && hasAnotherHero(state, playerIndex) && !isHeroSwapping(player)) {
         return switchHeroes(state, playerIndex);
     }
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
@@ -548,7 +508,8 @@ const renderHero = (context, player) => {
     if (done) return;
     const heroData = heroesData[player.heroes[0]];
     let animation = heroData.animation, animationTime = sprite.animationTime;
-    if (!isHeroSwapping(player) && player.usingFinisher) {
+    // Show the special animation when charging the finisher (not swapping or firing it).
+    if (!isHeroSwapping(player) && !player.shootingFinisher && player.usingFinisher) {
         animation = heroData.specialAnimation;
         // Tie the animation frame to the depletion of the energy bar.
         const p = (MAX_ENERGY - player[player.heroes[0]].energy) / MAX_ENERGY;
@@ -615,6 +576,7 @@ module.exports = {
     isPlayerInvulnerable,
     ladybugAnimation,
     useMeleeAttack,
+    switchHeroes,
 };
 
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
@@ -626,10 +588,10 @@ const {
     addEffectToState,
     getEffectHitBox,
     updateEffect,
-    EFFECT_FINISHER, EFFECT_FINISHER_BALL,
 } = require('effects');
 const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
 const { updateEnemy } = require('enemies');
+const { advanceFinisher, startFinisher, EFFECT_FINISHER } = require('effects/finisher');
 
 require('heroes/bee');
 require('heroes/dragonfly');

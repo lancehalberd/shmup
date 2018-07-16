@@ -8,7 +8,7 @@ const {
 const random = require('random');
 const { requireImage, createAnimation, r } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { applyCheckpointToState, getGroundHeight, allWorlds } = require('world');
+const { applyCheckpointToState, setCheckpoint, getGroundHeight, allWorlds } = require('world');
 
 const WORLD_FIELD_BOSS = 'fieldBoss';
 const layerNamesToClear = ['wheat', 'darkGrass', 'thickGrass', 'nearground', 'foreground'];
@@ -17,6 +17,7 @@ const forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginb
 allWorlds[WORLD_FIELD_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
+        if (world.toLowerForest) return advanceToLowerForest(state);
         if (world.time < 500 &&
             (['nearground','foreground'].some(layerName => world[layerName].sprites.length) ||
                 world.y > 0)
@@ -26,7 +27,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 targetFrames: 50 * 5 / 2,
                 targetX: world.x + 1000,
                 time: 0,
-            }
+            };
         }
         const time = world.time + FRAME_LENGTH;
         if (time === 500) {
@@ -106,12 +107,13 @@ allWorlds[WORLD_FIELD_BOSS] = {
             world = {...world, lifebars: {...world.lifebars, [largeTurret.id]: turretLifebar}};
         }
         const turrets = state.enemies.filter(enemy => !enemy.dead && enemy.type === ENEMY_SMALL_TURRET);
+        const door = state.enemies.filter(enemy => enemy.type === ENEMY_DOOR)[0];
         if (time > 2500) {
             if (largeTurret.dead && largeTurret.animationTime >= 2500) {
                 return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FOREST_UPPER_START));
             }
-            if (state.enemies.filter(enemy => enemy.type === ENEMY_DOOR).length === 0) {
-                return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FOREST_LOWER_START));
+            if (!door) {
+                return transitionToLowerForest(state);
             }
             const treeSprite = world.nearground.sprites[0];
             world = {...world, rightEdge: treeSprite.left + 630, spawnsDisabled: true};
@@ -132,7 +134,13 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 world = {...world, lastMonkTime: time};
             }
             const minStickTime = 3000 + 1000 * turrets.length;
-            if (time - (world.lastStickTime || 0) >= minStickTime && Math.random() > 0.9) {
+            // Sticks fall from the top of the screen until either boss is killed by the finisher.
+            // We stop generation of sticks during the finisher because it looks bad to have
+            // them fall during the finisher and especially during transition to the second stage.
+            if (time - (world.lastStickTime || 0) >= minStickTime && Math.random() > 0.9
+                && door && !door.dead && largeTurret && !largeTurret.dead
+                && !state.players[0].usingFinisher
+            ) {
                 const treeSprite = world.nearground.sprites[0];
                 const spawnX = Math.random() * 400 + treeSprite.left + 50;
 
@@ -161,8 +169,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
     },
 };
 
-
-const transitionToFieldBoss = (state) => {
+function transitionToFieldBoss(state) {
     const updatedWorld = {
         ...state.world,
         type: WORLD_FIELD_BOSS,
@@ -174,8 +181,44 @@ const transitionToFieldBoss = (state) => {
         const sprites = updatedWorld[layerName].sprites.filter(sprite => sprite.left < WIDTH);
         updatedWorld[layerName] = {...updatedWorld[layerName], spriteData: false, sprites};
     }
-
     return {...state, world: updatedWorld};
+}
+
+const transitionAnimation = createAnimation('gfx/scene/forest/2beginningsized.png', r(756, 650));
+function transitionToLowerForest(state) {
+    const sprites = state.world.nearground.sprites;
+    // const treeFortSprite = sprites[1];
+    sprites[1] = getNewSpriteState({
+        top: -736,
+        left: 234,
+        width: transitionAnimation.frames[0].width * 2,
+        height: transitionAnimation.frames[0].height * 2,
+        animation: transitionAnimation,
+    });
+    const nearground = {...state.world.nearground, sprites};
+    const world = {...state.world, nearground, toLowerForest: true, suppressAttacks: true};
+    return {...state, world}
+}
+function advanceToLowerForest(state) {
+    state = updatePlayer(state, 0, {}, {targetLeft: -200, targetTop: 300});
+    let world = {
+        ...state.world,
+        targetFrames: 50 * 5 / 2,
+        targetX: state.world.x + 1000,
+    }
+    const treeCover = state.world.nearground.sprites[1];
+    if (treeCover.left <= -550) {
+        state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_START);
+        state = applyCheckpointToState(state, CHECK_POINT_FOREST_LOWER_START);
+        const largeTrunks = {...state.world.largeTrunks, sprites: [treeCover]};
+        world = {...state.world,
+            targetX: state.world.x + 2000,
+            event: 'transition',
+            eventTime: 0,
+            largeTrunks,
+        };
+    }
+    return {...state, world};
 }
 
 module.exports = {
@@ -183,6 +226,7 @@ module.exports = {
 };
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
+const { updatePlayer } = require('heroes');
 
 const smallTurretRectangle = r(41, 41);
 const ENEMY_SMALL_TURRET = 'smallTurret';
@@ -352,7 +396,7 @@ enemyData[ENEMY_DOOR] = {
     },
     onDeathEffect(state, enemy) {
         let delay = 6;
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 7; i++) {
             const explosion = createEffect(EFFECT_EXPLOSION, {
                 sfx: 'sfx/explosion.mp3',
                 delay,
@@ -391,8 +435,8 @@ enemyData[ENEMY_DOOR] = {
         return state;
     },
     props: {
-        maxLife: 20,
-        life: 20,
+        maxLife: 2000,
+        life: 2000,
         score: 500,
         stationary: true,
         doNotFlip: true,

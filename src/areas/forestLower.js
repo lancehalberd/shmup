@@ -78,6 +78,14 @@ allWorlds[WORLD_FOREST_LOWER] = {
     initialEvent: 'nothing',
 
     events: {
+        transition: (state, eventTime) => {
+            state = updatePlayer(state, 0, {}, {targetLeft: -100, targetTop: 300});
+            if (eventTime === 3000) {
+                state = updatePlayer(state, 0, {}, {targetLeft: 100, targetTop: 300});
+                return setEvent(state, 'nothing');
+            }
+            return state;
+        },
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
                 return setEvent(state, 'easyFlies');
@@ -184,7 +192,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
         const targetFrames = 70 * 5;
-        const targetX = world.x + 1000;
+        const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
@@ -273,6 +281,7 @@ module.exports = {
 };
 
 const { createEnemy, addEnemyToState, enemyData, updateEnemy } = require('enemies');
+const { updatePlayer } = require('heroes');
 
 const ENEMY_CEILING_THORNS = 'ceilingThorns';
 const ceilingThornRectangle = r(200, 200, {hitBox: {left: 41, top: 0, width: 130, height: 150}});

@@ -87,6 +87,10 @@ const render = (state) => {
         const lifebar = state.world.lifebars[enemyId];
         const enemy = state.idMap[enemyId];
         const P = Math.min(1, (state.world.time - lifebar.startTime) / 3000);
+        if (P < 0) {
+            console.error("Lifebar startTime is less than current world time");
+            debugger;
+        }
         const width = Math.ceil(lifebar.width * P);
         const p = enemy ? enemy.life / (enemy.maxLife || lifebar.maxLife) : 0;
         context.fillStyle = 'black';
@@ -229,6 +233,9 @@ const renderHUD = (context, state) => {
     if (state.players[0].relics[LOOT_HELMET]) {
         frame = getFrame(helmetAnimation, state.players[0].sprite.animationTime);
         drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 5, 8));
+    }
+    if (state.flashHudUntil > state.world.time) {
+        drawImage(context, requireImage('gfx/hud/hudflash.png'), r(800, 36), r(800, 36));
     }
 };
 

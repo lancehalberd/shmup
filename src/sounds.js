@@ -153,6 +153,8 @@ const preloadSounds = () => {
         'sfx/portaltravel.mp3+0+4',
         'sfx/explosion.mp3+0+1',
         'sfx/dash.mp3+0+1',
+        {key: 'chargeFinisher', source: 'sfx/finisher1.mp3', volume: 5},
+        {key: 'shootFinisher', source: 'sfx/finisher2.mp3', volume: 1},
         {key: 'arclightning', source: 'sfx/fastlightning.mp3', volume: 0.3, limit: 8},
         {source: 'sfx/fastlightning.mp3', volume: 3, limit: 1},
         {source: 'sfx/dash.mp3', volume: 10, limit: 1},

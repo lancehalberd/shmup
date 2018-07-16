@@ -169,6 +169,7 @@ heroesData[HERO_BEE] = {
         return updatePlayer(state, playerIndex, {[HERO_BEE]: {...player[HERO_BEE], targets}});
     },
     render(context, player) {
+        if (player.usingFinisher) return;
         context.save();
         for (const target of player[HERO_BEE].targets) {
             const animation = target.enemyId ? crosshairLockedAnimation : crosshairAnimation;

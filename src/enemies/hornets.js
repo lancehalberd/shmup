@@ -290,7 +290,7 @@ enemyData[ENEMY_HORNET_DASHER] = {
 };
 
 const ENEMY_HORNET_QUEEN = 'hornetQueen';
-const queenRectangle = r(150, 150, {hitBox: {left: 14, top: 54, width: 125, height: 185}});
+const queenRectangle = r(150, 150, {hitBox: {left: 14, top: 54, width: 125, height: 85}});
 enemyData[ENEMY_HORNET_QUEEN] = {
     ...enemyData[ENEMY_HORNET],
     animation: {

@@ -116,12 +116,18 @@ const advanceState = (state) => {
         enemy = updatedState.idMap[enemy.id];
         if (enemy) updatedState = advanceEnemy(updatedState, enemy);
     }
-    for (let enemy of updatedState.enemies) {
-        enemy = updatedState.idMap[enemy.id];
-        if (enemyIsActive(updatedState, enemy) && enemyData[enemy.type].shoot && enemy.left > 0) {
-            // Don't shoot while spawning.
-            if (!enemyData[enemy.type].spawnAnimation || enemy.spawned) {
-                updatedState = enemyData[enemy.type].shoot(updatedState, enemy);
+    if (
+        !updatedState.players[0].usingFinisher
+        && !updatedState.world.suppressAttacks
+        && !updatedState.enemies.filter(enemy => enemy.boss && enemy.dead).length
+    ) {
+        for (let enemy of updatedState.enemies) {
+            enemy = updatedState.idMap[enemy.id];
+            if (enemyIsActive(updatedState, enemy) && enemyData[enemy.type].shoot && enemy.left > 0) {
+                // Don't shoot while spawning.
+                if (!enemyData[enemy.type].spawnAnimation || enemy.spawned) {
+                    updatedState = enemyData[enemy.type].shoot(updatedState, enemy);
+                }
             }
         }
     }
@@ -171,6 +177,17 @@ const advanceState = (state) => {
                 updatedState = damageHero(updatedState, i);
                 currentEnemyAttacks[j] = {...attack, done: true};
             }
+        }
+    }
+    if (updatedState.players[0].usingFinisher) {
+        // Replace any enemy attack with deflected bullets.
+        for (let j = 0; j < currentEnemyAttacks.length; j++) {
+            const enemyAttack = currentEnemyAttacks[j];
+            currentEnemyAttacks[j] = {...enemyAttack, done: true};
+            const deflectEffect = createEffect(EFFECT_DEFLECT_BULLET);
+            deflectEffect.left = enemyAttack.left + (enemyAttack.width - deflectEffect.width ) / 2;
+            deflectEffect.top = enemyAttack.top + (enemyAttack.height - deflectEffect.height ) / 2;
+            updatedState = addEffectToState(updatedState, deflectEffect);
         }
     }
     // Player melee attacks can destroy enemy projectiles.

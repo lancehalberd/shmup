@@ -32,23 +32,31 @@ const addElementToLayer = (state, layerName) => {
     const elementsData = layer.spriteData;
     let newSprite = null, lastSprite = layer.sprites[layer.sprites.length - 1];
     let safety = 0;
-    while ((!lastSprite || (lastSprite.left < WIDTH && lastSprite.next)) && safety++ < 20) {
-        const spriteData = lastSprite ? elementsData[random.element(lastSprite.next)] : random.element(elementsData);
+    const populating = !lastSprite;
+    //if (layerName === 'largeTrunks') console.log(spriteData);
+    while ((!lastSprite || lastSprite.left < WIDTH) && safety++ < 20) {
+        let spriteData = (lastSprite && lastSprite.next)
+            ? elementsData[random.element(lastSprite.next)]
+            : random.element(elementsData);
+        //if (layerName === 'largeTrunks') console.log(spriteData);
+        // This will often happen when transitioning between area types.
         if (!spriteData) {
-            // This will often happen when transitioning between area types.
-            break;
+            spriteData = random.element(elementsData);
+            if (!spriteData) break;
         }
         let {animation, scale} = spriteData;
         if (Array.isArray(animation)) {
             animation = random.element(animation);
         }
-        let offset = lastSprite ? lastSprite.offset : 0;
+        let offset = lastSprite ? (lastSprite.offset || 0) : 0;
         if (Array.isArray(offset)) {
             offset = random.element(offset);
         }
         if (lastSprite) {
             offset *= (lastSprite.scale || 1);
-            offset += lastSprite.left + lastSprite.width;
+            offset += populating ?
+                lastSprite.left + lastSprite.width :
+                Math.max(lastSprite.left + lastSprite.width, WIDTH);
         }
         let yOffset = spriteData.yOffset || 0
         if (Array.isArray(yOffset)) {
@@ -58,6 +66,8 @@ const addElementToLayer = (state, layerName) => {
         newSprite = getNewSpriteState({
             ...animation.frames[0],
             top: getBaseHeight(state) + layer.yOffset + yOffset,
+            // only allow items to be added to directly to the visible portion of the
+            // screen during the population section (no sprite on the layer yet).
             left: offset,
             ...spriteData,
             animation,

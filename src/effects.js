@@ -148,50 +148,12 @@ const effects = {
         animation: deflectAnimation,
     }
 };
-
-const EFFECT_FINISHER = 'effectFinisher';
-effects[EFFECT_FINISHER] = {
-    animation: createAnimation('gfx/effects/crosshair.png',
-        r(150, 100, { hitBox: { left: 46, top: 0, width: 55, height: 55 } })
-    ),
-    advanceEffect(state, effectIndex) {
-        const effect = state.effects[effectIndex];
-        const enemy = state.idMap[effect.enemyId];
-        if (!enemy || enemy.dead) {
-            return updateEffect(state, effectIndex, {done: true});
-        }
-        // Move the hitbox to be in front of the enemy.
-        return updateEffect(state, effectIndex, getFinisherPosition(effect, enemy));
-    },
-    props: {
-        permanent: true,
-    },
-};
-
-const EFFECT_FINISHER_BALL = 'effectFinisherBall';
-effects[EFFECT_FINISHER_BALL] = {
-    animation: createAnimation('gfx/attacks/finisherball.png', r(10, 10)),
-    advanceEffect(state, effectIndex) {
-        let rotation = (state.effects[effectIndex].rotation || 0) + Math.PI / 4;
-        return updateEffect(state, effectIndex, { rotation });
-    },
-    props: {
-        permanent: true,
-    },
-};
+window.effects = effects;
 
 function getEffectHitBox(effect) {
     let animation = effects[effect.type].animation;
     return new Rectangle(getHitBox(animation, effect.animationTime)).translate(effect.left, effect.top);
 }
-
-function getFinisherPosition(effect, enemy) {
-    const hitBox = getEnemyHitBox(enemy);
-    return {
-        top: hitBox.top + hitBox.height / 2 - effect.height / 2,
-        left: hitBox.left - effect.width / 2 - 200,
-    };
-};
 
 const createEffect = (type, props) => {
     const frame = effects[type].animation.frames[0];
@@ -311,10 +273,5 @@ module.exports = {
     renderEffect,
     updateEffect,
     getEffectIndex,
-    getFinisherPosition,
     getEffectHitBox,
-    EFFECT_FINISHER,
-    EFFECT_FINISHER_BALL,
 };
-
-const { getEnemyHitBox } = require('enemies');
