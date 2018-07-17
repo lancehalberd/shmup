@@ -75,6 +75,14 @@ allWorlds[WORLD_FOREST_UPPER] = {
     initialEvent: 'nothing',
 
     events: {
+        transition: (state, eventTime) => {
+            state = updatePlayer(state, 0, {}, {targetLeft: -100, targetTop: 300});
+            if (eventTime === 3000) {
+                state = updatePlayer(state, 0, {}, {targetLeft: 100, targetTop: 300});
+                return setEvent(state, 'nothing');
+            }
+            return state;
+        },
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
                 return setEvent(state, 'easyFlies');
@@ -269,6 +277,7 @@ module.exports = {
     getForestUpperWorld,
 };
 
+const { updatePlayer } = require('heroes');
 const { createEnemy, addEnemyToState, enemyData, updateEnemy } = require('enemies');
 
 const ENEMY_CEILING_THORNS = 'ceilingThorns';

@@ -17,7 +17,6 @@ const forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginb
 allWorlds[WORLD_FIELD_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
-        if (world.toLowerForest) return advanceToLowerForest(state);
         if (world.time < 500 &&
             (['nearground','foreground'].some(layerName => world[layerName].sprites.length) ||
                 world.y > 0)
@@ -110,7 +109,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
         const door = state.enemies.filter(enemy => enemy.type === ENEMY_DOOR)[0];
         if (time > 2500) {
             if (largeTurret.dead && largeTurret.animationTime >= 2500) {
-                return starWorldTransition(applyCheckpointToState(state, CHECK_POINT_FOREST_UPPER_START));
+                return transitionToUpperForest(state);
             }
             if (!door) {
                 return transitionToLowerForest(state);
@@ -182,43 +181,6 @@ function transitionToFieldBoss(state) {
         updatedWorld[layerName] = {...updatedWorld[layerName], spriteData: false, sprites};
     }
     return {...state, world: updatedWorld};
-}
-
-const transitionAnimation = createAnimation('gfx/scene/forest/2beginningsized.png', r(756, 650));
-function transitionToLowerForest(state) {
-    const sprites = state.world.nearground.sprites;
-    // const treeFortSprite = sprites[1];
-    sprites[1] = getNewSpriteState({
-        top: -736,
-        left: 234,
-        width: transitionAnimation.frames[0].width * 2,
-        height: transitionAnimation.frames[0].height * 2,
-        animation: transitionAnimation,
-    });
-    const nearground = {...state.world.nearground, sprites};
-    const world = {...state.world, nearground, toLowerForest: true, suppressAttacks: true};
-    return {...state, world}
-}
-function advanceToLowerForest(state) {
-    state = updatePlayer(state, 0, {}, {targetLeft: -200, targetTop: 300});
-    let world = {
-        ...state.world,
-        targetFrames: 50 * 5 / 2,
-        targetX: state.world.x + 1000,
-    }
-    const treeCover = state.world.nearground.sprites[1];
-    if (treeCover.left <= -550) {
-        state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_START);
-        state = applyCheckpointToState(state, CHECK_POINT_FOREST_LOWER_START);
-        const largeTrunks = {...state.world.largeTrunks, sprites: [treeCover]};
-        world = {...state.world,
-            targetX: state.world.x + 2000,
-            event: 'transition',
-            eventTime: 0,
-            largeTrunks,
-        };
-    }
-    return {...state, world};
 }
 
 module.exports = {
@@ -470,9 +432,9 @@ enemyData[ENEMY_STICK_3] = {
     animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24)),
 };
 
-const { starWorldTransition } = require('areas/stars');
 const { CHECK_POINT_FOREST_UPPER_START } = require('areas/forestUpper');
-const { CHECK_POINT_FOREST_LOWER_START } = require('areas/forestLower');
+const { transitionToLowerForest } = require('areas/fieldToLowerForest');
+const { transitionToUpperForest } = require('areas/fieldToUpperForest');
 
 const { createAttack, addEnemyAttackToState } = require('attacks');
 
