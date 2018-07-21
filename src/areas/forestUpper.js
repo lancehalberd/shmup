@@ -168,7 +168,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         },
         brownSpider: (state, eventTime) => {
             if (eventTime === 0) {
-                state = spawnEnemy(state, ENEMY_BROWN_SPIDER, {left: WIDTH + 10, top: random.range(2, 5) * SAFE_HEIGHT / 6 });
+                state = spawnEnemy(state, ENEMY_BROWN_SPIDER, {left: WIDTH + 10, top: random.range(4, 5) * SAFE_HEIGHT / 6 });
                 return state;
             }
             let spacing = 1000;
@@ -189,7 +189,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
         const targetFrames = 70 * 5;
-        const targetX = world.x + 1000;
+        const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
@@ -289,7 +289,6 @@ enemyData[ENEMY_CEILING_THORNS] = {
         return updateEnemy(state, enemy, {stationary: false});
     },
     props: {
-        maxLife: 20,
         life: 20,
         score: 0,
         stationary: true,

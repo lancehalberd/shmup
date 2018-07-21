@@ -81,7 +81,7 @@ function advanceFinisherBeam(state, playerIndex) {
         state = updateEffect(state, beamIndex, {done: true});
         const snaredEnemies = state.enemies.filter(enemy => enemy.snaredForFinisher);
         for (let enemy of snaredEnemies) {
-            state = updateEnemy(state, enemy, {dead: true, snaredForFinisher: false});
+            state = updateEnemy(state, enemy, {dead: true, animationTime: 0, snaredForFinisher: false});
             enemy = state.idMap[enemy.id];
             if (enemyData[enemy.type].onDeathEffect) {
                 // This actuall changes the enemy index, so we do it last. In the long term it is probably

@@ -34,14 +34,18 @@ const getNewState = () => (advanceWorld({
     bgm: 'bgm/title.mp3',
     interacted: false,
     checkpoint: null,
+    debug: false,
 }));
 
 const TEST_TIME = 0;
 
 const advanceState = (state) => {
     let updatedState = {...state};
-    if (state.world.time < TEST_TIME) {
-        state.world.time = TEST_TIME;
+    if (updatedState.world.time < TEST_TIME) {
+        updatedState.world.time = TEST_TIME;
+    }
+    if (updatedState.players[0].actions.toggleDebug) {
+        updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
         const checkpointKeys = Object.keys(checkpoints);

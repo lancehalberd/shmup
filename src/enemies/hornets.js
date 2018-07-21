@@ -321,7 +321,7 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         return {...enemy, vx, vy};
     },
     props: {
-        life: 3,
+        life: 300,
         score: 500,
         speed: 10,
         mode: 'enter',

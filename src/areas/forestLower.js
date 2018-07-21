@@ -4,7 +4,6 @@ const {
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    EFFECT_EXPLOSION,
     ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
 const { ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
@@ -292,7 +291,6 @@ enemyData[ENEMY_CEILING_THORNS] = {
         return updateEnemy(state, enemy, {stationary: false});
     },
     props: {
-        maxLife: 20,
         life: 20,
         score: 0,
         stationary: true,

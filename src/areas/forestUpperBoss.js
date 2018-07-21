@@ -4,7 +4,8 @@ const {
     EFFECT_EXPLOSION,
 } = require('gameConstants');
 const random = require('random');
-const { createAnimation, r } = require('animations');
+const { drawImage } = require('draw');
+const { createAnimation, r, getFrame } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { allWorlds, getHazardHeight } = require('world');
 const { enterStarWorldEnd } = require('areas/stars');
@@ -84,8 +85,7 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
             });
             connectedIds.push(newEnemy.id);
             lifebars[newEnemy.id] = {
-                left: 100, top: HEIGHT - 12, width: 600, height: 8, maxLife: newEnemy.life,
-                startTime: world.time,
+                left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
             world = {...world, lifebars, spawnsDisabled: true};
             state = addEnemyToState(state, newEnemy);
@@ -123,8 +123,7 @@ allWorlds[WORLD_UPPER_FOREST_BOSS] = {
             lastSpawnTime = time;
             const lifebars = world.lifebars;
             lifebars[newEnemy.id] = {
-                left: 100, top: HEIGHT - 24, width: 600, height: 8, maxLife: newEnemy.life,
-                startTime: time,
+                left: 100, top: HEIGHT - 24, width: 600, height: 8, startTime: time,
             };
             world = {...world, lifebars};
         }
@@ -166,16 +165,19 @@ const {
     ENEMY_HORNET_QUEEN,
 } = require('enemies/hornets');
 
-const NEST_LIFE = 50;
+const NEST_LIFE = 200;
 const ENEMY_HORNET_NEST_1 = 'horentNest1';
 const ENEMY_HORNET_NEST_2 = 'horentNest2';
 const ENEMY_HORNET_NEST_3 = 'horentNest3';
 const ENEMY_HORNET_NEST_4 = 'horentNest4';
 const ENEMY_HORNET_NEST_5 = 'horentNest5';
+const EFFECT_NEST_DAMAGE_LOWER = 'nestDamageLower';
+const EFFECT_NEST_DAMAGE_UPPER = 'nestDamageUpper';
 enemyData[ENEMY_HORNET_NEST_1] = {
     animation: createAnimation('gfx/enemies/hornetnest/nest5.png',
         r(300, 600, {hitBox: {left: 87, top: 33, width: 115, height: 105}})
     ),
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt5.png', r(300, 600)),
     deathSound: 'sfx/explosion.mp3+0+0.5',
     // All nest pieces are damaged simultaneously.
     onDamageEffect(state, enemy, attack) {
@@ -188,6 +190,12 @@ enemyData[ENEMY_HORNET_NEST_1] = {
                     {playerIndex: 0, damage: attack.damage, secondary: true}
                 );
             }
+            if (enemy.life % 5) return state;
+            const effect = createEffect(enemy.damageEffectType, {
+                top: enemy.top + enemy.damageEffectOffset + Math.random() * 40,
+                left: enemy.left - 20 + Math.random() * 40,
+            });
+            state = addEffectToState(state, effect);
         }
         return state;
     },
@@ -216,6 +224,12 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         }
         return state;
     },
+    drawOver(context, enemy) {
+        if (enemy.dead || enemy.life >= NEST_LIFE / 10) return;
+        const animation = enemyData[enemy.type].hurtAnimation;
+        const frame = getFrame(animation, enemy.animationTime);
+        drawImage(context, frame.image, frame, enemy);
+    },
     props: {
         life: NEST_LIFE,
         score: 200,
@@ -225,6 +239,8 @@ enemyData[ENEMY_HORNET_NEST_1] = {
             ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET
         ],
         boss: true,
+        damageEffectType: EFFECT_NEST_DAMAGE_UPPER,
+        damageEffectOffset: 0,
     },
 };
 enemyData[ENEMY_HORNET_NEST_2] = {
@@ -232,28 +248,73 @@ enemyData[ENEMY_HORNET_NEST_2] = {
     animation: createAnimation('gfx/enemies/hornetnest/nest4.png',
         r(300, 600, {hitBox: {left: 32, top: 134, width: 215, height:120}})
     ),
-    props: { life: NEST_LIFE * 0.8, hanging: true, spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER] },
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt4.png', r(300, 600)),
+    props: {
+        life: NEST_LIFE * 0.8, hanging: true,
+        spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER],
+        damageEffectType: EFFECT_NEST_DAMAGE_UPPER,
+        damageEffectOffset: 100,
+    },
 };
 enemyData[ENEMY_HORNET_NEST_3] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest3.png',
         r(300, 600, {hitBox: {left: 45, top: 195, width: 160, height:120}})
     ),
-    props: { life: NEST_LIFE * 0.6, hanging: true, spawns: [ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_DASHER] },
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt3.png', r(300, 600)),
+    props: {
+        life: NEST_LIFE * 0.6, hanging: true,
+        spawns: [ENEMY_HORNET_DASHER, ENEMY_HORNET, ENEMY_HORNET_DASHER],
+        damageEffectType: EFFECT_NEST_DAMAGE_LOWER,
+        damageEffectOffset: -120,
+    },
 };
 enemyData[ENEMY_HORNET_NEST_4] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest2.png',
         r(300, 600, {hitBox: {left: 43, top: 204, width: 240, height:140}})
     ),
-    props: { life: NEST_LIFE * 0.4, hanging: true, spawns: [/* queen spawns here */] },
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt2.png', r(300, 600)),
+    props: {
+        life: NEST_LIFE * 0.4, hanging: true,
+        spawns: [/* queen spawns here */],
+        damageEffectType: EFFECT_NEST_DAMAGE_LOWER,
+        damageEffectOffset: -80,
+    },
 };
 enemyData[ENEMY_HORNET_NEST_5] = {
     ...enemyData[ENEMY_HORNET_NEST_1],
     animation: createAnimation('gfx/enemies/hornetnest/nest1.png',
         r(300, 600, {hitBox: {left: 130, top: 302, width: 130, height:85}})
     ),
-    props: { life: NEST_LIFE * 0.2, hanging: true, spawns: [ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER]},
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt1.png', r(300, 600)),
+    props: { life: NEST_LIFE * 0.2, hanging: true,
+        spawns: [ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER],
+        damageEffectType: EFFECT_NEST_DAMAGE_UPPER,
+        damageEffectOffset: 280,
+    },
 };
 
-const { createEffect, addEffectToState, } = require('effects');
+const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
+
+effects[EFFECT_NEST_DAMAGE_LOWER] = {
+    animation: createAnimation('gfx/enemies/hornetnest/hornethurteffect2.png', r(300, 600), {duration: 20}),
+    advanceEffect: (state, effectIndex) => {
+        const effect = state.effects[effectIndex];
+        return updateEffect(state, effectIndex, {
+            vy: effect.vy + 0.5,
+           // xScale: (effect.xScale * 4 + 1) / 5,
+           // yScale: (effect.yScale * 4 + 1) / 5,
+        });
+    },
+    props: {
+        relativeToGround: true,
+        //xScale: .1,
+        //yScale: .1,
+    },
+};
+effects[EFFECT_NEST_DAMAGE_UPPER] = {
+    ...effects[EFFECT_NEST_DAMAGE_LOWER],
+    animation: createAnimation('gfx/enemies/hornetnest/hornethurteffect1.png', r(300, 600), {duration: 20}),
+};
+

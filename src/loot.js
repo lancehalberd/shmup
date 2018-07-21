@@ -358,7 +358,7 @@ const getComboMultiplier = (state, playerIndex) => {
 };
 
 let powerupGoals = [500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000];
-powerupGoals = powerupGoals.map(g => g / 10);
+// powerupGoals = powerupGoals.map(g => g / 10);
 
 const gainPoints = (state, playerIndex, points) => {
     points *= getComboMultiplier(state, playerIndex);

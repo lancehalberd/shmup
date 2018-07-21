@@ -1,6 +1,6 @@
 const { WIDTH, HEIGHT } = require('gameConstants');
 
-const drawImage = (context, image, source, target) => {
+function drawImage(context, image, source, target) {
     context.drawImage(
         image,
         source.left, source.top, source.width, source.height,

@@ -41,7 +41,7 @@ allWorlds[WORLD_FIELD_TO_UPPER_FOREST] = {
             world.targetY = state.world.y + 2700;
             world.targetX = state.world.x + 200;
             if (treeCover.top >= -100) {
-                world.targetX = state.world.x + 1000;
+                world.targetX = state.world.x + 2000;
                 world.targetY = state.world.y + 100;
             }
         }

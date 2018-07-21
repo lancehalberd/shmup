@@ -348,6 +348,7 @@ const createEnemy = (type, props) => {
         ...enemyData[type].props,
         type,
         seed: Math.random(),
+        maxLife: props && props.life || enemyData[type].props.life,
         ...props,
         id: `enemy${uniqueIdCounter++}`,
     });
@@ -495,12 +496,12 @@ const renderEnemy = (context, enemy) => {
     if (enemy.delay > 0) return;
     let animation = getEnemyAnimation(enemy);
     const frame = getFrame(animation, enemy.animationTime);
+    if (enemyData[enemy.type].drawUnder) {
+        enemyData[enemy.type].drawUnder(context, enemy);
+    }
     context.save();
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
-    }
-    if (enemyData[enemy.type].drawUnder) {
-        enemyData[enemy.type].drawUnder(context, enemy);
     }
     if (enemy.vx > 0 && !enemy.doNotFlip) {
         let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
@@ -537,6 +538,9 @@ const renderEnemy = (context, enemy) => {
         context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
     }
     context.restore();
+    if (enemyData[enemy.type].drawOver) {
+        enemyData[enemy.type].drawOver(context, enemy);
+    }
 };
 
 const advanceEnemy = (state, enemy) => {

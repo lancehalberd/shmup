@@ -68,9 +68,8 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 top: treeSprite.top + 270,
             });
             lifebars[newEnemy.id] = {
-                left: 100, top: HEIGHT - 12, width: 600, height: 8, maxLife: newEnemy.life,
-                startTime: world.time,
-            }
+                left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
+            };
             state = addEnemyToState(state, newEnemy);
             newEnemy = createEnemy(ENEMY_LARGE_TURRET, {
                 left: treeSprite.left + treeSprite.width - 90,
@@ -100,15 +99,14 @@ allWorlds[WORLD_FIELD_BOSS] = {
             enemyData[largeTurret.type].ready(state, largeTurret)
         ) {
             const turretLifebar = {
-                left: 100, top: HEIGHT - 24, width: 600, height: 8, maxLife: largeTurret.life,
-                startTime: world.time,
+                left: 100, top: HEIGHT - 24, width: 600, height: 8, startTime: world.time,
             };
             world = {...world, lifebars: {...world.lifebars, [largeTurret.id]: turretLifebar}};
         }
         const turrets = state.enemies.filter(enemy => !enemy.dead && enemy.type === ENEMY_SMALL_TURRET);
         const door = state.enemies.filter(enemy => enemy.type === ENEMY_DOOR)[0];
         if (time > 2500) {
-            if (largeTurret.dead && largeTurret.animationTime >= 2500) {
+            if (largeTurret.dead && largeTurret.animationTime >= 1000) {
                 return transitionToUpperForest(state);
             }
             if (!door) {
@@ -283,7 +281,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
     deathSound: 'sfx/explosion.mp3',
     onDeathEffect(state, enemy) {
         let delay = 6;
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 7; i++) {
             const explosion = createEffect(EFFECT_EXPLOSION, {
                 sfx: 'sfx/explosion.mp3',
                 delay,
@@ -320,7 +318,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
         return updateEnemy(state, enemy, {shotCooldown, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     },
     props: {
-        life: 100,
+        life: 200,
         score: 1000,
         stationary: true,
         bulletSpeed: 6,
@@ -397,7 +395,6 @@ enemyData[ENEMY_DOOR] = {
         return state;
     },
     props: {
-        maxLife: 2000,
         life: 2000,
         score: 500,
         stationary: true,

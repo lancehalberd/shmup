@@ -155,13 +155,23 @@ const advanceHero = (state, playerIndex) => {
         return advanceFinisher(state, playerIndex);
     }
     // Restore energy for all heroes each frame.
-    for (const heroType of player.heroes) {
-        if (player[heroType].energy < MAX_ENERGY &&
-            (heroType !== player.heroes[0] || (!player.invulnerableFor && !player.usingSpecial))
-        ) {
-            state = updatePlayer(state, playerIndex,
-                {[heroType]: {...player[heroType], energy: player[heroType].energy + 0.02}}
-            );
+    if (!isHeroSwapping(player)) {
+        for (const heroType of player.heroes) {
+            if (state.debug) {
+                state = updatePlayer(state, playerIndex,
+                    {[heroType]: {...player[heroType], energy: MAX_ENERGY}}
+                );
+                continue;
+            }
+            if (player[heroType].energy < MAX_ENERGY &&
+                // Do not restore energy for the current hero if they are currently using a special
+                // move or are invulnerable.
+                (heroType !== player.heroes[0] || (!(player.invulnerableFor > 0) && !player.usingSpecial))
+            ) {
+                state = updatePlayer(state, playerIndex,
+                    {[heroType]: {...player[heroType], energy: player[heroType].energy + 0.02}}
+                );
+            }
         }
     }
     const heroType = player.heroes[0];
@@ -176,7 +186,7 @@ const advanceHero = (state, playerIndex) => {
     }
     // If the player runs out of energy from using a special move, they automatically switch out
     // after using it.
-    if (player[player.heroes[0]].energy < 0 && !player.invulnerableFor) {
+    if (player[player.heroes[0]].energy < 0 && !(player.invulnerableFor > 0)) {
         return switchHeroes(state, playerIndex);
     }
     if (player.actions.special && !isHeroSwapping(player)) {
@@ -192,7 +202,10 @@ const advanceHero = (state, playerIndex) => {
         }
     }
     if (player.actions.special && heroData.applySpecial && !isHeroSwapping(player)
-        && !player.invulnerableFor
+        // Don't allow activating special while the moth is still running its invulnerability.
+        // We add 1 to the invulnerableFor value to distinguish it from other types of
+        // invulnerability.
+        && !(player.invulnerableFor > 0 && player.invulnerableFor % FRAME_LENGTH === 1)
         // You can use a special when you don't have enough energy *if* another hero is available.
         && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))
     ) {
@@ -413,6 +426,7 @@ const switchHeroes = (updatedState, playerIndex) => {
             invulnerableFor: 25 * FRAME_LENGTH,
             spawning: true,
             chasingNeedle: true,
+            [player.heroes[0]]: {...player[player.heroes[0]], targets: [] },
         }, {
             ...heroesData[player.heroes[0]].animation.frames[0],
             left, top, targetLeft, targetTop, spawnSpeed,
@@ -574,6 +588,7 @@ module.exports = {
     updatePlayer,
     updatePlayerOnContinue,
     isPlayerInvulnerable,
+    isHeroSwapping,
     ladybugAnimation,
     useMeleeAttack,
     switchHeroes,
@@ -584,7 +599,6 @@ const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('wo
 const { createAttack, addPlayerAttackToState } = require('attacks');
 const {
     createEffect,
-    getEffectIndex,
     addEffectToState,
     getEffectHitBox,
     updateEffect,

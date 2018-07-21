@@ -13,6 +13,7 @@ export const KEY_R = 'R'.charCodeAt(0);
 export const KEY_X = 'X'.charCodeAt(0);
 export const KEY_C = 'C'.charCodeAt(0);
 export const KEY_V = 'V'.charCodeAt(0);
+export const KEY_T = 'T'.charCodeAt(0);
 
 const KEY_MAPPINGS = {
     ['A'.charCodeAt(0)]: KEY_LEFT,

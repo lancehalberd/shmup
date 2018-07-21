@@ -14,6 +14,7 @@ const render = require('render');
 const { isKeyDown,
     KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE,
     KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V, KEY_SHIFT,
+    KEY_T,
 } = require('keyboard');
 
 // Currently we only support a single player.
@@ -35,7 +36,7 @@ const update = () => {
         melee: isKeyDown(KEY_C),
         special: isKeyDown(KEY_V),
         switch: isKeyDown(KEY_X),
-        toggleRight: isKeyDown(KEY_SHIFT),
+        toggleDebug: isKeyDown(KEY_T, true),
         start: isKeyDown(KEY_ENTER, true),
     });
 

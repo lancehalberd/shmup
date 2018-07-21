@@ -92,7 +92,7 @@ const render = (state) => {
             debugger;
         }
         const width = Math.ceil(lifebar.width * P);
-        const p = enemy ? enemy.life / (enemy.maxLife || lifebar.maxLife) : 0;
+        const p = enemy ? enemy.life / enemy.maxLife : 0;
         context.fillStyle = 'black';
         context.fillRect(lifebar.left, lifebar.top, width, lifebar.height);
         context.fillStyle = ['green', 'yellow', 'orange', 'red', 'black'][Math.floor((1 - p) / 0.25)];

@@ -17,7 +17,7 @@ const {
     createAnimation,
     getFrame,
 } = require('animations');
-const { heroesData, updatePlayer } = require('heroes');
+const { heroesData, updatePlayer, isHeroSwapping } = require('heroes');
 
 const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
 const beeRectangle = r(88, 56, {hitBox: beeHitBox});
@@ -101,12 +101,13 @@ heroesData[HERO_BEE] = {
         const middle = {x: sprite.left + sprite.width / 2, y: sprite.top + sprite.height / 2};
         for (let i = 0; i < numTargets; i++) {
             if (!targets[i]) {
+                if (isHeroSwapping(state.players[playerIndex])) break;
                 targets[i] = {
                     left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET - 2,
                     top: player.sprite.top + player.sprite.vy + player.sprite.height / 2 - 2,
                     vx: player.sprite.vx,
                     vy: player.sprite.vy,
-                    width: 4, height: 4,
+                    width: 2, height: 2,
                 };
                 break;
             }

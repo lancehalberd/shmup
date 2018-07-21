@@ -95,6 +95,9 @@ const effects = {
     },
     [EFFECT_EXPLOSION]: {
         animation: explosionAnimation,
+        props: {
+            relativeToGround: true,
+        },
     },
     [EFFECT_DUST]: {
         animation: dustAnimation,
@@ -229,7 +232,12 @@ const advanceEffect = (state, effectIndex) => {
         if (effect.sfx && delay === 0) {
             state = {...state, sfx: {...state.sfx, [effect.sfx]: true}};
         }
-        return updateEffect(state, effectIndex, {delay});
+        if (relativeToGround) {
+            const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
+            left -= state.world[neargroundKey].xFactor * state.world.vx;
+            top += state.world[neargroundKey].yFactor * state.world.vy;
+        }
+        return updateEffect(state, effectIndex, {delay, top, left});
     }
     const animation = effectInfo.animation;
     left += vx;
