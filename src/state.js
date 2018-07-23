@@ -145,7 +145,7 @@ const advanceState = (state) => {
         for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
             if (!attack.done && !attack.hitIds[enemy.id] && Rectangle.collision(enemyHitBox, attack)) {
-                if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy)) {
+                if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy, attack)) {
                     currentPlayerAttacks[j] = {...attack, done: !attack.piercing, hitIds: {...attack.hitIds, [enemy.id]: true}};
                 } else {
                     currentPlayerAttacks[j] = {...attack,

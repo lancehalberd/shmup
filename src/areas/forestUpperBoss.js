@@ -10,13 +10,13 @@ const { getNewSpriteState } = require('sprites');
 const { allWorlds, getHazardHeight } = require('world');
 const { enterStarWorldEnd } = require('areas/stars');
 
-const WORLD_UPPER_FOREST_BOSS = 'upperForestBoss';
+const WORLD_FOREST_UPPER_BOSS = 'forestUpperBoss';
 const layerNamesToClear = ['largeTrunks', 'willows'];
 
 const transitionToForestUpperBoss = (state) => {
     const updatedWorld = {
         ...state.world,
-        type: WORLD_UPPER_FOREST_BOSS,
+        type: WORLD_FOREST_UPPER_BOSS,
         time: 0,
         targetFrames: 50 * 5,
         targetY: -100,
@@ -29,7 +29,7 @@ const transitionToForestUpperBoss = (state) => {
 }
 
 const nestBaseAnimation = createAnimation('gfx/enemies/hornetnest/hornetbase.png', r(300, 600));
-allWorlds[WORLD_UPPER_FOREST_BOSS] = {
+allWorlds[WORLD_FOREST_UPPER_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
         if (world.hazardHeight > 30) {
@@ -165,7 +165,7 @@ const {
     ENEMY_HORNET_QUEEN,
 } = require('enemies/hornets');
 
-const NEST_LIFE = 200;
+const NEST_LIFE = 500;
 const ENEMY_HORNET_NEST_1 = 'horentNest1';
 const ENEMY_HORNET_NEST_2 = 'horentNest2';
 const ENEMY_HORNET_NEST_3 = 'horentNest3';

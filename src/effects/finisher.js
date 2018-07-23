@@ -41,7 +41,12 @@ function advanceFinisherCharge(state, playerIndex) {
         return switchHeroes(state, playerIndex);
     } else {
         state = {...state, flashHudUntil: state.world.time + 500};
-        state = updatePlayer(state, playerIndex, {powerups: [], ladybugs: [], shootingFinisher: true});
+        state = updatePlayer(state, playerIndex, {
+            powerupPoints: 0,
+            powerupIndex: 0,
+            comboScore: 0,
+            powerups: [], ladybugs: [], shootingFinisher: true
+        });
         state = updateEffect(state, ballIndex, {done: true});
         const y = heroHitBox.top + heroHitBox.height / 2;
         const x = heroHitBox.left + heroHitBox.width / 2 + 35;

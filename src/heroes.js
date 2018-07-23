@@ -511,11 +511,14 @@ const damageHero = (updatedState, playerIndex) => {
     return {...updatedState, deathCooldown, sfx};
 };
 
-const getHeroHitBox = (player) => {
+function getHeroHitBox(player) {
     const {animationTime, left, top} = player.sprite;
     const animation = heroesData[player.heroes[0]].animation;
     return new Rectangle(getHitBox(animation, animationTime)).translate(left, top);
-};
+}
+function getHeroCenter(player) {
+    return getHeroHitBox(player).getCenter();
+}
 
 const renderHero = (context, player) => {
     let {sprite, invulnerableFor, done, ladybugs} = player;
@@ -582,6 +585,7 @@ module.exports = {
     getNewPlayerState,
     advanceHero,
     getHeroHitBox,
+    getHeroCenter,
     damageHero,
     renderHero,
     heroesData,

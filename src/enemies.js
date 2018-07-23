@@ -9,6 +9,7 @@ const {
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY, ATTACK_EXPLOSION,
+    ATTACK_SLASH, ATTACK_STAB,
     EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
     LOOT_COIN,
 } = require('gameConstants');
@@ -16,6 +17,7 @@ const {
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
+    r, createAnimation,
     getFrame,
     getAnimationLength,
     getHitBox,
@@ -339,6 +341,28 @@ const enemyData = {
         },
     }
 };
+
+const ENEMY_SHIELD_MONK = 'shieldMonk';
+enemyData[ENEMY_SHIELD_MONK] = {
+    ...enemyData[ENEMY_MONK],
+    animation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {cols: 4, duration: 30}),
+    deathAnimation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {x: 5, cols: 1, duration: 30}),
+    attackAnimation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {x: 4, cols: 1, duration: 30}),
+    deathSound: 'sfx/robedeath1.mp3',
+    props: {
+        life: 5,
+        score: 50,
+        speed: 1.5,
+        grounded: true,
+        bulletSpeed: 5,
+        attackCooldownFrames: 15,
+        shotCooldownFrames: 80,
+        weakness: {[ATTACK_SLASH]: 5, [ATTACK_STAB]: 5},
+    },
+    isInvulnerable(state, enemy, attack) {
+        return !(enemy.attackCooldownFramesLeft > 0) && !(attack && attack.melee);
+    },
+};
 window.enemyData = enemyData;
 
 const createEnemy = (type, props) => {
@@ -356,6 +380,8 @@ const createEnemy = (type, props) => {
 
 function updateEnemy(state, enemy, props) {
     const idMap = {...state.idMap};
+    // Don't update the enemy if it isn't currently on the state.
+    if (!idMap[enemy.id]) return state;
     idMap[enemy.id] = {...enemy, ...props};
     return {...state, idMap};
 }
@@ -386,6 +412,9 @@ const getEnemyHitBox = (enemy) => {
     let animation = getEnemyAnimation(enemy);
     return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
 };
+function getEnemyCenter(enemy) {
+    return getEnemyHitBox(enemy).getCenter();
+}
 
 function enemyIsActive(state, enemy) {
     return enemy && state.idMap[enemy.id] && !enemy.dead &&
@@ -404,7 +433,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         damage = enemy.weakness[attack.type];
     }
     const enemyIsInvulnerable =
-        enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemy);
+        enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemy, attack);
     if (!enemyIsInvulnerable) {
         updatedState.idMap[enemyId] = {
             ...enemy,
@@ -607,13 +636,15 @@ const advanceEnemy = (state, enemy) => {
     enemy = state.idMap[enemy.id];
     const hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
     if (!enemy.dead) {
-        top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
-        if (top + hitBox.top + hitBox.height > getHazardHeight(state)) {
+        if (!enemy.stationary) {
+            top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
+        }
+        if (!enemy.boss && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
-        if (top + hitBox.top < getHazardCeilingHeight(state)) {
+        if (!enemy.boss && top + hitBox.top < getHazardCeilingHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
@@ -696,10 +727,12 @@ module.exports = {
     advanceEnemy,
     renderEnemy,
     getEnemyHitBox,
+    getEnemyCenter,
     updateEnemy,
     getDefaultEnemyAnimation,
     spawnMonkOnGround,
     enemyIsActive,
+    ENEMY_SHIELD_MONK,
 };
 
 // Move possible circular imports to after exports.

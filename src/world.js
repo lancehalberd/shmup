@@ -71,6 +71,7 @@ const addElementToLayer = (state, layerName) => {
             left: offset,
             ...spriteData,
             animation,
+            animationTime: offset,
         });
         newSprite.height *= scale;
         newSprite.width *= scale;

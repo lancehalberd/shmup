@@ -23,11 +23,11 @@ const spawnEnemy = (state, enemyType, props) => {
 };
 
 const spawnThorns = (state) => {
-    //if (random.chance(0.5)) {
+    if (random.chance(0.6)) {
         return spawnEnemy(state, ENEMY_CEILING_THORNS, {left: WIDTH + random.range(0, 100), top: random.range(0, 100)});
-    //} else {
-    //    return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: 300});
-    //}
+    } else {
+        return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: 365});
+    }
 };
 
 const setEvent = (state, event) => {
@@ -61,7 +61,7 @@ checkpoints[CHECK_POINT_FOREST_UPPER_END] = function (state) {
 checkpoints[CHECK_POINT_FOREST_UPPER_BOSS] = function (state) {
     const world = getForestUpperWorld();
     world.time = 120000;
-    return {...state, world};
+    return transitionToForestUpperBoss({...state, world});
 };
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
 

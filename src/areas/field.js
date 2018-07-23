@@ -81,7 +81,7 @@ checkpoints[CHECK_POINT_FIELD_END] = function (state) {
 checkpoints[CHECK_POINT_FIELD_BOSS] = function (state) {
     const world = getFieldWorld();
     world.time = 120000;
-    return {...state, world};
+    return transitionToFieldBoss({...state, world});
 };
 // start of level 'nothing' getFieldWorldStart
 // sky 40 seconds 'nothing' getFieldWorld

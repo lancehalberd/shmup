@@ -23,9 +23,11 @@ const spawnEnemy = (state, enemyType, props) => {
     return addEnemyToState(state, newEnemy);
 };
 
+//disabled thorns here for now.
 const spawnThorns = (state) => {
+    return state;
     //if (random.chance(0.5)) {
-        return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: GAME_HEIGHT});
+    //    return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: GAME_HEIGHT - 120});
     //} else {
     //    return spawnEnemy(state, ENEMY_FLOOR_THORNS, {left: WIDTH + random.range(0, 100), top: 300});
     //}
@@ -63,7 +65,7 @@ checkpoints[CHECK_POINT_FOREST_LOWER_END] = function (state) {
 checkpoints[CHECK_POINT_FOREST_LOWER_BOSS] = function (state) {
     const world = getForestLowerWorld();
     world.time = 120000;
-    return {...state, world};
+    return transitionToForestLowerBoss({...state, world});
 };
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
 
@@ -142,7 +144,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['jumpingSpider']));
+                return setEvent(state, 'jumpingSpider');
             }
         },
         explodingBeetle: (state, eventTime) => {
@@ -153,7 +155,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'jumpingSpider');
+                return setEvent(state, 'shield');
             }
         },
         hornet: (state, eventTime) => {
@@ -176,13 +178,24 @@ allWorlds[WORLD_FOREST_LOWER] = {
             let spacing = 1000;
             eventTime -= spacing;
             if (eventTime >= 0) {
+                return setEvent(state, random.element(['shield', 'flyingAnts', 'hornet']));
+            }
+        },
+        shield: (state, eventTime) => {
+            if (eventTime === 0) {
+                state = spawnEnemy(state, ENEMY_SHIELD_MONK, {left: WIDTH + 10 });
+                return state;
+            }
+            let spacing = 1000;
+            eventTime -= spacing;
+            if (eventTime >= 0) {
                 return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'hornet']));
             }
         },
         bossPrep: (state) => {
             if (state.enemies.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_END);
-                // return transitionToForestLowerBoss(state);
+                return transitionToForestLowerBoss(state);
             }
         },
     },
@@ -231,6 +244,18 @@ const thornloop = createAnimation('gfx/scene/forest/thornloop.png', r(200, 60));
 const forestbackTop = createAnimation('gfx/scene/forest/back.png', r(800, 400), {y: 1});
 const thickTrunk = createAnimation('gfx/scene/forest/forestmg3.png', r(100, 400));
 const skinnyTrunk = createAnimation('gfx/scene/forest/forestmg5.png', r(100, 400));
+const bellFlower = createAnimation('gfx/scene/forest/bellsheet.png', r(200, 150),
+    {cols: 5, duration: 10, frameMap:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4]}
+);
+const hole = createAnimation('gfx/scene/forest/forestfg3.png', r(100, 100));
+const brush = createAnimation('gfx/scene/forest/forestmg1.png', r(300, 300));
+const bush = createAnimation('gfx/scene/forest/forestmg4.png', r(200, 200));
+const fern = createAnimation('gfx/scene/forest/forestmg6.png', r(200, 200));
+const ivy = createAnimation('gfx/scene/forest/forestmg2.png', r(200, 100));
+
+const branches = createAnimation('gfx/scene/forest/forestfg1.png', r(200, 60));
+const mushrooms = createAnimation('gfx/scene/forest/forestfg2.png', r(100, 100));
+
 const getForestLowerLayers = () => ({
     background: getNewLayer({
         xFactor: 0, yFactor: 0, yOffset: 0, maxY: 0,
@@ -251,10 +276,38 @@ const getForestLowerLayers = () => ({
             ground: {animation: createAnimation('gfx/scene/field/groundloop.png', r(200, 60)), scale: 1, next: ['ground'], offset: 0},
         },
     }),
+    holes: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -45,
+        spriteData: {
+            hole: {animation: hole, scale: 1, next: ['flowers'], offset: [350, 500]},
+        },
+    }),
+    bushes: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -40,
+        spriteData: {
+           /* bush: {animation: bush, scale: 1, next: ['brush', 'fern', 'bush'], offset: [70, 140, 210]},
+            brush: {animation: brush, scale: 1, next: ['bush'], offset: [70, 140, 210]},
+            fern: {animation: brush, scale: 1, next: ['bush'], offset: [70, 140, 210]},*/
+            plant: {animation: [bush, brush, fern, ivy], scale: 1, next: ['bush'], offset: [-20, 5, 15], yOffset: [-6, 0, 3]}
+        },
+    }),
+    flowers: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -35,
+        spriteData: {
+            bellFlower: {animation: bellFlower, scale: 1.5, next: ['bellFlower'], offset: [100, 200, 300]},
+        },
+    }),
     thorns: getNewLayer({
-        xFactor: 1, yFactor: 0.5, yOffset: -GAME_HEIGHT + THORN_HEIGHT,
+        xFactor: 1, yFactor: 1, yOffset: -GAME_HEIGHT + THORN_HEIGHT,
         spriteData: {
             thorns: {animation: thornloop, scale: 2, next: ['thorns'], offset: 0},
+        },
+    }),
+    foreground: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: 0,
+        spriteData: {
+            mushrooms: {animation: mushrooms, scale: 1.6, next: ['mushrooms', 'branches'], offset: [70, 100, 140], yOffset: [-5, -10]},
+            branches: {animation: branches, scale: 1.6, next: ['mushrooms', 'branches'], offset: [70, 150, 200], yOffset: [20, 30]},
         },
     }),
     largeTrunks: getNewLayer({
@@ -268,9 +321,9 @@ const getForestLowerLayers = () => ({
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background', 'trunks', 'ground', 'thorns'],
+    mgLayerNames: ['background', 'trunks', 'ground', 'holes', 'bushes', 'flowers', 'thorns'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
-    fgLayerNames: ['largeTrunks'],
+    fgLayerNames: ['foreground', 'largeTrunks'],
 });
 
 
@@ -279,7 +332,10 @@ module.exports = {
     getForestLowerWorld,
 };
 
-const { createEnemy, addEnemyToState, enemyData, updateEnemy } = require('enemies');
+const {
+    createEnemy, addEnemyToState, enemyData, updateEnemy,
+    ENEMY_SHIELD_MONK,
+} = require('enemies');
 const { updatePlayer } = require('heroes');
 
 const ENEMY_CEILING_THORNS = 'ceilingThorns';
@@ -305,4 +361,4 @@ enemyData[ENEMY_FLOOR_THORNS] = {
     animation: createAnimation('gfx/scene/forest/thorn2.png', floorThornsRectangle),
 };
 
-// const { transitionToForestLowerBoss } = require('areas/forestLowerBoss');
+const { transitionToForestLowerBoss } = require('areas/forestLowerBoss');
