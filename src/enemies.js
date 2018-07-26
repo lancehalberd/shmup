@@ -521,13 +521,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     return updatedState;
 }
 
-const renderEnemy = (context, enemy) => {
-    if (enemy.delay > 0) return;
-    let animation = getEnemyAnimation(enemy);
-    const frame = getFrame(animation, enemy.animationTime);
-    if (enemyData[enemy.type].drawUnder) {
-        enemyData[enemy.type].drawUnder(context, enemy);
-    }
+function renderEnemyFrame(context, enemy, frame) {
     context.save();
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
@@ -556,17 +550,29 @@ const renderEnemy = (context, enemy) => {
         drawImage(context, frame.image, frame, target);
         context.restore();
     }
+    context.restore();
+}
+
+const renderEnemy = (context, enemy) => {
+    if (enemy.delay > 0) return;
+    if (enemyData[enemy.type].drawUnder) {
+        enemyData[enemy.type].drawUnder(context, enemy);
+    }
+    let animation = getEnemyAnimation(enemy);
+    const frame = getFrame(animation, enemy.animationTime);
+    renderEnemyFrame(context, enemy, frame);
    // context.translate(x, y - hitBox.height * yScale / 2);
    // if (rotation) context.rotate(rotation * Math.PI/180);
    // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
 
     if (isKeyDown(KEY_SHIFT)) {
         let hitBox = getEnemyHitBox(enemy);
+        context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'red';
         context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+        context.restore();
     }
-    context.restore();
     if (enemyData[enemy.type].drawOver) {
         enemyData[enemy.type].drawOver(context, enemy);
     }
@@ -684,6 +690,10 @@ const advanceEnemy = (state, enemy) => {
         }
     }
     if (!enemy) return state;
+    if (enemyData[enemy.type].updateState) {
+        state = enemyData[enemy.type].updateState(state, enemy);
+        enemy = state.idMap[enemy.id];
+    }
     if (!enemy.dead && enemyData[enemy.type].accelerate) {
         state = updateEnemy(state, enemy, enemyData[enemy.type].accelerate(state, enemy));
         enemy = state.idMap[enemy.id];
@@ -726,6 +736,7 @@ module.exports = {
     removeEnemy,
     advanceEnemy,
     renderEnemy,
+    renderEnemyFrame,
     getEnemyHitBox,
     getEnemyCenter,
     updateEnemy,

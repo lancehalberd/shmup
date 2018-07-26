@@ -4,6 +4,7 @@ const {
     EFFECT_EXPLOSION,
 } = require('gameConstants');
 const random = require('random');
+const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 const { createAnimation, r, getFrame, requireImage } = require('animations');
 const { getNewSpriteState } = require('sprites');
@@ -14,14 +15,11 @@ const WORLD_FOREST_LOWER_BOSS = 'forestLowerBoss';
 /*
 Add frog boss -
 Main Phase can be made harder with adding flying ants.
-Make tongue hurt player
-Use tongue graphics
 
-After the frog loses 40% health or 30 seconds pass:
-Move the frog to the water and set mode to water
+* Spawn water bug enemies that scoot in the water ( no unmounted form)
+* Spawn flying ants from the ant hole
 
-Spawn water bug enemies that scoot in the water ( no unmounted form)
-
+Frog: It ribbits here and there and flashes red more often the lower it gets to dying.
 */
 
 function transitionToForestLowerBoss(state) {
@@ -127,10 +125,11 @@ module.exports = {
 
 const {
     enemyData, createEnemy, addEnemyToState, damageEnemy,
-    getEnemyHitBox, getEnemyCenter,
+    getEnemyHitBox, getEnemyCenter, renderEnemyFrame,
 } = require('enemies');
 const {
-    getHeroCenter,
+    getHeroHitBox,
+    damageHero,
 } = require('heroes');
 
 function startPoolPhase(state) {
@@ -142,6 +141,12 @@ const ENEMY_FROG = 'frog';
 const frogRect = r(250, 220, {hitBox: {left: 30, top: 45, width:200, height: 105}});
 const swimmingFrogRect = r(251, 113);
 const offscreenHitBox = {left: 0, top: 1000, width: 1, height: 1};
+const swimmingHitBox = {left: 12, top: 17, width: 150, height: 80};
+// This image was originally designed to be placed on top of the swimming frog.
+// It needs to be moved down about 18 pixels when drawn on the land frog.
+const tongueStartAnimation = createAnimation('gfx/enemies/frog/tongue1.png', swimmingFrogRect);
+const tongueMiddleAnimation = createAnimation('gfx/enemies/frog/tongue2.png', r(60, 20));
+const tongueEndAnimation = createAnimation('gfx/enemies/frog/tongue3.png', r(60, 20));
 enemyData[ENEMY_FROG] = {
     animation: createAnimation('gfx/enemies/frog/frog15.png', frogRect),
     attackAnimation: createAnimation('gfx/enemies/frog/frog16.png', frogRect),
@@ -163,25 +168,60 @@ enemyData[ENEMY_FROG] = {
         frameDuration: 20,
         loop: false,
     },
+    swimmingAnimation: {
+        frames: [
+            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog3.png')},
+            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog4.png')},
+            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog5.png')},
+        ],
+        frameDuration: 10,
+    },
+    // This is drawn on top of the swimmingAnimation/swimmingAttackAnimation
+    ripplesAnimation: {
+        frames: [
+            {...swimmingFrogRect, image: requireImage('gfx/enemies/frog/frog1.png')},
+            {...swimmingFrogRect, image: requireImage('gfx/enemies/frog/frog2.png')},
+        ],
+        frameDuration: 10,
+    },
+    swimmingAttackAnimation: createAnimation('gfx/enemies/frog/frog6.png', {...swimmingFrogRect, hitBox: swimmingHitBox}),
+    submergingAnimation: {
+        frames: [
+            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog7.png')},
+            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog8.png')},
+            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog9.png')},
+        ],
+        frameDuration: 10,
+        loop: false,
+    },
+    emergingAnimation: createAnimation('gfx/enemies/frog/frog14.png', {...swimmingFrogRect, hitBox: offscreenHitBox}),
     getAnimation(enemy) {
-        if (enemy.mode === 'submerged') return this.submergedAnimation;
         if (enemy.mode === 'attacking' || enemy.mode === 'retracting') {
             return this.attackAnimation;
         }
         if (enemy.mode === 'crouching') return this.crouchingAnimation;
+
+        if (enemy.mode === 'swimming') return this.swimmingAnimation;
+        if (enemy.mode === 'swimmingAttacking' || enemy.mode === 'swimmingRetracting') {
+            return this.swimmingAttackAnimation;
+        }
+        if (enemy.mode === 'submerging') return this.submergingAnimation;
+        if (enemy.mode === 'submerged') return this.submergedAnimation;
+        if (enemy.mode === 'emerging') return this.emergingAnimation;
         return enemy.vy < 0 ? this.jumpingAnimation: this.animation;
     },
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
     accelerate: (state, enemy) => {
-        let {mode, vx, vy, modeTime, inPond} = enemy;
+        let {mode, vx, vy, modeTime, inPond, animationTime} = enemy;
         let tongues = [...enemy.tongues];
         const poolPhase = startPoolPhase(state);
         const pool = state.world.pool && state.world.pool.sprites[0];
         const playerSprite = state.players[0].sprite;
         modeTime += FRAME_LENGTH;
         const hitBox = getEnemyHitBox(enemy);
-        const [targetX, targetY] = getHeroCenter(state.players[0]);
+        const heroHitBox = getHeroHitBox(state.players[0]);
+        const [targetX, targetY] = heroHitBox.getCenter();
         // This line was used to test the tongue works for erratic targets.
         // Making sure it doesn't bend at awkward angles.
         //const [targetX, targetY] = [random.range(0, 800), random.range(0, 600)];
@@ -190,6 +230,7 @@ enemyData[ENEMY_FROG] = {
         function extendTongueTowardsPlayer() {
             const secondLastTongue = tongues[tongues.length - 2];
             const lastTongue = tongues[tongues.length - 1];
+            const deltaAngle = Math.max(0, Math.PI / 10 - Math.PI * (tongues.length - 3) / (10 * 7));
             const angle = (
                 Math.atan2(lastTongue[1] - secondLastTongue[1], lastTongue[0] - secondLastTongue[0]) + 2 * Math.PI
             ) % (2 * Math.PI);
@@ -199,9 +240,9 @@ enemyData[ENEMY_FROG] = {
             let chosenAngle = angle;
             if (desiredAngle > angle) {
                 if (desiredAngle - angle < Math.PI) {
-                    chosenAngle = Math.min(desiredAngle, angle + Math.PI / 12);
+                    chosenAngle = Math.min(desiredAngle, angle + deltaAngle);
                 } else {
-                    chosenAngle = angle - Math.PI / 12;
+                    chosenAngle = angle - deltaAngle;
                     if (chosenAngle < 0) {
                         chosenAngle += Math.PI * 2;
                         chosenAngle = Math.max(chosenAngle, desiredAngle);
@@ -209,9 +250,9 @@ enemyData[ENEMY_FROG] = {
                 }
             } else {
                 if (angle - desiredAngle < Math.PI) {
-                    chosenAngle = Math.max(desiredAngle, angle - Math.PI / 12);
+                    chosenAngle = Math.max(desiredAngle, angle - deltaAngle);
                 } else {
-                    chosenAngle = angle + Math.PI / 12;
+                    chosenAngle = angle + deltaAngle;
                     if (chosenAngle > Math.PI * 2) {
                         chosenAngle -= Math.PI * 2;
                         chosenAngle = Math.min(chosenAngle, desiredAngle);
@@ -220,48 +261,62 @@ enemyData[ENEMY_FROG] = {
             }
             //const mag = Math.sqrt(dx * dx + dy * dy);
             tongues.push([
-                lastTongue[0] + 50 * Math.cos(chosenAngle),
-                lastTongue[1] + 50 * Math.sin(chosenAngle),
+                lastTongue[0] + 55 * Math.cos(chosenAngle),
+                lastTongue[1] + 55 * Math.sin(chosenAngle),
             ]);
         }
 
         const dx = (targetX - getEnemyCenter(enemy)[0]) || 1;
         switch (mode) {
             case 'attacking':
-                if (modeTime % 60) break;
-                if (tongues.length < 10) {
+            case 'swimmingAttacking':
+                if (modeTime < 200 || modeTime % 60) break;
+                if (!tongues.length) {
+                    if (mode === 'swimmingAttacking')
+                        tongues = [[43, 66], [10, 66]];
+                    else
+                        tongues = [[43, 84], [10, 84]];
+                    // Mirror the starting tongue coords if the frogs sprite is flipped (facing right).
+                    if (vx > 0) tongues = tongues.map(t => [enemy.width - t[0], t[1]]);
+                }
+                if (tongues.length < 14) {
                     extendTongueTowardsPlayer();
+                } else if (mode === 'swimmingAttacking') {
+                    mode = 'swimmingRetracting';
+                    animationTime = modeTime = 0;
                 } else {
                     mode = 'retracting';
-                    modeTime = 0;
+                    animationTime = modeTime = 0;
                 }
                 break;
             case 'retracting':
-                if (modeTime % 40) break;
+            case 'swimmingRetracting':
+                if (modeTime < 500 || modeTime % 40) break;
                 tongues.pop();
                 if (tongues.length < 3) {
                     tongues = [];
-                    mode = 'crouching';
-                    modeTime = 0;
+                    if (mode === 'swimmingRetracting') {
+                        mode = 'submerging';
+                        animationTime = modeTime = 0;
+                    } else {
+                        mode = 'crouching';
+                        animationTime = modeTime = 0;
+                    }
                 }
                 break;
             case 'normal': {
                 if (poolPhase) {
                     mode = 'crouching';
-                    modeTime = 0;
+                    animationTime = modeTime = 0;
                     break;
                 }
                 if (modeTime < 400) break;
                 if (hitBox.left >= WIDTH / 2) {
                     mode = 'attacking';
-                    modeTime = 0;
-                    tongues = [[43, 86], [17, 78]];
-                    // Mirror the starting tongue coords if the frogs sprite is flipped (facing right).
-                    if (vx > 0) tongues = tongues.map(t => [enemy.width - t[0], t[1]]);
-                    extendTongueTowardsPlayer();
+                    animationTime = modeTime = 0;
                 } else {
                     mode = 'crouching';
-                    modeTime = 0;
+                    animationTime = modeTime = 0;
                 }
                 break;
             }
@@ -281,16 +336,15 @@ enemyData[ENEMY_FROG] = {
                     // the pool.
                     if (poolPhase) vx = 10;
 
-                    console.log({targetY, GAME_HEIGHT, vx, poolPhase});
-                    if (targetY > 2*GAME_HEIGHT/3 && Math.abs(vx) < 13) {
+                    if (targetY > 2*GAME_HEIGHT/3 && Math.abs(vx) < 13 && !poolPhase) {
                         vy = -10;
-                    } else if (targetY > GAME_HEIGHT/3 && Math.abs(vx) < 18 && !poolPhase) {
+                    } else if (targetY > GAME_HEIGHT/3 && Math.abs(vx) < 18) {
                         vy = -18;
                     } else {
                         vy = -25;
                     }
                     mode = 'jumping';
-                    modeTime = 0;
+                    animationTime = modeTime = 0;
                 }
                 break;
             }
@@ -303,36 +357,112 @@ enemyData[ENEMY_FROG] = {
                             // We use this to allow the frog to be positioned
                             // below the ground level.
                             stationary: true,
-                            left: pool.left + 280 + random.range(0, 20),
+                            left: pool.left + 480 + random.range(0, 20),
                             top: 440,
                         };
                         mode = 'submerged';
-                        modeTime = 0;
+                        animationTime = modeTime = 0;
+                        vx = -0.01;
                     } else {
                         mode = 'normal';
-                        modeTime = 0;
+                        animationTime = modeTime = 0;
                     }
                 }
                 break;
             }
+            case 'swimming': {
+                if (modeTime >= 1000) {
+                    mode = 'swimmingAttacking';
+                    animationTime = modeTime = 0;
+                }
+                break;
+            }
+            case 'submerging':
+                if (modeTime >= 400) {
+                    mode = 'submerged';
+                    animationTime = modeTime = 0;
+                }
+                break;
             case 'submerged': {
-                vx = 0;
+                if (modeTime >= 1000) {
+                    mode = 'emerging';
+                    animationTime =  modeTime = 0;
+                }
+                break;
+            }
+            case 'emerging': {
+                if (modeTime >= 200) {
+                    mode = 'swimming';
+                    animationTime = modeTime = 0;
+                }
                 break;
             }
         }
         //console.log({mode, tongues});
-        return {...enemy, vx, vy, mode, modeTime, tongues, inPond};
+        return {...enemy, vx, vy, mode, modeTime, animationTime, tongues, inPond};
+    },
+    // Make the tongue damage the player.
+    updateState(state, enemy) {
+        let lastPoint;
+        const tongues = enemy.tongues;
+        const heroHitBox = getHeroHitBox(state.players[0]);
+        for (let i = 1; i < tongues.length; i++) {
+            let point = {x: enemy.left + tongues[i][0], y: enemy.top + tongues[i][1]};
+            if (lastPoint) {
+                // This hitbox is a crude estimation for the tongues actual position.
+                const L = Math.min(point.x, lastPoint.x), R = Math.max(point.x, lastPoint.x);
+                const T = Math.min(point.y, lastPoint.y), B = Math.max(point.y, lastPoint.y);
+                const sectionBox = new Rectangle(L, T, R - L, B - T);
+                if (sectionBox.overlapsRectangle(heroHitBox)) {
+                    return damageHero(state, 0);
+                }
+            }
+            lastPoint = point;
+        }
+        return state;
     },
     drawOver(context, enemy) {
-        if (!enemy || enemy.dead || !enemy.tongues.length) return;
-        context.beginPath();
-        context.lineWidth = 8;
-        context.strokeStyle = 'red';
+        if (!enemy || enemy.dead) return;
+        if (enemy.mode.includes('swimming')) {
+            const frame = getFrame(this.ripplesAnimation, enemy.animationTime);
+            // Use render enemy frame to transform the animation to match
+            // the position+orientation of the enemy correctly.
+            renderEnemyFrame(context, enemy, frame);
+        }
+        if (!enemy.tongues.length) return;
+        let frame = getFrame(tongueStartAnimation, enemy.animationTime);
+        if (enemy.mode.includes('swimming')) {
+            renderEnemyFrame(context, enemy, frame);
+        } else {
+            enemy.top += 18;
+            renderEnemyFrame(context, enemy, frame);
+            enemy.top -= 18;
+            // drawImage(context, frame.image, frame, new Rectangle(enemy).translate(0, 18));
+        }
+        for (let i = 2; i < enemy.tongues.length; i++) {
+            context.save();
+            const dx = enemy.tongues[i][0] - enemy.tongues[i - 1][0];
+            const dy = enemy.tongues[i][1] - enemy.tongues[i - 1][1];
+            context.translate(
+                enemy.left + (enemy.tongues[i][0] + enemy.tongues[i - 1][0]) / 2,
+                enemy.top + (enemy.tongues[i][1] + enemy.tongues[i - 1][1]) / 2,
+            );
+            context.rotate(Math.atan2(dy, dx) + Math.PI);
+            const animation = (i < enemy.tongues.length - 1) ? tongueMiddleAnimation : tongueEndAnimation;
+            let frame = getFrame(animation, enemy.animationTime);
+            drawImage(context, frame.image, frame, new Rectangle(frame).moveCenterTo(0, 0));
+            context.restore();
+        }
+        // This draws the exact path the tongue is supposed to use. You can uncomment this to
+        // check if there are any issues with the code for rendering the tongue.
+        /*context.beginPath();
+        context.lineWidth = 3;
+        context.strokeStyle = 'blue';
         context.moveTo(enemy.left + enemy.tongues[0][0], enemy.top + enemy.tongues[0][1]);
         for (let i = 1; i < enemy.tongues.length; i++) {
             context.lineTo(enemy.left + enemy.tongues[i][0], enemy.top + enemy.tongues[i][1]);
         }
-        context.stroke();
+        context.stroke();*/
     },
     props: {
         life: 400,

@@ -159,8 +159,7 @@ const advanceState = (state) => {
             }
         }
         for (let j = 0; j < updatedState.players.length; j++) {
-            if (!isPlayerInvulnerable(updatedState, j) && !updatedState.players[j].done &&
-                enemyIsActive(updatedState, enemy) &&
+            if (enemyIsActive(updatedState, enemy) &&
                 Rectangle.collision(enemyHitBox, getHeroHitBox(updatedState.players[j]))
             ) {
                 updatedState = damageHero(updatedState, j);

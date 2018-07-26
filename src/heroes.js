@@ -109,7 +109,8 @@ function updatePlayerOnContinue(state, playerIndex) {
 
 const isPlayerInvulnerable = (state, playerIndex) => {
     const player = state.players[playerIndex];
-    return player.invulnerableFor > 0 || player.usingSpecial || player.usingFinisher || player.sprite.targetLeft;
+    return player.invulnerableFor > 0 || player.usingSpecial ||
+        player.usingFinisher || player.sprite.targetLeft || player.done;
 };
 
 const useMeleeAttack = (state, playerIndex) => {
@@ -440,6 +441,10 @@ const switchHeroes = (updatedState, playerIndex) => {
 };
 
 const damageHero = (updatedState, playerIndex) => {
+    // Don't damage a hero if they are invulnerable.
+    if (isPlayerInvulnerable(updatedState, playerIndex)) {
+        return updatedState;
+    }
     let deathCooldown = updatedState.deathCooldown
     let player = updatedState.players[playerIndex];
     const sprite = player.sprite;
