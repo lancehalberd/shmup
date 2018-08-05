@@ -10,7 +10,6 @@ const {
     LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const random = require('random');
-const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 const {
     requireImage, r,
@@ -200,8 +199,8 @@ heroesData[HERO_BEE] = {
                 const enemy = state.idMap[state.enemies[j].id];
                 if (!enemyIsActive(state, enemy)) continue;
                 if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
-                const hitBox = getEnemyHitBox(enemy);
-                if (Rectangle.collision(targetHitBox, hitBox)) {
+                if (isIntersectingEnemyHitBoxes(enemy, targetHitBox)) {
+                    const hitBox = getEnemyHitBox(enemy);
                     state = addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
                         playerIndex, enemyId: enemy.id,
                         sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
@@ -249,6 +248,6 @@ heroesData[HERO_BEE] = {
 
 const { getAttackTint } = require('attacks');
 const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitBox, enemyIsActive } = require('enemies');
+const { getEnemyHitBox, enemyIsActive, isIntersectingEnemyHitBoxes } = require('enemies');
 const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 

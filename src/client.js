@@ -58,6 +58,7 @@ const update = () => {
     //render(state);
     // This is here to help with debugging from console.
     window.state = state;
+    window.stateQueue = stateQueue;
 };
 setInterval(update, FRAME_LENGTH);
 

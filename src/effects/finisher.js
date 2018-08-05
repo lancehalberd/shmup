@@ -2,7 +2,7 @@ const {
     EFFECT_DEFLECT_BULLET,
 } = require('gameConstants');
 const {
-    r,
+    r, a,
     requireImage,
     createAnimation,
     getFrame,
@@ -54,7 +54,7 @@ function advanceFinisherCharge(state, playerIndex) {
         finisherBeamStart.left = x;
         finisherBeamStart.top = y - finisherBeamStart.height / 2;
         state = addEffectToState(state, finisherBeamStart);
-        const finisherBeam = createEffect(EFFECT_FINISHER_BEAM, {xScale: 80});
+        const finisherBeam = createEffect(EFFECT_FINISHER_BEAM, {xScale: 40});
         finisherBeam.left = x + finisherBeamStart.width;
         finisherBeam.top = y - finisherBeam.height / 2;
         state = addEffectToState(state, finisherBeam);
@@ -68,8 +68,8 @@ function advanceFinisherCharge(state, playerIndex) {
         x: finisherBall.left + finisherBall.xScale * finisherBall.width / 2,
         y: finisherBall.top + finisherBall.yScale * finisherBall.height / 2,
     });*/
-    const targetLeft = heroHitBox.left + heroHitBox.width / 2 + 50 - xScale * finisherBall.width / 2;
-    const targetTop = heroHitBox.top + heroHitBox.height / 2 - yScale * finisherBall.height / 2;
+    const targetLeft = heroHitBox.left + heroHitBox.width / 2 + 50 - finisherBall.width / 2;
+    const targetTop = heroHitBox.top + heroHitBox.height / 2 - finisherBall.height / 2;
     const left = (finisherBall.left + targetLeft) / 2;
     const top = (finisherBall.top + targetTop) / 2;
     state = updateEffect(state, ballIndex, { top, left, xScale, yScale });
@@ -113,6 +113,8 @@ function startFinisher(state, playerIndex) {
             top: heroHitBox.top + heroHitBox.height / 2,
             left: heroHitBox.left + heroHitBox.width / 2 + 50,
     });
+    finisherBall.top -= finisherBall.height / 2;
+    finisherBall.left -= finisherBall.width / 2;
     state = addEffectToState(state, finisherBall);
     state = {...state, sfx: {...state.sfx, chargeFinisher: true}};
     return updatePlayer(state, playerIndex, {usingFinisher: true});
@@ -163,7 +165,7 @@ effects[EFFECT_FINISHER] = {
 
 const EFFECT_FINISHER_BALL = 'effectFinisherBall';
 effects[EFFECT_FINISHER_BALL] = {
-    animation: createAnimation('gfx/attacks/finisherball.png', r(10, 10)),
+    animation: createAnimation('gfx/attacks/finisherball.png', a(r(10, 10), 0.5, 0.5)),
     advanceEffect(state, effectIndex) {
         let rotation = (state.effects[effectIndex].rotation || 0) + Math.PI / 20;
         return updateEffect(state, effectIndex, { rotation });

@@ -141,10 +141,11 @@ const advanceState = (state) => {
     for (let i = 0; i < updatedState.enemies.length; i++) {
         let enemy = updatedState.idMap[updatedState.enemies[i].id];
         if (!enemy) continue;
-        const enemyHitBox = getEnemyHitBox(enemy);
         for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
-            if (!attack.done && !attack.hitIds[enemy.id] && Rectangle.collision(enemyHitBox, attack)) {
+            if (!attack.done && !attack.hitIds[enemy.id]
+                && isIntersectingEnemyHitBoxes(enemy, attack)
+            ) {
                 if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy, attack)) {
                     currentPlayerAttacks[j] = {...attack, done: !attack.piercing, hitIds: {...attack.hitIds, [enemy.id]: true}};
                 } else {
@@ -159,8 +160,8 @@ const advanceState = (state) => {
             }
         }
         for (let j = 0; j < updatedState.players.length; j++) {
-            if (enemyIsActive(updatedState, enemy) &&
-                Rectangle.collision(enemyHitBox, getHeroHitBox(updatedState.players[j]))
+            if (enemyIsActive(updatedState, enemy) && !enemy.noCollisionDamage &&
+                isIntersectingEnemyHitBoxes(enemy, getHeroHitBox(updatedState.players[j]))
             ) {
                 updatedState = damageHero(updatedState, j);
             }
@@ -230,8 +231,7 @@ const advanceState = (state) => {
         for (let j = 0; j < updatedState.enemies.length; j++) {
             const enemy = updatedState.idMap[updatedState.enemies[j].id];
             if (!enemyIsActive(updatedState, enemy) || attack.hitIds[enemy.id]) continue;
-            const enemyHitBox = getEnemyHitBox(enemy);
-            if (Rectangle.collision(enemyHitBox, attack)) {
+            if (isIntersectingEnemyHitBoxes(enemy, attack)) {
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
                     done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
@@ -284,6 +284,9 @@ const {
     advanceAttack,
 } = require('attacks');
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
-const { enemyData, damageEnemy, advanceEnemy, getEnemyHitBox, enemyIsActive } = require('enemies');
+const {
+    enemyData, damageEnemy, advanceEnemy,
+    isIntersectingEnemyHitBoxes, enemyIsActive
+} = require('enemies');
 const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');

@@ -89,8 +89,12 @@ class Rectangle {
     }
 
     scaleFromCenter(scale) {
-        var center = this.getCenter();
-        return this.moveCenterTo(0, 0).scale(scale).moveCenterTo(center[0], center[1]);
+        const center = this.getCenter();
+        return this.scaleFromPoint(center[0], center[1], scale);
+    }
+
+    scaleFromPoint(x, y, scale) {
+        return this.translate(-x, -y).scale(scale).translate(x, y);
     }
 
     stretch(scaleX, scaleY) {
@@ -98,8 +102,12 @@ class Rectangle {
     }
 
     stretchFromCenter(scaleX, scaleY) {
-        var center = this.getCenter();
-        return this.moveCenterTo(0, 0).stretch(scaleX, scaleY).moveCenterTo(center[0], center[1]);
+        const center = this.getCenter();
+        return this.stretchFromPoint(center[0], center[1], scaleX, scaleY);
+    }
+
+    stretchFromPoint(x, y, scaleX, scaleY) {
+        return this.translate(-x, -y).stretch(scaleX, scaleY).translate(x, y);
     }
 
     getCenter() {

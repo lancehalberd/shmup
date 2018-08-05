@@ -280,6 +280,7 @@ module.exports = {
 };
 
 const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
+require('areas/forestLower');
 require('areas/forestUpper');
 const { getEnemyHitBox } = require('enemies');
 const { getHeroHitBox } = require('heroes');

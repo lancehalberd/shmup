@@ -2,18 +2,19 @@ const {
     FRAME_LENGTH,
 } = require('gameConstants');
 const {
-    requireImage, r,
+    requireImage, r, a,
 } = require('animations');
 
 const EFFECT_LIGHTNING = 'lightning';
 const EFFECT_FAST_LIGHTNING = 'fastLightning';
 const EFFECT_ARC_LIGHTNING = 'arcLightning';
 
+const lightningGeometry = a(r(50, 10), 0.5, 0.5);
 const lightningFrames = [
-    {...r(50, 10), image: requireImage('gfx/attacks/chain1.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain2.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain3.png')},
-    {...r(50, 10), image: requireImage('gfx/attacks/chain4.png')},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain1.png')},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain2.png')},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain3.png')},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain4.png')},
 ];
 function advanceLightning(state, effectIndex) {
     const effect = state.effects[effectIndex];
@@ -47,9 +48,9 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.idMap[state.enemies[i].id];
         if (!enemyIsActive(state, enemy)) continue;
-        // The large lightning attack can only hit enemies in front of each bolt.
-        if (type === EFFECT_LIGHTNING && enemy.left + enemy.width / 2 <= left) continue;
         const hitBox = getEnemyHitBox(enemy);
+        // The large lightning attack can only hit enemies in front of each bolt.
+        if (type === EFFECT_LIGHTNING && hitBox.left + hitBox.width / 2 <= left) continue;
         const dx = hitBox.left + hitBox.width / 2 - left,
             dy = hitBox.top + hitBox.height / 2 - top;
         const radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;

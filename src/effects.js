@@ -13,6 +13,8 @@ const {
     EFFECT_DEFLECT_BULLET,
 } = require('gameConstants');
 
+const { isKeyDown, KEY_SHIFT } = require('keyboard');
+
 const {
     requireImage,
     createAnimation,
@@ -190,32 +192,45 @@ const renderEffect = (context, effect) => {
     const frame = getFrame(effects[effect.type].animation, effect.animationTime);
     if ((effect.xScale || 1) === 1 && (effect.yScale || 1) === 1 && (effect.rotation || 0) === 0) {
         renderEffectFrame(context, frame, effect, effect);
+        if (isKeyDown(KEY_SHIFT)) {
+            context.save();
+            context.globalAlpha = 0.6;
+            context.fillStyle = 'orange';
+            let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
+            hitBox = hitBox.translate(effect.left, effect.top);
+            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.restore();
+        }
     } else {
         let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
         const xScale = effect.xScale || 1;
         const yScale = effect.yScale || 1;
-        context.translate(
+        /*context.translate(
             effect.left + xScale * (hitBox.left + hitBox.width / 2),
             effect.top + yScale * (hitBox.top + hitBox.height / 2)
-        );
+        );*/
+        const anchor = frame.anchor || {x: hitBox.left, y: hitBox.top};
+        context.translate(effect.left + anchor.x, effect.top + anchor.y);
         context.scale(xScale, yScale);
         if (effect.rotation) context.rotate(effect.rotation);
-        // This draws the image frame so that the center is exactly at the origin.
-        const target = new Rectangle(frame).moveTo(
-            -(hitBox.left + hitBox.width / 2),
-            -(hitBox.top + hitBox.height / 2),
-        );
+        // This draws the image frame so that the anchor is exactly at the origin.
+        const target = new Rectangle(frame).moveTo(-anchor.x, -anchor.y);
         renderEffectFrame(context, frame, target, effect);
         context.restore();
+
+        if (isKeyDown(KEY_SHIFT)) {
+            context.save();
+            context.globalAlpha = 0.6;
+            context.fillStyle = 'orange';
+            hitBox = hitBox.stretchFromPoint(anchor.x, anchor.y, xScale, yScale)
+                .translate(effect.left, effect.top);
+            // console.log(effect.left + effect.width * effect.xScale / 2, effect.top + effect.width * effect.yScale / 2);
+            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.restore();
+        }
     }
-    /*context.save();
-    context.globalAlpha = 0.8;
-    context.fillStyle = 'red';
-    // console.log(effect.left + effect.width * effect.xScale / 2, effect.top + effect.width * effect.yScale / 2);
-    context.fillRect(effect.left, effect.top, effect.width * effect.xScale, effect.height * effect.yScale);
-    context.restore();*/
 };
 
 const advanceEffect = (state, effectIndex) => {

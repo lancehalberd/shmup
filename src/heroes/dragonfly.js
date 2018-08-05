@@ -6,7 +6,6 @@ const {
     LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
-const Rectangle = require('Rectangle');
 const {
     requireImage, r,
     createAnimation,
@@ -67,9 +66,8 @@ heroesData[HERO_DRAGONFLY] = {
         const player = state.players[playerIndex];
         for (let i = 0; i < state.enemies.length; i++) {
             let enemy = state.enemies[i];
-            const enemyHitBox = getEnemyHitBox(enemy);
             if (enemyIsActive(state, enemy) &&
-                Rectangle.collision(enemyHitBox, getHeroHitBox(player))
+                isIntersectingEnemyHitBoxes(enemy, getHeroHitBox(player))
             ) {
                 state = damageEnemy(state, enemy.id, {playerIndex});
             }
@@ -131,5 +129,5 @@ heroesData[HERO_DRAGONFLY] = {
 };
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { getEnemyHitBox, damageEnemy, enemyIsActive } = require('enemies');
+const { isIntersectingEnemyHitBoxes, damageEnemy, enemyIsActive } = require('enemies');
 

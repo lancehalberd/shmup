@@ -1,6 +1,8 @@
 
 const {
-    FRAME_LENGTH, WIDTH, HEIGHT, GAME_HEIGHT,
+    FRAME_LENGTH, WIDTH, GAME_HEIGHT,
+    ATTACK_DEFEATED_ENEMY,
+    ENEMY_FLYING_ANT,
     EFFECT_EXPLOSION,
 } = require('gameConstants');
 const random = require('random');
@@ -8,7 +10,7 @@ const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 const { createAnimation, r, getFrame, requireImage } = require('animations');
 const { getNewSpriteState } = require('sprites');
-const { allWorlds, getHazardHeight, getGroundHeight, getNewLayer } = require('world');
+const { allWorlds, getGroundHeight, getNewLayer } = require('world');
 const { enterStarWorldEnd } = require('areas/stars');
 
 const WORLD_FOREST_LOWER_BOSS = 'forestLowerBoss';
@@ -16,8 +18,7 @@ const WORLD_FOREST_LOWER_BOSS = 'forestLowerBoss';
 Add frog boss -
 Main Phase can be made harder with adding flying ants.
 
-* Spawn water bug enemies that scoot in the water ( no unmounted form)
-* Spawn flying ants from the ant hole
+Spawn water bugs in pond
 
 Frog: It ribbits here and there and flashes red more often the lower it gets to dying.
 */
@@ -31,7 +32,6 @@ function transitionToForestLowerBoss(state) {
     };
     return {...state, world};
 }
-
 
 const layerNamesToClear = ['foreground', 'largeTrunks'];
 function clearLayers(state) {
@@ -81,10 +81,15 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
             // This controls the bgm music for the area (this will start if the player unpauses).
             world.bgm = 'bgm/boss.mp3';
             // This actually starts playing the new bgm music.
-            state = {...state, bgm: world.bgm};
+            state = {...state, bgm: world.bgm, world};
             state = addEnemyToState(state, frog);
+            world = state.world;
         }
-        // const frog = state.enemies.filter(enemy => enemy.type === ENEMY_FROG)[0];
+        const frog = state.enemies.filter(enemy => enemy.type === ENEMY_FROG)[0];
+        const grate = state.enemies.filter(enemy => enemy.type === ENEMY_GRATE)[0];
+        if (pool && (!frog || !grate)) {
+            return enterStarWorldEnd(state);
+        }
         if (startPoolPhase(state) && !pool) {
             world = {...world,
                 pool: getNewLayer({
@@ -109,10 +114,35 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
             ];
             world.targetFrames = 400;
             world.targetX = world.x + 2 * WIDTH;
-            world.bgm = 'bgm/boss.mp3';
-            state = {...state, bgm: world.bgm, world};
+
+            const lifebars = {...world.lifebars};
+            let grate = createEnemy(ENEMY_GRATE, {left: 2 * WIDTH, top: -36});
+            lifebars[grate.id] = {
+                left: 100, top: 52, width: 600, height: 8, startTime: world.time,
+            };
+            world = {...world, lifebars, lastSpawnTime: world.time};
+            state = {...state, world};
+            state = addEnemyToState(state, grate);
             state = clearLayers(state);
             world = state.world;
+        }
+        // Once the pool exists, start spawning flying ants every 3
+        // seconds from the anthole (or offscreen before it is onscreen).
+        if (pool && !(world.lastSpawnTime + 2000 > world.time)) {
+            world = {...world, lastSpawnTime: world.time};
+            const fly = createEnemy(ENEMY_FLYING_ANT, {
+                left: pool.left + 430,
+                top: pool.top + 500,
+            });
+            fly.left = Math.min(WIDTH, fly.left - fly.width / 2);
+            if (fly.left === WIDTH) {
+                fly.vx = -6;
+            } else {
+                fly.vy = Math.random() * 5 - 10;
+                fly.vx = Math.random() * 10 - 5;
+            }
+            fly.top = fly.top - fly.height;
+            state = addEnemyToState(state, fly);
         }
         state = {...state, world};
         return state;
@@ -124,8 +154,8 @@ module.exports = {
 };
 
 const {
-    enemyData, createEnemy, addEnemyToState, damageEnemy,
-    getEnemyHitBox, getEnemyCenter, renderEnemyFrame,
+    enemyData, createEnemy, addEnemyToState,
+    getEnemyHitBox, getEnemyCenter, renderEnemyFrame, updateEnemy, removeEnemy,
 } = require('enemies');
 const {
     getHeroHitBox,
@@ -138,44 +168,79 @@ function startPoolPhase(state) {
     return frog && frog.life <= frog.lowLife;
 }
 const ENEMY_FROG = 'frog';
-const frogRect = r(250, 220, {hitBox: {left: 30, top: 45, width:200, height: 105}});
+// Frames when the frog is on dry land.
+const landFrogRect = r(250, 220);
+const landFrogHitBox = {left: 30, top: 45, width:200, height: 105};
+const landFrogGeometry = {
+    ...landFrogRect,
+    hitBox: landFrogHitBox,
+    hitBoxes: [
+        {left: 37, top: 39, width: 75, height: 88},
+        {left: 112, top: 57, width: 61, height: 77},
+        {left: 173, top: 83, width: 45, height: 65},
+    ],
+};
+const jumpingFrogGeometry = {
+    ...landFrogRect,
+    hitBox: landFrogHitBox,
+    hitBoxes: [
+        {left: 31, top: 17, width: 72, height: 59},
+        {left: 74, top: 43, width: 100, height: 72},
+        {left: 169, top: 68, width: 47, height: 75},
+    ],
+};
+// Frames when the frog is swimming mostly above the water.
 const swimmingFrogRect = r(251, 113);
-const offscreenHitBox = {left: 0, top: 1000, width: 1, height: 1};
-const swimmingHitBox = {left: 12, top: 17, width: 150, height: 80};
+const swimmingFrogGeometry = {
+    ...swimmingFrogRect,
+    hitBox: {left: 15, top: 17, width: 210, height: 80},
+    hitBoxes: [
+        {left: 15, top: 20, width: 100, height: 83},
+        {left: 118, top: 32, width: 45, height: 72},
+        {left: 163, top: 69, width: 52, height: 30},
+    ],
+};
+// Frames when only the frog's head is sticking out of the water.
+const divingFrogGeometry = {
+    ...swimmingFrogRect,
+    hitBox: {left: 57, top: 53, width: 100, height: 55},
+    hitBoxes: [
+        {left: 60, top: 49, width: 60, height: 50},
+        {left: 125, top: 79, width: 16, height: 23}
+    ],
+};
+// When the frog is completely underwater. No actual hitboxes.
+const submergedFrogGeometry = {
+    ...swimmingFrogRect,
+    hitBox: {left: 45, top: 75, width: 205, height: 30},
+    hitBoxes: [],
+};
 // This image was originally designed to be placed on top of the swimming frog.
 // It needs to be moved down about 18 pixels when drawn on the land frog.
 const tongueStartAnimation = createAnimation('gfx/enemies/frog/tongue1.png', swimmingFrogRect);
 const tongueMiddleAnimation = createAnimation('gfx/enemies/frog/tongue2.png', r(60, 20));
 const tongueEndAnimation = createAnimation('gfx/enemies/frog/tongue3.png', r(60, 20));
 enemyData[ENEMY_FROG] = {
-    animation: createAnimation('gfx/enemies/frog/frog15.png', frogRect),
-    attackAnimation: createAnimation('gfx/enemies/frog/frog16.png', frogRect),
-    crouchingAnimation: createAnimation('gfx/enemies/frog/frog17.png', frogRect),
-    submergedAnimation: {
-        frames: [
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog9.png')},
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog11.png')},
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog12.png')},
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog13.png')},
-        ],
-        frameDuration: 10,
-    },
+    animation: createAnimation('gfx/enemies/frog/frog15.png', landFrogGeometry),
+    attackAnimation: createAnimation('gfx/enemies/frog/frog16.png', landFrogGeometry),
+    crouchingAnimation: createAnimation('gfx/enemies/frog/frog17.png', landFrogGeometry),
     jumpingAnimation: {
         frames: [
-            {...frogRect, image: requireImage('gfx/enemies/frog/frog18.png')},
-            {...frogRect, image: requireImage('gfx/enemies/frog/frog19.png')},
+            {...jumpingFrogGeometry, image: requireImage('gfx/enemies/frog/frog18.png')},
+            {...jumpingFrogGeometry, image: requireImage('gfx/enemies/frog/frog19.png')},
         ],
         frameDuration: 20,
         loop: false,
     },
     swimmingAnimation: {
         frames: [
-            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog3.png')},
-            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog4.png')},
-            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog5.png')},
+            {...swimmingFrogGeometry, image: requireImage('gfx/enemies/frog/frog3.png')},
+            {...swimmingFrogGeometry, image: requireImage('gfx/enemies/frog/frog4.png')},
+            {...swimmingFrogGeometry, image: requireImage('gfx/enemies/frog/frog5.png')},
         ],
         frameDuration: 10,
     },
+    swimmingAttackAnimation: createAnimation('gfx/enemies/frog/frog6.png', swimmingFrogGeometry),
     // This is drawn on top of the swimmingAnimation/swimmingAttackAnimation
     ripplesAnimation: {
         frames: [
@@ -184,18 +249,27 @@ enemyData[ENEMY_FROG] = {
         ],
         frameDuration: 10,
     },
-    swimmingAttackAnimation: createAnimation('gfx/enemies/frog/frog6.png', {...swimmingFrogRect, hitBox: swimmingHitBox}),
     submergingAnimation: {
         frames: [
-            {...swimmingFrogRect, hitBox: swimmingHitBox, image: requireImage('gfx/enemies/frog/frog7.png')},
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog8.png')},
-            {...swimmingFrogRect, hitBox: offscreenHitBox, image: requireImage('gfx/enemies/frog/frog9.png')},
+            {...divingFrogGeometry, image: requireImage('gfx/enemies/frog/frog7.png')},
+            {...divingFrogGeometry, image: requireImage('gfx/enemies/frog/frog8.png')},
+            {...divingFrogGeometry, image: requireImage('gfx/enemies/frog/frog9.png')},
         ],
         frameDuration: 10,
         loop: false,
     },
-    emergingAnimation: createAnimation('gfx/enemies/frog/frog14.png', {...swimmingFrogRect, hitBox: offscreenHitBox}),
+    emergingAnimation: createAnimation('gfx/enemies/frog/frog14.png', divingFrogGeometry),
+    submergedAnimation: {
+        frames: [
+            {...submergedFrogGeometry, image: requireImage('gfx/enemies/frog/frog9.png')},
+            {...submergedFrogGeometry, image: requireImage('gfx/enemies/frog/frog11.png')},
+            {...submergedFrogGeometry, image: requireImage('gfx/enemies/frog/frog12.png')},
+            {...submergedFrogGeometry, image: requireImage('gfx/enemies/frog/frog13.png')},
+        ],
+        frameDuration: 10,
+    },
     getAnimation(enemy) {
+        if (enemy.dead) return this.submergingAnimation;
         if (enemy.mode === 'attacking' || enemy.mode === 'retracting') {
             return this.attackAnimation;
         }
@@ -217,7 +291,6 @@ enemyData[ENEMY_FROG] = {
         let tongues = [...enemy.tongues];
         const poolPhase = startPoolPhase(state);
         const pool = state.world.pool && state.world.pool.sprites[0];
-        const playerSprite = state.players[0].sprite;
         modeTime += FRAME_LENGTH;
         const hitBox = getEnemyHitBox(enemy);
         const heroHitBox = getHeroHitBox(state.players[0]);
@@ -277,7 +350,12 @@ enemyData[ENEMY_FROG] = {
                     else
                         tongues = [[43, 84], [10, 84]];
                     // Mirror the starting tongue coords if the frogs sprite is flipped (facing right).
-                    if (vx > 0) tongues = tongues.map(t => [enemy.width - t[0], t[1]]);
+                    if (vx > 0) {
+                        if (mode === 'swimmingAttacking')
+                            tongues = tongues.map(t => [enemy.width - t[0] - hitBox.left + enemy.left, t[1]]);
+                        else
+                            tongues = tongues.map(t => [enemy.width - t[0], t[1]]);
+                    }
                 }
                 if (tongues.length < 14) {
                     extendTongueTowardsPlayer();
@@ -298,6 +376,14 @@ enemyData[ENEMY_FROG] = {
                     if (mode === 'swimmingRetracting') {
                         mode = 'submerging';
                         animationTime = modeTime = 0;
+                        // Frog gains life on eating a fly.
+                        if (enemy.caughtFly) {
+                            enemy = {
+                                ...enemy,
+                                caughtFly: false,
+                                life: Math.min(enemy.maxLife, enemy.life + 40),
+                            };
+                        }
                     } else {
                         mode = 'crouching';
                         animationTime = modeTime = 0;
@@ -384,9 +470,22 @@ enemyData[ENEMY_FROG] = {
                 }
                 break;
             case 'submerged': {
-                if (modeTime >= 1000) {
+                if (modeTime >= 1500) {
                     mode = 'emerging';
                     animationTime =  modeTime = 0;
+                    if (enemy.left > pool.left + 350) {
+                        vx = -0.0001;
+                    } else {
+                        vx = 0.0001;
+                    }
+                } else {
+                    // Swim to the opposite half of the screen of the player, so that on
+                    // emerging, the tongue can attack toward the player.
+                    if (targetX < pool.left + 350) {
+                        vx = Math.min(5, Math.max(pool.left + 500 - enemy.left, 0));
+                    } else {
+                        vx = Math.max(-5, Math.min(pool.left + 200 - enemy.left, 0));
+                    }
                 }
                 break;
             }
@@ -401,23 +500,51 @@ enemyData[ENEMY_FROG] = {
         //console.log({mode, tongues});
         return {...enemy, vx, vy, mode, modeTime, animationTime, tongues, inPond};
     },
+    onDeathEffect(state, enemy) {
+        let delay = 4;
+        for (let i = 0; i < 5; i++) {
+            const explosion = createEffect(EFFECT_EXPLOSION, {
+                sfx: 'sfx/explosion.mp3',
+                delay,
+            });
+            delay += random.range(4, 8);
+            if (i % 3 === 2) delay += 5;
+            explosion.width *= 2;
+            explosion.height *= 2;
+            explosion.left = enemy.left + (enemy.width - explosion.width ) / 2 + random.range(-25, 25);
+            explosion.top = enemy.top + (enemy.height - explosion.height ) / 2 + random.range(-25, 25);
+            state = addEffectToState(state, explosion);
+        }
+        return updateEnemy(state, enemy, {TTL: 500});
+    },
     // Make the tongue damage the player.
     updateState(state, enemy) {
-        let lastPoint;
-        const tongues = enemy.tongues;
+        if (!enemy.tongues || enemy.tongues.length < 3) return state;
+        const points = enemy.tongues.map(t => ({x: enemy.left + t[0], y: enemy.top + t[1]}));
         const heroHitBox = getHeroHitBox(state.players[0]);
-        for (let i = 1; i < tongues.length; i++) {
-            let point = {x: enemy.left + tongues[i][0], y: enemy.top + tongues[i][1]};
-            if (lastPoint) {
-                // This hitbox is a crude estimation for the tongues actual position.
-                const L = Math.min(point.x, lastPoint.x), R = Math.max(point.x, lastPoint.x);
-                const T = Math.min(point.y, lastPoint.y), B = Math.max(point.y, lastPoint.y);
-                const sectionBox = new Rectangle(L, T, R - L, B - T);
-                if (sectionBox.overlapsRectangle(heroHitBox)) {
-                    return damageHero(state, 0);
+        // Check if the frog caught a flying ant (the tip of its tongue hits an ant).
+        if (enemy.mode === 'swimmingAttacking') {
+            const ants = state.enemies.filter(enemy => enemy.type === ENEMY_FLYING_ANT);
+            const lastRectangle = Rectangle.defineFromPoints(
+                points[points.length - 1], points[points.length - 2]
+            );
+            for (let ant of ants) {
+                if (lastRectangle.overlapsRectangle(getEnemyHitBox(ant))) {
+                    state = updateEnemy(state, enemy,
+                        {mode: 'swimmingRetracting', modeTime: 0, caughtFly: true}
+                    );
+                    return removeEnemy(state, ant);
                 }
             }
-            lastPoint = point;
+        }
+        // Check if the player is hitting any of the tongue sections.
+        for (let i = 2; i < points.length; i++) {
+            // This hitbox is a crude estimation for the tongues actual position.
+            const sectionBox = Rectangle.defineFromPoints(points[i], points[i - 1]);
+            if (sectionBox.overlapsRectangle(heroHitBox)) {
+                return damageHero(state, 0);
+            }
+
         }
         return state;
     },
@@ -451,6 +578,11 @@ enemyData[ENEMY_FROG] = {
             const animation = (i < enemy.tongues.length - 1) ? tongueMiddleAnimation : tongueEndAnimation;
             let frame = getFrame(animation, enemy.animationTime);
             drawImage(context, frame.image, frame, new Rectangle(frame).moveCenterTo(0, 0));
+            if (i === enemy.tongues.length - 1 && enemy.caughtFly) {
+                const flyFrame = enemyData[ENEMY_FLYING_ANT].animation.frames[0];
+                context.rotate(Math.PI / 12);
+                drawImage(context, flyFrame.image, flyFrame, new Rectangle(flyFrame).moveCenterTo(0, 0));
+            }
             context.restore();
         }
         // This draws the exact path the tongue is supposed to use. You can uncomment this to
@@ -466,7 +598,7 @@ enemyData[ENEMY_FROG] = {
     },
     props: {
         life: 400,
-        lowLife: 240,
+        lowLife: 300,
         score: 1000,
         boss: true,
         grounded: true,
@@ -476,7 +608,91 @@ enemyData[ENEMY_FROG] = {
         tongues: [],
     },
 };
+const ENEMY_GRATE = 'grate';
+const grateRectangle = r(800, 600, {hitBox: {left: 718, top: 195, width: 30, height: 175}});
+enemyData[ENEMY_GRATE] = {
+    animation: {
+        frames: [
+            {...grateRectangle, image: requireImage('gfx/enemies/frog/frogbase_grate1.png')},
+            {...grateRectangle, image: requireImage('gfx/enemies/frog/frogbase_grate2.png')},
+            {...grateRectangle, image: requireImage('gfx/enemies/frog/frogbase_grate3.png')},
+        ],
+        frameDuration: 12,
+    },
+    deathAnimation: createAnimation('gfx/enemies/frog/frogbase_grate3.png', grateRectangle),
+    updateState(state, enemy) {
+        let animationTime = 0;
+        if (enemy.life <= enemy.maxLife / 3) animationTime = 2 * FRAME_LENGTH * 12;
+        else if (enemy.life <= 2 * enemy.maxLife / 3) animationTime = FRAME_LENGTH * 12;
+        return updateEnemy(state, enemy, {animationTime});
+    },
+    onDeathEffect(state, enemy) {
+        let delay = 6;
+        for (let i = 0; i < 7; i++) {
+            const explosion = createEffect(EFFECT_EXPLOSION, {
+                sfx: 'sfx/explosion.mp3',
+                delay,
+            });
+            delay += random.range(8, 12);
+            if (i % 3 === 2) delay += 10;
+            const hitBox = getEnemyHitBox(enemy);
+            explosion.width *= 3;
+            explosion.height *= 3;
+            explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2 + random.range(-40, 40);
+            explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2 + random.range(-100, 100);
+            state = addEffectToState(state, explosion);
+        }
+        return updateEnemy(state, enemy, {stationary: false, bounces: 2, vx: 2});
+    },
+    onHitGroundEffect(state, enemy) {
+        if (enemy.bounces > 0) {
+            return updateEnemy(state, enemy, {
+                vy: -4 - 3 * enemy.bounces,
+                bounces: enemy.bounces - 1
+            });
+        }
+        // This prevents onHitGroundEffect from being called again for this enemy.
+        return updateEnemy(state, enemy, {hitGround: true});
+    },
+    onDamageEffect(state, enemy, attack) {
+        if (!enemy.life || enemy.life % 5 && attack.damage < 5) return state;
+        for (let i = 0; i < 1; i++) {
+            const effect = createEffect(EFFECT_GRATE_DAMAGE, {
+                top: enemy.top - 40 + Math.random() * 10,
+                left: enemy.left - 5 + Math.random() * 10,
+            });
+            state = addEffectToState(state, effect);
+        }
+        return state;
+    },
+    props: {
+        life: 1000,
+        score: 500,
+        stationary: true,
+        doNotFlip: true,
+        weakness: {[ATTACK_DEFEATED_ENEMY]: 50},
+        boss: true,
+        noCollisionDamage: true,
+    },
+};
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
-
+const grateDamageGeometry = {...grateRectangle, anchor: {x: 733, y: 277}};
+const EFFECT_GRATE_DAMAGE = 'grateDamage';
+effects[EFFECT_GRATE_DAMAGE] = {
+    animation: createAnimation('gfx/enemies/frog/frogbase_grate_damage.png', grateDamageGeometry, {duration: 20}),
+    advanceEffect: (state, effectIndex) => {
+        const effect = state.effects[effectIndex];
+        return updateEffect(state, effectIndex, {
+            vy: effect.vy + 0.5,
+            xScale: (effect.xScale * 4 + 1) / 5,
+            yScale: (effect.yScale * 4 + 1) / 5,
+        });
+    },
+    props: {
+        relativeToGround: true,
+        xScale: .1,
+        yScale: .1,
+    },
+};
 

@@ -27,6 +27,15 @@ for (const initialImageToLoad of initialImagesToLoad) {
 
 const i = (width, height, source) => ({left: 0, top: 0, width, height, image: requireImage(source)});
 const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props});
+// Sets the anchor for a frame's geometry based on percent values passed for h and v.
+// Default anchor is h=v=0 is the top left. Center would be h=v=0.5. Left center
+// would be h=0, v=0.5
+const a = (rectangle, h, v) => {
+    const hitBox = rectangle.hitBox || rectangle;
+    return {...rectangle, anchor: {
+        x: hitBox.left + h * hitBox.width, y: hitBox.top + v * hitBox.height,
+    }};
+};
 
 const createAnimation = (source, rectangle, {x = 0, y = 0, rows = 1, cols = 1, top = 0, left = 0, duration = 8, frameMap} = {}, props) => {
     let frames = [];
@@ -430,7 +439,7 @@ const startImage = r(58, 30, {image: requireImage('gfx/start.png')});
 
 module.exports = {
     requireImage,
-    r, i,
+    r, i, a,
     allAnimations,
     getFrame,
     getAnimationLength,

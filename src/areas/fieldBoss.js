@@ -6,9 +6,9 @@ const {
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
 } = require('gameConstants');
 const random = require('random');
-const { requireImage, createAnimation, r } = require('animations');
+const { requireImage, createAnimation, r, a } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
-const { applyCheckpointToState, setCheckpoint, getGroundHeight, allWorlds } = require('world');
+const { getGroundHeight, allWorlds } = require('world');
 
 const WORLD_FIELD_BOSS = 'fieldBoss';
 const layerNamesToClear = ['wheat', 'darkGrass', 'thickGrass', 'nearground', 'foreground'];
@@ -186,7 +186,6 @@ module.exports = {
 };
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
-const { updatePlayer } = require('heroes');
 
 const smallTurretRectangle = r(41, 41);
 const ENEMY_SMALL_TURRET = 'smallTurret';
@@ -349,10 +348,11 @@ enemyData[ENEMY_DOOR] = {
         frameDuration: 12,
     },
     deathAnimation: createAnimation('gfx/enemies/plainsboss/door3.png', doorRectangle),
-    accelerate(state, enemy) {
-        if (enemy.life > 2 * enemy.maxLife / 3) return {...enemy, animationTime: 0};
-        if (enemy.life > enemy.maxLife / 3) return {...enemy, animationTime: FRAME_LENGTH * 12};
-        return {...enemy, animationTime: 2 * FRAME_LENGTH * 12};
+    updateState(state, enemy) {
+        let animationTime = 0;
+        if (enemy.life <= enemy.maxLife / 3) animationTime = 2 * FRAME_LENGTH * 12;
+        else if (enemy.life <= 2 * enemy.maxLife / 3) animationTime = FRAME_LENGTH * 12;
+        return updateEnemy(state, enemy, {animationTime});
     },
     onDeathEffect(state, enemy) {
         let delay = 6;
@@ -382,7 +382,7 @@ enemyData[ENEMY_DOOR] = {
         return updateEnemy(state, enemy, {hitGround: true});
     },
     onDamageEffect(state, enemy) {
-        if (enemy.life % 3) return state;
+        if (!enemy.life || enemy.life % 3) return state;
         for (let i = 0; i < 2; i++) {
             const effect = createEffect(EFFECT_DOOR_DAMAGE, {
                 top: enemy.top + 20 + 120 * i + Math.random() * 40,
@@ -429,16 +429,17 @@ enemyData[ENEMY_STICK_3] = {
     animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24)),
 };
 
-const { CHECK_POINT_FOREST_UPPER_START } = require('areas/forestUpper');
-const { transitionToLowerForest } = require('areas/fieldToLowerForest');
 const { transitionToUpperForest } = require('areas/fieldToUpperForest');
+const { transitionToLowerForest } = require('areas/fieldToLowerForest');
 
 const { createAttack, addEnemyAttackToState } = require('attacks');
 
 const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
 const EFFECT_LEAF = 'leaf';
+// Make the leaf scale from the center of its hitbox instead of the top left corner.
+const leafGeometry = a({...r(40, 37), hitBox: r(30, 37)}, 0.5, 0.5);
 effects[EFFECT_LEAF] = {
-    animation: createAnimation('gfx/enemies/plainsboss/leaf.png', {...r(40, 37), hitBox: r(30, 37)}),
+    animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry),
     advanceEffect: (state, effectIndex) => {
         const effect = state.effects[effectIndex];
         /*if (effect.vy > 20) {

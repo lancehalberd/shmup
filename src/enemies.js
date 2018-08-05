@@ -408,12 +408,27 @@ const getDefaultEnemyAnimation = (enemy) => {
     return animation;
 };
 
-const getEnemyHitBox = (enemy) => {
+function getEnemyHitBox(enemy) {
     let animation = getEnemyAnimation(enemy);
     return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
-};
+}
 function getEnemyCenter(enemy) {
     return getEnemyHitBox(enemy).getCenter();
+}
+function isIntersectingEnemyHitBoxes(enemy, rectangle) {
+    const frame = getFrame(getEnemyAnimation(enemy), enemy.animationTime);
+    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+    const reflectX = geometryBox.left + geometryBox.width / 2;
+    const hitBoxes = frame.hitBoxes || [geometryBox];
+    for (let hitBox of hitBoxes) {
+        if (enemy.vx > 0 && !enemy.doNotFlip) {
+            hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+        }
+        if (Rectangle.collision(new Rectangle(hitBox).translate(enemy.left, enemy.top), rectangle)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function enemyIsActive(state, enemy) {
@@ -431,6 +446,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     let damage = attack.damage || 1;
     if (attack.type && enemy.weakness && enemy.weakness[attack.type]) {
         damage = enemy.weakness[attack.type];
+        attack = {...attack, damage};
     }
     const enemyIsInvulnerable =
         enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(state, enemy, attack);
@@ -526,8 +542,8 @@ function renderEnemyFrame(context, enemy, frame) {
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
+    let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
     if (enemy.vx > 0 && !enemy.doNotFlip) {
-        let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
@@ -540,7 +556,6 @@ function renderEnemyFrame(context, enemy, frame) {
         drawImage(context, frame.image, frame, target);
         context.restore();
     } else {
-        let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
         context.save();
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
         const target = new Rectangle(frame).moveTo(
@@ -566,12 +581,21 @@ const renderEnemy = (context, enemy) => {
    // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
 
     if (isKeyDown(KEY_SHIFT)) {
-        let hitBox = getEnemyHitBox(enemy);
-        context.save();
-        context.globalAlpha = .6;
-        context.fillStyle = 'red';
-        context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
-        context.restore();
+        const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+        const reflectX = geometryBox.left + geometryBox.width / 2;
+        const hitBoxes = frame.hitBoxes || [geometryBox];
+        for (let hitBox of hitBoxes) {
+            hitBox = new Rectangle(hitBox)
+            if (enemy.vx > 0 && !enemy.doNotFlip) {
+                hitBox = hitBox.translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+            }
+            hitBox = hitBox.translate(enemy.left, enemy.top);
+            context.save();
+            context.globalAlpha = .6;
+            context.fillStyle = 'red';
+            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.restore();
+        }
     }
     if (enemyData[enemy.type].drawOver) {
         enemyData[enemy.type].drawOver(context, enemy);
@@ -694,7 +718,7 @@ const advanceEnemy = (state, enemy) => {
         state = enemyData[enemy.type].updateState(state, enemy);
         enemy = state.idMap[enemy.id];
     }
-    if (!enemy.dead && enemyData[enemy.type].accelerate) {
+    if (!enemy.dead && !enemy.snaredForFinisher && enemyData[enemy.type].accelerate) {
         state = updateEnemy(state, enemy, enemyData[enemy.type].accelerate(state, enemy));
         enemy = state.idMap[enemy.id];
     }
@@ -739,6 +763,7 @@ module.exports = {
     renderEnemyFrame,
     getEnemyHitBox,
     getEnemyCenter,
+    isIntersectingEnemyHitBoxes,
     updateEnemy,
     getDefaultEnemyAnimation,
     spawnMonkOnGround,
