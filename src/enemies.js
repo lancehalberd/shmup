@@ -345,9 +345,9 @@ const enemyData = {
 const ENEMY_SHIELD_MONK = 'shieldMonk';
 enemyData[ENEMY_SHIELD_MONK] = {
     ...enemyData[ENEMY_MONK],
-    animation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {cols: 4, duration: 30}),
-    deathAnimation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {x: 5, cols: 1, duration: 30}),
-    attackAnimation: createAnimation('gfx/enemies/monks/pillrobe.png', r(42, 50), {x: 4, cols: 1, duration: 30}),
+    animation: createAnimation('gfx/enemies/monks/pillback.png', r(42, 50), {cols: 3, duration: 30, frameMap: [0, 1, 2, 1]}),
+    deathAnimation: createAnimation('gfx/enemies/monks/pillback.png', r(42, 50), {x: 4, cols: 1, duration: 30}),
+    attackAnimation: createAnimation('gfx/enemies/monks/pillback.png', r(42, 50), {x: 3, cols: 1, duration: 30}),
     deathSound: 'sfx/robedeath1.mp3',
     props: {
         life: 5,
