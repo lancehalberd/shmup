@@ -67,7 +67,7 @@ heroesData[HERO_DRAGONFLY] = {
         for (let i = 0; i < state.enemies.length; i++) {
             let enemy = state.enemies[i];
             if (enemyIsActive(state, enemy) &&
-                isIntersectingEnemyHitBoxes(enemy, getHeroHitBox(player))
+                isIntersectingEnemyHitBoxes(state, enemy, getHeroHitBox(player))
             ) {
                 state = damageEnemy(state, enemy.id, {playerIndex});
             }

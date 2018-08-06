@@ -233,7 +233,7 @@ const monkAttackAnimation = {
 };
 const monkDeathAnimation = {
     frames: [
-        {...r(46, 41), image: requireImage('gfx/enemies/monks/robeded.png')},
+        {...r(46, 41, {hitBox: {left: 0, top: 8, width: 42, height: 33}}), image: requireImage('gfx/enemies/monks/robeded.png')},
     ],
     frameDuration: 5,
 };

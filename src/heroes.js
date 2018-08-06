@@ -493,6 +493,7 @@ const damageHero = (updatedState, playerIndex) => {
         invulnerableFor: 2000,
         spawning: true,
         chasingNeedle: true,
+        [player.heroes[0]]: {...player[player.heroes[0]], targets: [] },
         // powerupIndex: 0,
         // powerupPoints: 0,
         comboScore: 0,

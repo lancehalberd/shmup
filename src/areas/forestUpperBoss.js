@@ -200,7 +200,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         return state;
     },
     onDeathEffect(state, enemy) {
-        const hitBox = getEnemyHitBox(enemy)
+        const hitBox = getEnemyHitBox(state, enemy);
         let delay = random.range(4, 6);
         for (let i = 0; i < 3; i++) {
             const explosion = createEffect(EFFECT_EXPLOSION, {
@@ -224,7 +224,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         }
         return state;
     },
-    drawOver(context, enemy) {
+    drawOver(context, state, enemy) {
         if (enemy.dead || enemy.life >= NEST_LIFE / 10) return;
         const animation = enemyData[enemy.type].hurtAnimation;
         const frame = getFrame(animation, enemy.animationTime);

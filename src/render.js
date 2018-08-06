@@ -69,7 +69,7 @@ const render = (state) => {
 
         context.save();
         context.translate(0, hudImage.height);
-        state.enemies.map(enemy => renderEnemy(context, enemy));
+        state.enemies.map(enemy => renderEnemy(context, state, enemy));
         state.playerAttacks.map(attack => renderAttack(context, attack));
         state.loot.map(loot => renderLoot(context, state, loot));
         state.effects.map(effect => renderEffect(context, effect));

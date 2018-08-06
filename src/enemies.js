@@ -396,11 +396,11 @@ function removeEnemy(state, enemy) {
     return {...state, idMap};
 }
 
-const getEnemyAnimation = (enemy) => {
-    if (enemyData[enemy.type].getAnimation) return enemyData[enemy.type].getAnimation(enemy);
-    return getDefaultEnemyAnimation(enemy);
+const getEnemyAnimation = (state, enemy) => {
+    if (enemyData[enemy.type].getAnimation) return enemyData[enemy.type].getAnimation(state, enemy);
+    return getDefaultEnemyAnimation(state, enemy);
 };
-const getDefaultEnemyAnimation = (enemy) => {
+const getDefaultEnemyAnimation = (state, enemy) => {
     let animation = enemyData[enemy.type].animation;
     if (enemy.dead) return enemyData[enemy.type].deathAnimation || animation;
     if (enemy.attackCooldownFramesLeft > 0) return enemyData[enemy.type].attackAnimation || animation;
@@ -408,15 +408,15 @@ const getDefaultEnemyAnimation = (enemy) => {
     return animation;
 };
 
-function getEnemyHitBox(enemy) {
-    let animation = getEnemyAnimation(enemy);
+function getEnemyHitBox(state, enemy) {
+    let animation = getEnemyAnimation(state, enemy);
     return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
 }
-function getEnemyCenter(enemy) {
-    return getEnemyHitBox(enemy).getCenter();
+function getEnemyCenter(state, enemy) {
+    return getEnemyHitBox(state, enemy).getCenter();
 }
-function isIntersectingEnemyHitBoxes(enemy, rectangle) {
-    const frame = getFrame(getEnemyAnimation(enemy), enemy.animationTime);
+function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
+    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
     const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
     const hitBoxes = frame.hitBoxes || [geometryBox];
@@ -477,9 +477,12 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         updatedState = addEffectToState(updatedState, explosion);
 
         if (attack.melee && !enemy.stationary) {
-            const playerSprite = updatedState.players[attack.playerIndex].sprite;
-            const {dx, dy} = getTargetVector(playerSprite, enemy);
-            const theta = Math.atan2(dy, dx);
+            const player = updatedState.players[attack.playerIndex];
+            // Make sure to use the hitbox from the enemy when it was still alive.
+            const {dx, dy} = getTargetVector(getHeroHitBox(player), getEnemyHitBox(state, {...enemy, dead: false}));
+            let theta = Math.atan2(dy, dx);
+            // Restrict theta to be mostly in the forward direction.
+            theta = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, theta));
             const defeatedEnemyAttack = createAttack(ATTACK_DEFEATED_ENEMY, {
                 animation: enemyData[enemy.type].deathAnimation || enemyData[enemy.type].animation,
                 damage: 1,
@@ -537,12 +540,12 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     return updatedState;
 }
 
-function renderEnemyFrame(context, enemy, frame) {
+function renderEnemyFrame(context, state, enemy, frame) {
     context.save();
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
-    let hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
+    let hitBox = getEnemyHitBox(state, enemy).translate(-enemy.left, -enemy.top);
     if (enemy.vx > 0 && !enemy.doNotFlip) {
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
@@ -568,14 +571,14 @@ function renderEnemyFrame(context, enemy, frame) {
     context.restore();
 }
 
-const renderEnemy = (context, enemy) => {
+const renderEnemy = (context, state, enemy) => {
     if (enemy.delay > 0) return;
     if (enemyData[enemy.type].drawUnder) {
-        enemyData[enemy.type].drawUnder(context, enemy);
+        enemyData[enemy.type].drawUnder(context, state, enemy);
     }
-    let animation = getEnemyAnimation(enemy);
+    let animation = getEnemyAnimation(state, enemy);
     const frame = getFrame(animation, enemy.animationTime);
-    renderEnemyFrame(context, enemy, frame);
+    renderEnemyFrame(context, state, enemy, frame);
    // context.translate(x, y - hitBox.height * yScale / 2);
    // if (rotation) context.rotate(rotation * Math.PI/180);
    // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
@@ -598,7 +601,7 @@ const renderEnemy = (context, enemy) => {
         }
     }
     if (enemyData[enemy.type].drawOver) {
-        enemyData[enemy.type].drawOver(context, enemy);
+        enemyData[enemy.type].drawOver(context, state, enemy);
     }
 };
 
@@ -615,7 +618,7 @@ const advanceEnemy = (state, enemy) => {
             // Make sure the finisher is position correctly on the first frame.
             finisherEffect = {
                 ...finisherEffect,
-                ...getFinisherPosition(finisherEffect, enemy),
+                ...getFinisherPosition(state, finisherEffect, enemy),
             };
             state = addEffectToState(state, finisherEffect);
         }
@@ -664,10 +667,11 @@ const advanceEnemy = (state, enemy) => {
     }
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
-    const hitBox = getEnemyHitBox(enemy).translate(-enemy.left, -enemy.top);
+    const hitBox = getEnemyHitBox(state, enemy).translate(-enemy.left, -enemy.top);
+    const groundOffset = enemy.groundOffset || 0;
     if (!enemy.dead) {
         if (!enemy.stationary) {
-            top = Math.min(top, getGroundHeight(state) - (hitBox.top + hitBox.height));
+            top = Math.min(top, getGroundHeight(state) + groundOffset - (hitBox.top + hitBox.height));
         }
         if (!enemy.boss && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
@@ -676,6 +680,7 @@ const advanceEnemy = (state, enemy) => {
         }
         if (!enemy.boss && top + hitBox.top < getHazardCeilingHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
+            if (!state.idMap) debugger;
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
@@ -685,7 +690,7 @@ const advanceEnemy = (state, enemy) => {
 
     if (enemy && ((!enemy.stationary && enemy.dead) || enemy.grounded)) {
         // Flying enemies fall when they are dead, grounded enemies always fall unless they are on the ground.
-        const touchingGround = (enemy.vy >= 0) && (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state));
+        const touchingGround = (enemy.vy >= 0) && (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state) + groundOffset);
         state = updateEnemy(state, enemy, {
             vy: (!touchingGround || !enemy.grounded) ? enemy.vy + 1 : 0,
             // Dead bodies shouldn't slide along the ground
@@ -695,7 +700,7 @@ const advanceEnemy = (state, enemy) => {
         if (enemy && enemy.dead && !enemy.hitGround) {
             const onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
-                if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state)) {
+                if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state) + groundOffset) {
                     state = onHitGroundEffect(state, enemy);
                     enemy = state.idMap[enemy.id];
                     if (enemy) {
@@ -705,7 +710,7 @@ const advanceEnemy = (state, enemy) => {
                         });
                         dust.left = enemy.left + (enemy.width - dust.width ) / 2;
                         // Add dust at the bottom of the enemy frame.
-                        dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state)) - dust.height;
+                        dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state) + groundOffset) - dust.height;
                         state = addEffectToState(state, dust);
                         enemy = state.idMap[enemy.id];
                     }
@@ -779,4 +784,4 @@ const { createEffect, addEffectToState, } = require('effects');
 const { EFFECT_FINISHER, getFinisherPosition } = require('effects/finisher');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
 const { createLoot, addLootToState, getAdaptivePowerupType, gainPoints } = require('loot');
-const { updatePlayer } = require('heroes');
+const { updatePlayer, getHeroHitBox } = require('heroes');

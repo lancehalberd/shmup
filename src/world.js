@@ -130,7 +130,7 @@ const advanceLayer = (state, layerName) => {
                 state = sprite.onContact(state, layerName, i);
             } else {
                 for (const enemy of state.enemies) {
-                    if (Rectangle.collision(hitBox, getEnemyHitBox(enemy))) {
+                    if (Rectangle.collision(hitBox, getEnemyHitBox(state, enemy))) {
                         state = sprite.onContact(state, layerName, i);
                         break;
                     }

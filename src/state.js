@@ -70,7 +70,7 @@ const advanceState = (state) => {
         }
         return {...updatedState, titleIndex, stageSelectIndex};
     }
-    if (state.gameover) {
+    if (updatedState.gameover) {
         let continueIndex = updatedState.continueIndex;
         if (updatedState.players[0].actions.start) {
             if (continueIndex === 0) { // Continue
@@ -144,7 +144,7 @@ const advanceState = (state) => {
         for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
             if (!attack.done && !attack.hitIds[enemy.id]
-                && isIntersectingEnemyHitBoxes(enemy, attack)
+                && isIntersectingEnemyHitBoxes(updatedState, enemy, attack)
             ) {
                 if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy, attack)) {
                     currentPlayerAttacks[j] = {...attack, done: !attack.piercing, hitIds: {...attack.hitIds, [enemy.id]: true}};
@@ -161,7 +161,7 @@ const advanceState = (state) => {
         }
         for (let j = 0; j < updatedState.players.length; j++) {
             if (enemyIsActive(updatedState, enemy) && !enemy.noCollisionDamage &&
-                isIntersectingEnemyHitBoxes(enemy, getHeroHitBox(updatedState.players[j]))
+                isIntersectingEnemyHitBoxes(updatedState, enemy, getHeroHitBox(updatedState.players[j]))
             ) {
                 updatedState = damageHero(updatedState, j);
             }
@@ -231,7 +231,7 @@ const advanceState = (state) => {
         for (let j = 0; j < updatedState.enemies.length; j++) {
             const enemy = updatedState.idMap[updatedState.enemies[j].id];
             if (!enemyIsActive(updatedState, enemy) || attack.hitIds[enemy.id]) continue;
-            if (isIntersectingEnemyHitBoxes(enemy, attack)) {
+            if (isIntersectingEnemyHitBoxes(updatedState, enemy, attack)) {
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
                     done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,

@@ -114,7 +114,7 @@ heroesData[HERO_BEE] = {
             if (player.actions.shoot && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
                 !state.idMap[targets[i].enemyId].dead
             ) {
-                const hitBox = getEnemyHitBox(state.idMap[targets[i].enemyId]);
+                const hitBox = getEnemyHitBox(state, state.idMap[targets[i].enemyId]);
                 targets[i] = {
                     left: (targets[i].left + hitBox.left + hitBox.width / 2 - targets[i].width / 2) / 2,
                     top: (targets[i].top + hitBox.top + hitBox.height / 2 - targets[i].height / 2) / 2,
@@ -199,8 +199,8 @@ heroesData[HERO_BEE] = {
                 const enemy = state.idMap[state.enemies[j].id];
                 if (!enemyIsActive(state, enemy)) continue;
                 if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
-                if (isIntersectingEnemyHitBoxes(enemy, targetHitBox)) {
-                    const hitBox = getEnemyHitBox(enemy);
+                if (isIntersectingEnemyHitBoxes(state, enemy, targetHitBox)) {
+                    const hitBox = getEnemyHitBox(state, enemy);
                     state = addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
                         playerIndex, enemyId: enemy.id,
                         sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,

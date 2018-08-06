@@ -1,14 +1,14 @@
 
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT,
-    ATTACK_DEFEATED_ENEMY,
-    ENEMY_FLYING_ANT,
+    ATTACK_DEFEATED_ENEMY, ATTACK_BULLET,
+    ENEMY_FLYING_ANT, ENEMY_MONK,
     EFFECT_EXPLOSION,
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
-const { createAnimation, r, getFrame, requireImage } = require('animations');
+const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { allWorlds, getGroundHeight, getNewLayer } = require('world');
 const { enterStarWorldEnd } = require('areas/stars');
@@ -72,7 +72,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         if (time === 500) {
             const lifebars = {};
             let frog = createEnemy(ENEMY_FROG, {left: WIDTH});
-            const hitBox = getEnemyHitBox(frog).translate(-frog.left, -frog.top);
+            const hitBox = getEnemyHitBox(state, frog).translate(-frog.left, -frog.top);
             frog.top = getGroundHeight(state) - (hitBox.top + hitBox.height);
             lifebars[frog.id] = {
                 left: 100, top: 40, width: 600, height: 8, startTime: world.time,
@@ -128,7 +128,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         }
         // Once the pool exists, start spawning flying ants every 3
         // seconds from the anthole (or offscreen before it is onscreen).
-        if (pool && !(world.lastSpawnTime + 2000 > world.time)) {
+        if (pool && !(world.lastSpawnTime + 3000 > world.time)) {
             world = {...world, lastSpawnTime: world.time};
             const fly = createEnemy(ENEMY_FLYING_ANT, {
                 left: pool.left + 430,
@@ -144,6 +144,13 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
             fly.top = fly.top - fly.height;
             state = addEnemyToState(state, fly);
         }
+        const waterMonks = state.enemies.filter(enemy => enemy.type === ENEMY_WATER_MONK);
+        if (pool && pool.left + 200 < WIDTH && waterMonks.length < 3 &&
+            world.lastSpawnTime + 1000 === world.time && random.chance(0.8)
+        ) {
+            const waterMonk = createEnemy(ENEMY_WATER_MONK, {left: WIDTH, top: GAME_HEIGHT});
+            state = addEnemyToState(state, waterMonk);
+        }
         state = {...state, world};
         return state;
     },
@@ -154,7 +161,7 @@ module.exports = {
 };
 
 const {
-    enemyData, createEnemy, addEnemyToState,
+    enemyData, createEnemy, addEnemyToState, getDefaultEnemyAnimation,
     getEnemyHitBox, getEnemyCenter, renderEnemyFrame, updateEnemy, removeEnemy,
 } = require('enemies');
 const {
@@ -209,7 +216,7 @@ const divingFrogGeometry = {
         {left: 125, top: 79, width: 16, height: 23}
     ],
 };
-// When the frog is completely underwater. No actual hitboxes.
+// When the frog is completely underwater. No actual hitBoxes.
 const submergedFrogGeometry = {
     ...swimmingFrogRect,
     hitBox: {left: 45, top: 75, width: 205, height: 30},
@@ -268,7 +275,7 @@ enemyData[ENEMY_FROG] = {
         ],
         frameDuration: 10,
     },
-    getAnimation(enemy) {
+    getAnimation(state, enemy) {
         if (enemy.dead) return this.submergingAnimation;
         if (enemy.mode === 'attacking' || enemy.mode === 'retracting') {
             return this.attackAnimation;
@@ -292,7 +299,7 @@ enemyData[ENEMY_FROG] = {
         const poolPhase = startPoolPhase(state);
         const pool = state.world.pool && state.world.pool.sprites[0];
         modeTime += FRAME_LENGTH;
-        const hitBox = getEnemyHitBox(enemy);
+        const hitBox = getEnemyHitBox(state, enemy);
         const heroHitBox = getHeroHitBox(state.players[0]);
         const [targetX, targetY] = heroHitBox.getCenter();
         // This line was used to test the tongue works for erratic targets.
@@ -339,7 +346,7 @@ enemyData[ENEMY_FROG] = {
             ]);
         }
 
-        const dx = (targetX - getEnemyCenter(enemy)[0]) || 1;
+        const dx = (targetX - getEnemyCenter(state, enemy)[0]) || 1;
         switch (mode) {
             case 'attacking':
             case 'swimmingAttacking':
@@ -515,7 +522,7 @@ enemyData[ENEMY_FROG] = {
             explosion.top = enemy.top + (enemy.height - explosion.height ) / 2 + random.range(-25, 25);
             state = addEffectToState(state, explosion);
         }
-        return updateEnemy(state, enemy, {TTL: 500});
+        return updateEnemy(state, enemy, {ttl: 500});
     },
     // Make the tongue damage the player.
     updateState(state, enemy) {
@@ -529,7 +536,7 @@ enemyData[ENEMY_FROG] = {
                 points[points.length - 1], points[points.length - 2]
             );
             for (let ant of ants) {
-                if (lastRectangle.overlapsRectangle(getEnemyHitBox(ant))) {
+                if (lastRectangle.overlapsRectangle(getEnemyHitBox(state, ant))) {
                     state = updateEnemy(state, enemy,
                         {mode: 'swimmingRetracting', modeTime: 0, caughtFly: true}
                     );
@@ -539,7 +546,7 @@ enemyData[ENEMY_FROG] = {
         }
         // Check if the player is hitting any of the tongue sections.
         for (let i = 2; i < points.length; i++) {
-            // This hitbox is a crude estimation for the tongues actual position.
+            // This hitBox is a crude estimation for the tongues actual position.
             const sectionBox = Rectangle.defineFromPoints(points[i], points[i - 1]);
             if (sectionBox.overlapsRectangle(heroHitBox)) {
                 return damageHero(state, 0);
@@ -548,21 +555,21 @@ enemyData[ENEMY_FROG] = {
         }
         return state;
     },
-    drawOver(context, enemy) {
+    drawOver(context, state, enemy) {
         if (!enemy || enemy.dead) return;
         if (enemy.mode.includes('swimming')) {
             const frame = getFrame(this.ripplesAnimation, enemy.animationTime);
             // Use render enemy frame to transform the animation to match
             // the position+orientation of the enemy correctly.
-            renderEnemyFrame(context, enemy, frame);
+            renderEnemyFrame(context, state, enemy, frame);
         }
         if (!enemy.tongues.length) return;
         let frame = getFrame(tongueStartAnimation, enemy.animationTime);
         if (enemy.mode.includes('swimming')) {
-            renderEnemyFrame(context, enemy, frame);
+            renderEnemyFrame(context, state, enemy, frame);
         } else {
             enemy.top += 18;
-            renderEnemyFrame(context, enemy, frame);
+            renderEnemyFrame(context, state, enemy, frame);
             enemy.top -= 18;
             // drawImage(context, frame.image, frame, new Rectangle(enemy).translate(0, 18));
         }
@@ -635,7 +642,7 @@ enemyData[ENEMY_GRATE] = {
             });
             delay += random.range(8, 12);
             if (i % 3 === 2) delay += 10;
-            const hitBox = getEnemyHitBox(enemy);
+            const hitBox = getEnemyHitBox(state, enemy);
             explosion.width *= 3;
             explosion.height *= 3;
             explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2 + random.range(-40, 40);
@@ -675,6 +682,69 @@ enemyData[ENEMY_GRATE] = {
         noCollisionDamage: true,
     },
 };
+const ENEMY_WATER_MONK = 'waterMonk';
+const ENEMY_DROWNING_MONK = 'drowningMonk';
+
+const waterMonkGeometry = r(60, 40, {hitBox: {left: 0, top: 0, width: 50, height: 20}});
+// This drowning monk is created dead when a waterbug is defeated and has a special
+// frame for showing the monk sinking in the water.
+enemyData[ENEMY_DROWNING_MONK] = {
+    ...enemyData[ENEMY_MONK],
+    waterDeathAnimation: createAnimation('gfx/enemies/monks/waterbugsheet.png', waterMonkGeometry, {y: 3}),
+    getAnimation(state, enemy) {
+        const hitBox = getHitBox(this.deathAnimation, 0);
+        if (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state)) {
+            return this.waterDeathAnimation;
+        }
+        return getDefaultEnemyAnimation(state, enemy);
+    }
+}
+enemyData[ENEMY_WATER_MONK] = {
+    animation: createAnimation('gfx/enemies/monks/waterbugsheet.png', waterMonkGeometry, {rows: 3}),
+    deathAnimation: createAnimation('gfx/enemies/monks/waterbugsheet.png', waterMonkGeometry, {y: 4}),
+    deathSound: 'sfx/robedeath1.mp3',
+    // Just turn back when they hit the edge of the pool.
+    accelerate(state, enemy) {
+        const pool = state.world.pool && state.world.pool.sprites[0];
+        if (enemy.vx < 0 && enemy.left <= pool.left + 200) {
+            return {...enemy, vx: -enemy.vx};
+        }
+        return enemy;
+    },
+    shoot(state, enemy) {
+        if (enemy.animationTime % 3000) return state;
+        for (let i = 0; i < 3; i++) {
+            const theta = Math.PI / 3 + i * Math.PI / 6;
+            const bullet = createAttack(ATTACK_BULLET, {
+                left: enemy.left - enemy.vx + enemy.width / 2,
+                top: enemy.top + enemy.vy,
+                vx: enemy.bulletSpeed * Math.cos(theta),
+                vy: -enemy.bulletSpeed * Math.sin(theta),
+            });
+            bullet.left -= bullet.width / 2;
+            bullet.top -= bullet.height;
+            state = addEnemyAttackToState(state, bullet);
+        }
+        return state;
+    },
+    onDeathEffect(state, enemy) {
+        const drowningMonk = createEnemy(ENEMY_DROWNING_MONK, {
+            top: enemy.top, left: enemy.left,
+            // The rider gets knocked back, but the mount stays in places.
+            vx: enemy.vx, vy: enemy.vy,
+            life: 0, dead: true, ttl: 1000,
+        });
+        state = addEnemyToState(state, drowningMonk);
+        return updateEnemy(state, enemy, {ttl: 600, vx: 0, vy: 0});
+    },
+    props: {
+        life: 3,
+        score: 10,
+        grounded: true,
+        vx: -2,
+        bulletSpeed: 5,
+    },
+};
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
 const grateDamageGeometry = {...grateRectangle, anchor: {x: 733, y: 277}};
@@ -695,4 +765,6 @@ effects[EFFECT_GRATE_DAMAGE] = {
         yScale: .1,
     },
 };
+
+const { createAttack, addEnemyAttackToState } = require('attacks');
 

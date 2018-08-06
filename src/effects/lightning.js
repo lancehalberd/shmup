@@ -48,7 +48,7 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.idMap[state.enemies[i].id];
         if (!enemyIsActive(state, enemy)) continue;
-        const hitBox = getEnemyHitBox(enemy);
+        const hitBox = getEnemyHitBox(state, enemy);
         // The large lightning attack can only hit enemies in front of each bolt.
         if (type === EFFECT_LIGHTNING && hitBox.left + hitBox.width / 2 <= left) continue;
         const dx = hitBox.left + hitBox.width / 2 - left,
@@ -132,7 +132,7 @@ effects[EFFECT_ARC_LIGHTNING] = {
         } else {
             let tx = effect.tx, ty = effect.ty;
             if (target) {
-                const hitBox = getEnemyHitBox(target);
+                const hitBox = getEnemyHitBox(state, target);
                 tx = hitBox.left + hitBox.width / 2;
                 ty = hitBox.top + hitBox.height / 2;
             }

@@ -18,11 +18,11 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
     deathAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 2, duration: 30}),
     crouchingAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 3, duration: 30}),
     jumpingAnimation: createAnimation('gfx/enemies/spiders/jspider.png', r(55, 40), {y: 4, duration: 30}),
-    getAnimation(enemy) {
+    getAnimation(state, enemy) {
         if (enemy.grounded && !enemy.dead) {
             return enemy.vy < 0 ? this.jumpingAnimation: this.crouchingAnimation;
         }
-        return getDefaultEnemyAnimation(enemy);
+        return getDefaultEnemyAnimation(state, enemy);
     },
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
@@ -101,7 +101,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         }
         return {...enemy, targetY, jumps, vx, vy, mode};
     },
-    drawUnder(context, enemy) {
+    drawUnder(context, state, enemy) {
         if (enemy.dead || enemy.grounded) return;
         context.strokeStyle = 'white';
         for (let lineWidth = 1; lineWidth <= 4; lineWidth++) {
@@ -173,7 +173,7 @@ enemyData[ENEMY_BROWN_SPIDER] = {
         }
         return {...enemy, targetY, vy, mode};
     },
-    drawUnder(context, enemy) {
+    drawUnder(context, state, enemy) {
         if (enemy.dead || enemy.grounded) return;
         context.strokeStyle = 'white';
         for (let lineWidth = 1; lineWidth <= 4; lineWidth++) {

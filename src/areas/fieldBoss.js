@@ -334,10 +334,11 @@ enemyData[ENEMY_GROUND_MONK] = {
     props: {
         ...enemyData[ENEMY_MONK].props,
         life: 2,
+        groundOffset: 5,
     },
 };
 const ENEMY_DOOR = 'door';
-const doorRectangle = r(129, 275, {hitBox: {left: 22, top: 23, width: 96, height: 235}});
+const doorRectangle = r(129, 275, {hitBox: {left: 22, top: 23, width: 96, height: 220}});
 enemyData[ENEMY_DOOR] = {
     animation: {
         frames: [

@@ -120,8 +120,8 @@ function startFinisher(state, playerIndex) {
     return updatePlayer(state, playerIndex, {usingFinisher: true});
 }
 
-function getFinisherPosition(effect, enemy) {
-    const hitBox = getEnemyHitBox(enemy);
+function getFinisherPosition(state, effect, enemy) {
+    const hitBox = getEnemyHitBox(state, enemy);
     const effectHitBox = getEffectHitBox(effect).translate(-effect.left, -effect.top);
     return {
         top: hitBox.top + hitBox.height / 2 - effectHitBox.top - effectHitBox.height / 2,
@@ -156,7 +156,7 @@ effects[EFFECT_FINISHER] = {
             return updateEffect(state, effectIndex, {done: true});
         }
         // Move the hitbox to be in front of the enemy.
-        return updateEffect(state, effectIndex, getFinisherPosition(effect, enemy));
+        return updateEffect(state, effectIndex, getFinisherPosition(state, effect, enemy));
     },
     props: {
         permanent: true,
