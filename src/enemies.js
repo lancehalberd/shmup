@@ -80,13 +80,17 @@ function shoot_bulletAtAngle(state, enemy, getTheta) {
         return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
     }
     // Set attackCooldownFramesLeft if the enemy uses an attack animation.
+    let bulletsFired = enemy.bulletsFired || 0;
+    const shotCooldown = Array.isArray(enemy.shotCooldownFrames) ?
+        enemy.shotCooldownFrames[bulletsFired % enemy.shotCooldownFrames.length] :
+        enemy.shotCooldownFrames;
+    bulletsFired++;
     if (enemy.attackCooldownFrames) {
-        state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames, attackCooldownFramesLeft: enemy.attackCooldownFrames});
+        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     } else {
-        state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
+        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired});
     }
-    const bullet = createAttack(ATTACK_BULLET, {
-    });
+    const bullet = createAttack(ATTACK_BULLET, {});
     const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
     const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
     const hitBox = getEnemyHitBox(state, enemy);
@@ -99,6 +103,9 @@ function shoot_bulletAtAngle(state, enemy, getTheta) {
     bullet.vy = enemy.bulletSpeed * Math.sin(theta);
     return addEnemyAttackToState(state, bullet);
 
+}
+function shoot_bulletForward(state, enemy) {
+    return shoot_bulletAtAngle(state, enemy, () => Math.atan2(0, enemy.vx));
 }
 function shoot_bulletAtHeading(state, enemy) {
     return shoot_bulletAtAngle(state, enemy, () => Math.atan2(enemy.vy, enemy.vx));
@@ -157,7 +164,7 @@ const enemyData = {
             }
             return {...enemy, targetX, targetY, vx, vy};
         },
-        shoot: shoot_bulletAtPlayer,
+        shoot: shoot_bulletForward,
         onDeathEffect(state, enemy) {
             const locust = createEnemy(ENEMY_LOCUST, {
                 life: 6,
@@ -183,7 +190,9 @@ const enemyData = {
             speed: 1,
             bulletSpeed: 10,
             doNotFlip: true,
-            shotCooldownFrames: 80,
+            shotCooldownFrames: [8, 8, 8, 8, 8, 8, 8, 125],
+            bulletX: 1,
+            bulletY: 0.25,
         }
     },
     [ENEMY_FLYING_ANT]: {
