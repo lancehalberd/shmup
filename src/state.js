@@ -26,7 +26,7 @@ const getNewState = () => (advanceWorld({
     sfx: {},
     title: true,
     titleIndex: 0,
-    stageSelectIndex: 0,
+    stageSelectIndex: -1,
     paused: false,
     gameover: false,
     continueIndex: 0,
@@ -48,11 +48,15 @@ const advanceState = (state) => {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
+        //updatedState = {...updatedState, title: false};
+        //updatedState = setCheckpoint(updatedState, 'fieldStart');
+        //return applyCheckpointToState(updatedState);
+
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
         if (updatedState.players[0].actions.start && titleIndex === 0) {
             let world = updatedState.world;
-            if (stageSelectIndex) {
+            if (stageSelectIndex >= 0) {
                 updatedState = {...updatedState, title: false};
                 const checkpoint = checkpointKeys[stageSelectIndex];
                 updatedState = setCheckpoint(updatedState, checkpoint);
@@ -63,10 +67,12 @@ const advanceState = (state) => {
         if (updatedState.players[0].actions.up) titleIndex = (titleIndex + 2 - 1) % 2;
         if (updatedState.players[0].actions.down) titleIndex = (titleIndex + 1) % 2;
         if (updatedState.players[0].actions.left) {
-            stageSelectIndex = (stageSelectIndex + checkpointKeys.length - 1) % checkpointKeys.length;
+            stageSelectIndex--;
+            if (stageSelectIndex < -1) stageSelectIndex = checkpointKeys.length - 1;
         }
         if (updatedState.players[0].actions.right) {
-            stageSelectIndex = (stageSelectIndex + 1) % checkpointKeys.length;
+            stageSelectIndex++;
+            if (stageSelectIndex >= checkpointKeys.length) stageSelectIndex = -1;
         }
         return {...updatedState, titleIndex, stageSelectIndex};
     }

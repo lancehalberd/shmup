@@ -5,8 +5,9 @@ const {
     WIDTH, GAME_HEIGHT, ATTACK_BULLET, FRAME_LENGTH,
 } = require('gameConstants');
 const {
-    enemyData, updateEnemy, spawnMonkOnGround,
+    enemyData, updateEnemy,
     addEnemyToState, createEnemy, removeEnemy,
+    onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer,
 } = require('enemies');
 const { createAttack, addEnemyAttackToState } = require('attacks');
 const { getTargetVector } = require('sprites');
@@ -45,6 +46,12 @@ enemyData[ENEMY_HORNET] = {
     deathSound: 'sfx/hornetdeath.mp3',
     accelerate: (state, enemy) => {
         let {vx, vy, seed, targetX, targetY, mode, modeTime} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 8;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+        }
         const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 2000;
         const radius = seed * 2 + 2;
         switch (mode) {
@@ -119,6 +126,12 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
     deathSound: 'sfx/hit.mp3',
     accelerate: (state, enemy) => {
         let {vx, vy, targetX, targetY, mode, modeTime} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 8;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+        }
         const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 8000;
         const radius = 1;
         switch (mode) {
@@ -178,21 +191,9 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         return {...enemy, targetX, targetY, vx, vy, mode, modeTime};
     },
     shoot(state, enemy) {
+        // Only attack while circling and retreating.
         if (enemy.mode !== 'circle' && enemy.mode !== 'retreat') return state;
-        if (enemy.shotCooldown > 0) {
-            return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-        }
-        state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
-        const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-        const theta = Math.atan2(dy, dx);
-        const bullet = createAttack(ATTACK_BULLET, {
-            vx: enemy.bulletSpeed * Math.cos(theta),
-            vy: enemy.bulletSpeed * Math.sin(theta),
-            top: enemy.top + enemy.vy + enemy.height / 2,
-            left: enemy.left + enemy.vx,
-        });
-        bullet.top -= bullet.height / 2;
-        return addEnemyAttackToState(state, bullet);
+        return shoot_bulletAtPlayer(state, enemy);
     },
     onDeathEffect(state, enemy) {
         const hornet = createEnemy(ENEMY_HORNET, {
@@ -210,7 +211,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         state = addEnemyToState(state, hornet);
         return addEnemyToState(state, enemy);
     },
-    onHitGroundEffect: spawnMonkOnGround,
+    onHitGroundEffect: onHitGroundEffect_spawnMonk,
     props: {
         life: 40,
         score: 500,
@@ -220,7 +221,10 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         modeTime: 0,
         permanent: true,
         doNotFlip: true,
+        initialShotCooldownFrames: 5,
         shotCooldownFrames: 50,
+        bulletX: 0.9,
+        bulletY: 0.15,
     }
 };
 const ENEMY_HORNET_CIRCLER = 'hornetCircler';
@@ -229,6 +233,12 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
     accelerate: (state, enemy) => {
         const playerSprite = state.players[0].sprite;
         let {vx, vy, seed, animationTime} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 8;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+        }
         const theta = Math.PI / 2 + seed * Math.PI + Math.PI * 4 * animationTime / 2000;
         const radius = 5 + animationTime / 1000;
         vx = radius * Math.cos(theta);
@@ -256,6 +266,12 @@ enemyData[ENEMY_HORNET_DASHER] = {
     ...enemyData[ENEMY_HORNET],
     accelerate: (state, enemy) => {
         let {vx, vy, animationTime, targetX, targetY, permanent} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 8;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+        }
         const target = state.players[0].sprite;
         // Don't update the targetX/Y values once the hornet starts charging.
         targetX = target.left + target.width / 2;
@@ -304,6 +320,13 @@ enemyData[ENEMY_HORNET_QUEEN] = {
     deathAnimation: createAnimation('gfx/enemies/hornets/hqueen4.png', queenRectangle),
     accelerate: (state, enemy) => {
         let {vx, vy} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 7;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+        }
+        // Fly straight onto the screen initially.
         if (enemy.left + enemy.width > WIDTH) {
             vx = -5;
             vy = 0;

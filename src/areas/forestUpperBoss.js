@@ -114,7 +114,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
         const nest = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_NEST_1)[0];
         const queen = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_QUEEN)[0];
         // Spawn the hornet queen at 60% health of nest
-        if (nest && !queen && nest.life / NEST_LIFE < 0.6 ) {
+        if (nest && nest.life > 0 && !queen && nest.life / NEST_LIFE < 0.6 ) {
             const newEnemy = createEnemy(ENEMY_HORNET_QUEEN, {
                 left: WIDTH,
                 top: random.range(1, 3) * getHazardHeight(state) / 5,
@@ -127,7 +127,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             };
             world = {...world, lifebars};
         }
-        if (time > 2500 && nest) {
+        if (time > 2500 && nest && !nest.dead) {
             const spawnPeriod = 1500 + 3500 * nest.life / NEST_LIFE;
             let enemyTypes = [ENEMY_HORNET_CIRCLER];
             if (nest.life < 0.66 * NEST_LIFE) enemyTypes.push(ENEMY_HORNET_DASHER);
@@ -141,8 +141,8 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
                 lastSpawnTime = time;
             }
         }
-        if (time > 2500 && !nest && state.enemies.length === 0) {
-            return enterStarWorldEnd(state);
+        if (time > 2500 && nest) {
+            return transitionToSky(state);
         }
         if (time > 2500 && queen && queen.dead) {
             return enterStarWorldEnd(state);
@@ -156,6 +156,8 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
 module.exports = {
     transitionToForestUpperBoss,
 };
+
+const { transitionToSky } = require('areas/forestUpperToSky');
 
 const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitBox } = require('enemies');
 const {
@@ -234,10 +236,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         life: NEST_LIFE,
         score: 200,
         hanging: true,
-        spawns: [
-            ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET,
-            ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET_CIRCLER, ENEMY_HORNET
-        ],
+        spawns: [],
         boss: true,
         damageEffectType: EFFECT_NEST_DAMAGE_UPPER,
         damageEffectOffset: 0,

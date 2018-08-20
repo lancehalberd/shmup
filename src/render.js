@@ -257,7 +257,7 @@ const renderTitle = (context, state) => {
     for (let i = 0; i < options.length; i++) {
         drawImage(context, options[i].image, options[i], targets[i]);
     }
-    if (state.stageSelectIndex) {
+    if (state.stageSelectIndex >= 0) {
         const checkpoint = Object.keys(checkpoints)[state.stageSelectIndex];
         context.textBaseline = 'middle';
         context.textAlign = 'left';

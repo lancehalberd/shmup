@@ -1,5 +1,6 @@
 
 const Rectangle = require('Rectangle');
+const random = require('random');
 const { drawImage } = require('draw');
 
 const {
@@ -33,7 +34,7 @@ const {
 
 let uniqueIdCounter = 0;
 
-const spawnMonkOnGround = (state, enemy) => {
+const onHitGroundEffect_spawnMonk = (state, enemy) => {
     const fallDamage = Math.floor(enemy.vy / 13);
     const monk = createEnemy(ENEMY_MONK, {
         left: enemy.left,
@@ -47,6 +48,67 @@ const spawnMonkOnGround = (state, enemy) => {
     // Remove the current enemy from the state.
     return removeEnemy(state, enemy);
 };
+
+function accelerate_followPlayer(state, enemy) {
+    let {vx, vy} = enemy;
+    const speed = enemy.speed;
+    const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
+    const theta = Math.atan2(dy, dx);
+    if (enemy.animationTime === 0) {
+        vx = speed * Math.cos(theta);
+        vy = speed * Math.sin(theta);
+    } else if (enemy.animationTime < 3000) {
+        vx = (vx * 20 + speed * Math.cos(theta)) / 21;
+        vy = (vy * 20 + speed * Math.sin(theta)) / 21;
+    } else {
+        const tvx = 6 * Math.abs(vx) / vx;
+        vx = (vx * 20 + tvx) / 21;
+        vy = (vy * 20 + 0) / 21;
+    }
+    return {...enemy, vx, vy};
+}
+function shoot_bulletAtAngle(state, enemy, getTheta) {
+    if (enemy.shotCooldown === undefined) {
+        const initialShotCooldownFrames = enemy.initialShotCooldownFrames || 50
+        const shotCooldown = Array.isArray(initialShotCooldownFrames) ?
+            random.range(initialShotCooldownFrames[0], initialShotCooldownFrames[1]) :
+            initialShotCooldownFrames;
+        state = updateEnemy(state, enemy, {shotCooldown});
+        enemy = state.idMap[enemy.id];
+    }
+    if (enemy.shotCooldown > 0) {
+        return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
+    }
+    // Set attackCooldownFramesLeft if the enemy uses an attack animation.
+    if (enemy.attackCooldownFrames) {
+        state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames, attackCooldownFramesLeft: enemy.attackCooldownFrames});
+    } else {
+        state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
+    }
+    const bullet = createAttack(ATTACK_BULLET, {
+    });
+    const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
+    const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
+    const hitBox = getEnemyHitBox(state, enemy);
+    bullet.left = (enemy.vx > 0 && !enemy.doNotFlip) ?
+        hitBox.left + bulletX * hitBox.width - enemy.vx + bullet.width * (bulletX - 1): // Facing right.
+        hitBox.left + (1 - bulletX) * hitBox.width + enemy.vx - bullet.width * bulletX; // Facing left.
+    bullet.top = hitBox.top + enemy.vy + bulletY * hitBox.height + bullet.height * (bulletY - 1);
+    const theta = getTheta(bullet);
+    bullet.vx = enemy.bulletSpeed * Math.cos(theta);
+    bullet.vy = enemy.bulletSpeed * Math.sin(theta);
+    return addEnemyAttackToState(state, bullet);
+
+}
+function shoot_bulletAtHeading(state, enemy) {
+    return shoot_bulletAtAngle(state, enemy, () => Math.atan2(enemy.vy, enemy.vx));
+}
+function shoot_bulletAtPlayer(state, enemy) {
+    return shoot_bulletAtAngle(state, enemy, bullet => {
+        const {dx, dy} = getTargetVector(bullet, state.players[0].sprite);
+        return Math.atan2(dy, dx);
+    });
+}
 
 const enemyData = {
     [ENEMY_FLY]: {
@@ -95,22 +157,7 @@ const enemyData = {
             }
             return {...enemy, targetX, targetY, vx, vy};
         },
-        shoot(state, enemy) {
-            if (enemy.shotCooldown > 0) {
-                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-            }
-            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
-            const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-            const theta = Math.atan2(dy, dx);
-            const bullet = createAttack(ATTACK_BULLET, {
-                vx: enemy.bulletSpeed * Math.cos(theta),
-                vy: enemy.bulletSpeed * Math.sin(theta),
-                top: enemy.top + enemy.vy + enemy.height / 2,
-                left: enemy.left + enemy.vx,
-            });
-            bullet.top -= bullet.height / 2;
-            return addEnemyAttackToState(state, bullet);
-        },
+        shoot: shoot_bulletAtPlayer,
         onDeathEffect(state, enemy) {
             const locust = createEnemy(ENEMY_LOCUST, {
                 life: 6,
@@ -129,7 +176,7 @@ const enemyData = {
             state = addEnemyToState(state, locust);
             return addEnemyToState(state, enemy);
         },
-        onHitGroundEffect: spawnMonkOnGround,
+        onHitGroundEffect: onHitGroundEffect_spawnMonk,
         props: {
             life: 12,
             score: 500,
@@ -143,26 +190,7 @@ const enemyData = {
         animation: flyingAntAnimation,
         deathAnimation: flyingAntDeathAnimation,
         deathSound: 'sfx/flydeath.mp3',
-        accelerate: (state, enemy) => {
-            let {vx, vy} = enemy;
-            const target = state.players[0].sprite;
-            const speed = enemy.speed;
-            const dx = target.left + target.width / 2 - (enemy.left + enemy.width / 2)
-            const dy = target.top + target.height / 2 - (enemy.top + enemy.height / 2)
-            const theta = Math.atan2(dy, dx);
-            if (enemy.animationTime === 0) {
-                vx = speed * Math.cos(theta);
-                vy = speed * Math.sin(theta);
-            } else if (enemy.animationTime < 3000) {
-                vx = (vx * 20 + speed * Math.cos(theta)) / 21;
-                vy = (vy * 20 + speed * Math.sin(theta)) / 21;
-            } else {
-                const tvx = 6 * Math.abs(vx) / vx;
-                vx = (vx * 20 + tvx) / 21;
-                vy = (vy * 20 + 0) / 21;
-            }
-            return {...enemy, vx, vy};
-        },
+        accelerate: accelerate_followPlayer,
         props: {
             life: 1,
             score: 30,
@@ -173,42 +201,8 @@ const enemyData = {
         animation: flyingAntSoldierAnimation,
         deathAnimation: flyingAntSoldierDeathAnimation,
         deathSound: 'sfx/hit.mp3',
-        accelerate(state, enemy) {
-            let {vx, vy} = enemy;
-            const speed = enemy.speed;
-            const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-            const theta = Math.atan2(dy, dx);
-            if (enemy.animationTime === 0) {
-                vx = speed * Math.cos(theta);
-                vy = speed * Math.sin(theta);
-            } else if (enemy.animationTime < 5000) {
-                vx = (vx * 20 + speed * Math.cos(theta)) / 21;
-                vy = (vy * 20 + speed * Math.sin(theta)) / 21;
-            } else {
-                const tvx = 6 * Math.abs(vx) / vx;
-                vx = (vx * 20 + tvx) / 21;
-                vy = (vy * 20 + 0) / 21;
-            }
-            return {...enemy, vx, vy};
-        },
-        shoot(state, enemy) {
-            if (enemy.shotCooldown === undefined) {
-                state = updateEnemy(state, enemy, {shotCooldown: 20 + Math.floor(50 * Math.random())});
-                enemy = state.idMap[enemy.id];
-            }
-            if (enemy.shotCooldown > 0) {
-                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-            }
-            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames});
-            const theta = Math.atan2(enemy.vy, enemy.vx);
-            const bullet = createAttack(ATTACK_BULLET, {
-                left: enemy.left - enemy.vx,
-                vx: enemy.bulletSpeed * Math.cos(theta),
-                vy: enemy.bulletSpeed * Math.sin(theta),
-            });
-            bullet.top = enemy.top + enemy.vy + Math.round((enemy.height - bullet.height) / 2);
-            return addEnemyAttackToState(state, bullet);
-        },
+        accelerate: accelerate_followPlayer,
+        shoot: shoot_bulletAtHeading,
         onDeathEffect(state, enemy) {
             const flyingAnt = createEnemy(ENEMY_FLYING_ANT, {
                 left: enemy.left,
@@ -224,13 +218,14 @@ const enemyData = {
             state = addEnemyToState(state, flyingAnt);
             return addEnemyToState(state, enemy);
         },
-        onHitGroundEffect: spawnMonkOnGround,
+        onHitGroundEffect: onHitGroundEffect_spawnMonk,
         props: {
             bulletSpeed: 8,
             life: 2,
             score: 20,
             speed: 5,
             shotCooldownFrames: 100,
+            initialShotCooldownFrames: [25, 50],
         },
     },
     [ENEMY_MONK]: {
@@ -243,33 +238,7 @@ const enemyData = {
             const vx = (enemy.attackCooldownFramesLeft > 0) ? 0.001 : enemy.speed;
             return {...enemy, vx};
         },
-        shoot(state, enemy) {
-            if (enemy.shotCooldown === undefined) {
-                state = updateEnemy(state, enemy, {shotCooldown: 20 + Math.floor(enemy.shotCooldownFrames * Math.random())});
-                enemy = state.idMap[enemy.id];
-            }
-            if (enemy.shotCooldown > 0) {
-                return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-            }
-            let target = state.players[0].sprite;
-            target = {...target, left: target.left + state.world.vx * 40};
-            const {dx, dy} = getTargetVector(enemy, target);
-            const mag = Math.sqrt(dx * dx + dy * dy);
-            if (!mag) {
-                return state;
-            }
-            state = updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldownFrames, attackCooldownFramesLeft: enemy.attackCooldownFrames});
-
-            const bullet = createAttack(ATTACK_BULLET, {
-                left: enemy.left - enemy.vx + enemy.width / 2,
-                top: enemy.top + enemy.vy,
-                vx: enemy.bulletSpeed * dx / mag - state.world.vx,
-                vy: enemy.bulletSpeed * dy / mag,
-            });
-            bullet.left -= bullet.width / 2;
-            bullet.top -= bullet.height;
-            return addEnemyAttackToState(state, bullet);
-        },
+        shoot: shoot_bulletAtPlayer,
         onDeathEffect(state, enemy) {
             return updateEnemy(state, enemy, {ttl: 600});
         },
@@ -281,6 +250,9 @@ const enemyData = {
             bulletSpeed: 5,
             attackCooldownFrames: 15,
             shotCooldownFrames: 80,
+            bulletX: 0.5,
+            bulletY: 0,
+            initialShotCooldownFrames: [20, 50]
         },
     },
     [ENEMY_CARGO_BEETLE]: {
@@ -771,9 +743,11 @@ module.exports = {
     isIntersectingEnemyHitBoxes,
     updateEnemy,
     getDefaultEnemyAnimation,
-    spawnMonkOnGround,
     enemyIsActive,
     ENEMY_SHIELD_MONK,
+    accelerate_followPlayer,
+    onHitGroundEffect_spawnMonk,
+    shoot_bulletAtPlayer,
 };
 
 // Move possible circular imports to after exports.

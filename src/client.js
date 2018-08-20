@@ -54,7 +54,7 @@ const update = () => {
         }
     }
 
-    stateQueue = stateQueue.slice(0, 100);
+    stateQueue = stateQueue.slice(0, 200);
     //render(state);
     // This is here to help with debugging from console.
     window.state = state;

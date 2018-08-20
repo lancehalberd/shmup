@@ -7,6 +7,7 @@ const { getNewSpriteState } = require('sprites');
 
 const allWorlds = {};
 const checkpoints = {};
+window.checkpoints = checkpoints;
 window.allWorlds = allWorlds;
 
 const getNewLayer = (props) => ({
@@ -34,7 +35,7 @@ const addElementToLayer = (state, layerName) => {
     let safety = 0;
     const populating = !lastSprite;
     //if (layerName === 'largeTrunks') console.log(spriteData);
-    while ((!lastSprite || lastSprite.left < WIDTH) && safety++ < 20) {
+    while ((!lastSprite || lastSprite.left < WIDTH) && !(lastSprite && layer.unique) && safety++ < 20) {
         let spriteData = (lastSprite && lastSprite.next)
             ? elementsData[random.element(lastSprite.next)]
             : random.element(elementsData);
@@ -48,7 +49,7 @@ const addElementToLayer = (state, layerName) => {
         if (Array.isArray(animation)) {
             animation = random.element(animation);
         }
-        let offset = lastSprite ? (lastSprite.offset || 0) : 0;
+        let offset = lastSprite ? (lastSprite.offset || 0) : (layer.xOffset || 0);
         if (Array.isArray(offset)) {
             offset = random.element(offset);
         }
@@ -110,6 +111,9 @@ const advanceLayer = (state, layerName) => {
             animationTime: sprite.animationTime + FRAME_LENGTH,
         });
         sprite = state.world[layerName].sprites[i];
+        if (sprite.accelerate) {
+            state = sprite.accelerate(state, layerName, i);
+        }
         if (sprite.onHit) {
             const frame = getFrame(sprite.animation, sprite.animationTime);
             const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
@@ -268,6 +272,7 @@ module.exports = {
     getNewWorld,
     getNewLayer,
     advanceWorld,
+    addElementToLayer,
     getHazardHeight,
     getHazardCeilingHeight,
     getGroundHeight,
@@ -280,7 +285,7 @@ module.exports = {
 };
 
 const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
-require('areas/forestLower');
-require('areas/forestUpper');
+// require('areas/forestLower');
+// require('areas/forestUpper');
 const { getEnemyHitBox } = require('enemies');
 const { getHeroHitBox } = require('heroes');

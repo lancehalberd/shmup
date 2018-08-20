@@ -203,6 +203,7 @@ const advanceHero = (state, playerIndex) => {
         }
     }
     if (player.actions.special && heroData.applySpecial && !isHeroSwapping(player)
+        && player[heroType].energy > 0
         // Don't allow activating special while the moth is still running its invulnerability.
         // We add 1 to the invulnerableFor value to distinguish it from other types of
         // invulnerability.
@@ -252,6 +253,7 @@ const advanceHero = (state, playerIndex) => {
         }
         return updatePlayer(state, playerIndex, {
             invulnerableFor, spawning: true,
+            bee: {...player.bee, targets: []},
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
         }, {left, top, animationTime, targetLeft, targetTop});
     }
@@ -463,6 +465,7 @@ const damageHero = (updatedState, playerIndex) => {
     updatedState = updatePlayer(updatedState, playerIndex, {
         [player.heroes[0]]: {...player[player.heroes[0]], energy: -10 - 10 * (deaths - 1), deaths},
     });
+    player = updatedState.players[playerIndex];
     const needleEffect = createEffect(EFFECT_NEEDLE_FLIP);
     needleEffect.left = sprite.left + (sprite.width - needleEffect.width ) / 2;
     needleEffect.top = sprite.top + (sprite.height - needleEffect.height ) / 2;
@@ -493,16 +496,21 @@ const damageHero = (updatedState, playerIndex) => {
         invulnerableFor: 2000,
         spawning: true,
         chasingNeedle: true,
-        [player.heroes[0]]: {...player[player.heroes[0]], targets: [] },
         // powerupIndex: 0,
         // powerupPoints: 0,
         comboScore: 0,
         powerups,
         ladybugs,
+        bee: {...player.bee, targets: [] },
     }, {
         ...heroesData[player.heroes[0]].animation.frames[0],
         left, top, targetLeft, targetTop, spawnSpeed,
         vx: 0, vy: 0,
+    });
+    player = updatedState.players[playerIndex];
+    // Remove the targets if the current player happens to be the bee.
+    updatedState = updatePlayer(updatedState, playerIndex, {
+
     });
     player = updatedState.players[playerIndex];
 
