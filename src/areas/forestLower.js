@@ -1,19 +1,16 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ENEMY_FLY, ENEMY_MONK,
+    ENEMY_FLY,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
     ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
 const { ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 const random = require('random');
 const { createAnimation, r } = require('animations');
-const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
-
-const willowAnimation = createAnimation('gfx/scene/forest/willowsheet.png', r(200, 200), {cols: 6, duration: 30});
+const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
 
 const spawnEnemy = (state, enemyType, props) => {
     const newEnemy = createEnemy(enemyType, props);

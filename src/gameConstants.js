@@ -3,7 +3,7 @@ module.exports = {
     TEST_ITEMS: false,
     //TEST_ITEMS: ['tripleCombo', 'combo'],
     //TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
-    //TEST_ENEMY: 'hornetSoldier',
+    TEST_ENEMY: 'wren',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
@@ -17,8 +17,6 @@ module.exports = {
     ENEMY_FLYING_ANT: 'flyingAnt',
     ENEMY_FLYING_ANT_SOLDIER: 'flyingAntSoldier',
     ENEMY_MONK: 'monk',
-    ENEMY_CARGO_BEETLE: 'cargoBeetle',
-    ENEMY_EXPLOSIVE_BEETLE: 'explosiveBeetle',
     ENEMY_LOCUST: 'locust',
     ENEMY_LOCUST_SOLDIER: 'locustSoldier',
 

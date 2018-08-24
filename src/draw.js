@@ -6,7 +6,7 @@ function drawImage(context, image, source, target) {
         source.left, source.top, source.width, source.height,
         target.left, target.top, target.width, target.height
     );
-};
+}
 
 const tintCanvas = document.createElement('canvas');
 tintCanvas.width = WIDTH;

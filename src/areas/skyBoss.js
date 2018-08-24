@@ -1,19 +1,13 @@
 
 const {
-    FRAME_LENGTH, WIDTH, GAME_HEIGHT,
-    ATTACK_DEFEATED_ENEMY, ATTACK_BULLET,
-    ENEMY_FLYING_ANT, ENEMY_MONK,
-    EFFECT_EXPLOSION,
+    FRAME_LENGTH,
 } = require('gameConstants');
-const random = require('random');
-const Rectangle = require('Rectangle');
-const { drawImage } = require('draw');
-const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
-const { getNewSpriteState } = require('sprites');
-const { allWorlds, getGroundHeight, getNewLayer } = require('world');
-const { enterStarWorldEnd } = require('areas/stars');
+// const random = require('random');
+// const Rectangle = require('Rectangle');
+// const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
+const { allWorlds } = require('world');
 
-const WORLD_SKY_BOSS = 'skyrBoss';
+const WORLD_SKY_BOSS = 'skyBoss';
 
 function transitionToSkyBoss(state) {
     const world = {

@@ -142,7 +142,6 @@ const advanceState = (state) => {
         }
     }
 
-    updatedState.sfx = {...updatedState.sfx};
     // Check for enemies hit by attacks.
     for (let i = 0; i < updatedState.enemies.length; i++) {
         let enemy = updatedState.idMap[updatedState.enemies[i].id];

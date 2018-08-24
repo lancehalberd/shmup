@@ -224,7 +224,7 @@ const advanceHero = (state, playerIndex) => {
         state = useMeleeAttack(state, playerIndex);
         player = state.players[playerIndex];
     } else if (shotCooldown > 0) {
-        state = updatePlayer({...state, sfx}, playerIndex, {shotCooldown: shotCooldown - 1});
+        state = updatePlayer(state, playerIndex, {shotCooldown: shotCooldown - 1});
         player = state.players[playerIndex];
     } else if (player.actions.shoot && !isHeroSwapping(player)) {
         state = heroData.shoot(state, playerIndex);

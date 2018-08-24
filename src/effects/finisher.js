@@ -1,11 +1,7 @@
 const {
-    EFFECT_DEFLECT_BULLET,
-} = require('gameConstants');
-const {
     r, a,
     requireImage,
     createAnimation,
-    getFrame,
 } = require('animations');
 
 const { MAX_ENERGY } = require('gameConstants');
@@ -78,7 +74,6 @@ function advanceFinisherCharge(state, playerIndex) {
 }
 
 function advanceFinisherBeam(state, playerIndex) {
-    const player = state.players[playerIndex];
     const beamStartIndex = getEffectIndex(state, EFFECT_FINISHER_BEAM_START);
     const beamIndex = getEffectIndex(state, EFFECT_FINISHER_BEAM);
     if (state.effects[beamStartIndex].animationTime > 1000) {

@@ -16,7 +16,6 @@ const {
     LOOT_PORTAL,
     LOOT_HELMET,
     EFFECT_RATE_UP, EFFECT_SIZE_UP, EFFECT_SPEED_UP,
-    ENEMY_CARGO_BEETLE,
 } = require('gameConstants');
 
 const {
@@ -411,6 +410,7 @@ module.exports = {
 // Move possible circular imports to after exports.
 const { getHazardHeight, getHazardCeilingHeight } = require('world');
 const { addEnemyToState, createEnemy } = require('enemies');
+const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
 
 const { updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
 

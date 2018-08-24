@@ -17,7 +17,6 @@ const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
     requireImage,
-    createAnimation,
     getFrame,
     getHitBox,
     damageAnimation,

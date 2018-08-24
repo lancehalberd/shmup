@@ -3,13 +3,13 @@ const {
     ENEMY_FLY,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
 const random = require('random');
-const { createAnimation, r } = require('animations');
+const { createAnimation, r, requireImage } = require('animations');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
+const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
+
 
 const spawnEnemy = (state, enemyType, props) => {
     const newEnemy = createEnemy(enemyType, props);
@@ -52,7 +52,7 @@ checkpoints[CHECK_POINT_SKY_BOSS] = function (state) {
     world.time = 120000;
     return transitionToSkyBoss({...state, world});
 };
-const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
+const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_LIGHTNING_BEETLE];
 
 const SKY_DURATION = 120000;
 const SKY_EASY_DURATION = 30000;
@@ -103,7 +103,7 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['explodingBeetle', 'hornet']));
+                return setEvent(state, random.element(['lightningBeetle', 'hornet']));
             }
         },
         flyingAnts: (state, eventTime) => {
@@ -129,10 +129,10 @@ allWorlds[WORLD_SKY] = {
                 return setEvent(state, random.element(['hornet']));
             }
         },
-        explodingBeetle: (state, eventTime) => {
+        lightningBeetle: (state, eventTime) => {
             if (eventTime === 0) {
                 let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_EXPLOSIVE_BEETLE, {left: WIDTH, top});
+                return spawnEnemy(state, ENEMY_LIGHTNING_BEETLE, {left: WIDTH, top});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
@@ -147,7 +147,7 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'flyingAnts');
+                return setEvent(state, random.element(['lightningBeetle', 'flyingAnts']));
             }
         },
         bossPrep: (state) => {
@@ -265,34 +265,39 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, addEnemyToState, enemyData, updateEnemy, removeEnemy,
-    accelerate_followPlayer, onHitGroundEffect_spawnMonk,
+const { createEnemy, addEnemyToState, enemyData, removeEnemy,
+    accelerate_followPlayer, onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer,
 } = require('enemies');
 // Bluebirds, slowly follow the Knight, when mounted can fire long lasers.
 const ENEMY_BLUE_BIRD = 'blueBird';
+const blueBirdGeometry = {
+    ...r(130, 130),
+    hitBox: {left: 27, top: 25, width: 65, height: 80},
+};
 enemyData[ENEMY_BLUE_BIRD] = {
-    animation: createAnimation('gfx/enemies/birds/bluebird.png', r(130, 130), {cols: 4, duration: 30}),
-    deathAnimation: createAnimation('gfx/enemies/birds/bluebird.png', r(130, 130), {x: 4, duration: 30}),
+    animation: createAnimation('gfx/enemies/birds/bluebird.png', blueBirdGeometry, {cols: 4}),
+    deathAnimation: createAnimation('gfx/enemies/birds/bluebird.png', blueBirdGeometry, {x: 4}),
     deathSound: 'sfx/birds/bird.mp3',
     accelerate: accelerate_followPlayer,
     props: {
-        life: 5,
+        life: 20,
+        followPlayerFor: 10000,
         score: 40,
-        speed: 2,
+        speed: 4,
     },
 };
 const ENEMY_BLUE_BIRD_SOLDIER = 'blueBirdSoldier';
 enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
-    animation: createAnimation('gfx/enemies/birds/mountbluebird.png', r(130, 130), {cols: 4, duration: 30}),
-    deathAnimation: createAnimation('gfx/enemies/birds/mountbluebird.png', r(130, 130), {x: 4, duration: 30}),
-    deathSound: 'sfx/birds/bird.mp3',
+    animation: createAnimation('gfx/enemies/birds/mountbluebird.png', blueBirdGeometry, {cols: 4}),
+    deathAnimation: createAnimation('gfx/enemies/birds/mountbluebird.png', blueBirdGeometry, {x: 4}),
+    deathSound: 'sfx/hit.mp3',
     accelerate: accelerate_followPlayer,
+    shoot: shoot_bulletAtPlayer,
     onDeathEffect(state, enemy) {
         const blueBird = createEnemy(ENEMY_BLUE_BIRD, {
             left: enemy.left,
             top: enemy.top,
-            speed: 3,
-            vx: 10,
+            vx: 20,
             vy: Math.random() < .5 ? -5 : 5,
             animationTime: 20,
         });
@@ -304,20 +309,58 @@ enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
     },
     onHitGroundEffect: onHitGroundEffect_spawnMonk,
     props: {
-        life: 8,
+        life: 20,
+        followPlayerFor: 10000,
         score: 50,
-        speed: 1.5,
+        speed: 3,
+        shotCooldownFrames: 50,
+        bulletSpeed: 8,
+        bulletX: 0.9,
+        bulletY: 0.15,
     },
 };
-/*Enemies:
-Wren, like stronger larger flies and fly in patterns.
 
-Ducks, which stop projectiles from being shot through them but don’t have any attacks.
-I am unsure if Ducks should damage the Knights or just only stop attacks.
-If they don’t damage the Knights, it may be worth having them move from left to right so they stay on screen longer.
-Ducks have a quack to warn they are coming on screen.
+const ENEMY_DUCK = 'duck';
+const duckGeometry = {
+    ...r(200, 102),
+    hitBoxes: [
+        {left: 25, top: 28, width: 35, height: 20},
+        {left: 56, top: 35, width: 50, height: 15},
+        {left: 114, top: 24, width: 55, height: 60},
+        {left: 114, top: 21, width: 70, height: 20},
+    ],
+};
+// Duck can fly in either direction, and should be spawned off screen to give warning.
+enemyData[ENEMY_DUCK] = {
+    animation: {
+        frames: [
+            {...duckGeometry, image: requireImage('gfx/enemies/birds/duck1.png')},
+            {...duckGeometry, image: requireImage('gfx/enemies/birds/duck2.png')},
+        ],
+        frameDuration: 12,
+    },
+    props: {
+        life: 1000,
+        score: 50,
+        speed: 8,
+        spawnSfx: 'quack',
+    },
+};
 
-Lightning Beetles, which when killed summon a vertical bolt of lightning across the screen to damage anything.
-*/
+const ENEMY_WREN = 'wren';
+const wrenGeometry = {
+    ...r(80, 74),
+    hitBox: {left: 15, top: 15, width: 45, height: 35},
+};
+enemyData[ENEMY_WREN] = {
+    animation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {cols: 4}),
+    deathAnimation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {x: 4}),
+    deathSound: 'sfx/birds/bird.mp3',
+    props: {
+        life: 4,
+        score: 50,
+        speed: 4,
+    },
+};
 
 const { transitionToSkyBoss } = require('areas/skyBoss');

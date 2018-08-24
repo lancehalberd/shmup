@@ -8,8 +8,7 @@ const {
     ENEMY_FLY, ENEMY_MONK,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
-    ATTACK_BULLET, ATTACK_DEFEATED_ENEMY, ATTACK_EXPLOSION,
+    ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
     ATTACK_SLASH, ATTACK_STAB,
     EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
     LOOT_COIN,
@@ -28,8 +27,6 @@ const {
     flyingAntAnimation, flyingAntDeathAnimation,
     flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation,
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
-    cargoBeetleAnimation, cargoBeetleDeathAnimation,
-    explosiveBeetleAnimation, explosiveBeetleDeathAnimation,
 } = require('animations');
 
 let uniqueIdCounter = 0;
@@ -57,7 +54,7 @@ function accelerate_followPlayer(state, enemy) {
     if (enemy.animationTime === 0) {
         vx = speed * Math.cos(theta);
         vy = speed * Math.sin(theta);
-    } else if (enemy.animationTime < 3000) {
+    } else if (enemy.animationTime < (enemy.followPlayerFor || 3000)) {
         vx = (vx * 20 + speed * Math.cos(theta)) / 21;
         vy = (vy * 20 + speed * Math.sin(theta)) / 21;
     } else {
@@ -146,7 +143,6 @@ const enemyData = {
             life: 8,
             score: 100,
             speed: 3,
-            doNotFlip: true,
         }
     },
     [ENEMY_LOCUST_SOLDIER]: {
@@ -174,8 +170,7 @@ const enemyData = {
                 vx: enemy.vx,
                 vy: enemy.vy,
                 animationTime: enemy.animationTime, // This helps keep acceleration in sync.
-                speed: 3,
-                mode: 'retreat',
+                speed: -1,
             })
             // Delete the current enemy from the state so it can be
             // added on top of the mount enemy.
@@ -189,7 +184,6 @@ const enemyData = {
             score: 500,
             speed: 1,
             bulletSpeed: 10,
-            doNotFlip: true,
             shotCooldownFrames: [8, 8, 8, 8, 8, 8, 8, 125],
             bulletX: 1,
             bulletY: 0.25,
@@ -264,63 +258,6 @@ const enemyData = {
             initialShotCooldownFrames: [20, 50]
         },
     },
-    [ENEMY_CARGO_BEETLE]: {
-        animation: cargoBeetleAnimation,
-        deathAnimation: cargoBeetleDeathAnimation,
-        accelerate(state, enemy) {
-            // Move up and down in a sin wave.
-            const theta = Math.PI / 2 + Math.PI * 4 * enemy.animationTime / 2000;
-            const vy = 2 * Math.sin(theta);
-            return {...enemy, vy};
-        },
-        deathSound: 'sfx/flydeath.mp3',
-        onDeathEffect(state, enemy) {
-            const loot = createLoot(enemy.lootType || getAdaptivePowerupType(state));
-            // These offsets are chosen to match the position of the bucket.
-            loot.left = enemy.left + 50 - loot.width / 2;
-            loot.top = enemy.top + 85 - loot.height / 2;
-            return addLootToState(state, loot);
-        },
-        props: {
-            life: 3,
-            score: 0,
-            speed: 1,
-            vx: -3,
-        },
-    },
-    [ENEMY_EXPLOSIVE_BEETLE]: {
-        animation: explosiveBeetleAnimation,
-        deathAnimation: explosiveBeetleDeathAnimation,
-        accelerate(state, enemy) {
-            // Move up and down in a sin wave.
-            const theta = Math.PI / 2 + Math.PI * 4 * enemy.animationTime / 2000;
-            const vy = 2 * Math.sin(theta);
-            return {...enemy, vy};
-        },
-        // deathSound: 'sfx/flydeath.mp3',
-        onDeathEffect(state, enemy, playerIndex = 0) {
-            // The bucket explodes on death.
-            const explosion = createAttack(ATTACK_EXPLOSION, {
-                // These offsets are chosen to match the position of the bucket.
-                left: enemy.left + 30 + enemy.vx,
-                top: enemy.top + 90 + enemy.vy,
-                playerIndex,
-                delay: 10,
-                vx: enemy.vx, vy: enemy.vy,
-            });
-            explosion.width *= 4;
-            explosion.height *= 4;
-            explosion.left -= explosion.width / 2;
-            explosion.top -= explosion.height / 2;
-            return addNeutralAttackToState(state, explosion);
-        },
-        props: {
-            life: 3,
-            score: 0,
-            speed: 1,
-            vx: -3,
-        },
-    }
 };
 
 const ENEMY_SHIELD_MONK = 'shieldMonk';
@@ -368,7 +305,9 @@ function updateEnemy(state, enemy, props) {
 }
 
 function addEnemyToState(state, enemy) {
-    return {...state, newEnemies: [...(state.newEnemies || []), enemy] };
+    let sfx = state.sfx;
+    if (enemy.spawnSfx) sfx = {...sfx, [enemy.spawnSfx]: true};
+    return {...state, newEnemies: [...(state.newEnemies || []), enemy], sfx };
 }
 
 function removeEnemy(state, enemy) {
@@ -765,6 +704,6 @@ const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('wo
 
 const { createEffect, addEffectToState, } = require('effects');
 const { EFFECT_FINISHER, getFinisherPosition } = require('effects/finisher');
-const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState, addNeutralAttackToState } = require('attacks');
-const { createLoot, addLootToState, getAdaptivePowerupType, gainPoints } = require('loot');
+const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState } = require('attacks');
+const { createLoot, addLootToState, gainPoints } = require('loot');
 const { updatePlayer, getHeroHitBox } = require('heroes');

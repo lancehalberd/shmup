@@ -238,40 +238,6 @@ const monkDeathAnimation = {
     frameDuration: 5,
 };
 
-const cargoBeetleHitBox = {left: 0, top: 16, width: 100, height: 84};
-const cargoBeetleRectangle = r(100, 100, {hitBox: cargoBeetleHitBox});
-const cargoBeetleAnimation = {
-    frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly1.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly2.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly3.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bfly4.png')},
-    ],
-    frameDuration: 6,
-};
-const cargoBeetleDeathAnimation = {
-    frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/bflyded.png')},
-    ],
-    frameDuration: 5,
-};
-const explosiveBeetleAnimation = {
-    frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly1.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly2.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly3.png')},
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly4.png')},
-    ],
-    frameDuration: 6,
-};
-const explosiveBeetleDeathAnimation = {
-    frames: [
-        {...cargoBeetleRectangle, image: requireImage('gfx/enemies/beetles/expbflyded.png')},
-    ],
-    frameDuration: 5,
-};
-
-
 const damageRectangle = r(28, 28);
 const damageAnimation = {
     frames: [
@@ -476,8 +442,6 @@ module.exports = {
     flyingAntAnimation, flyingAntDeathAnimation,
     flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation,
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
-    cargoBeetleAnimation, cargoBeetleDeathAnimation,
-    explosiveBeetleAnimation, explosiveBeetleDeathAnimation,
     selectNeedleImage,
     startGameImage,
     optionsImage,

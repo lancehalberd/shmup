@@ -2,14 +2,13 @@
 const { requireImage, createAnimation, r } = require('animations');
 
 const {
-    WIDTH, GAME_HEIGHT, ATTACK_BULLET, FRAME_LENGTH,
+    WIDTH, GAME_HEIGHT, FRAME_LENGTH,
 } = require('gameConstants');
 const {
-    enemyData, updateEnemy,
+    enemyData,
     addEnemyToState, createEnemy, removeEnemy,
     onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer,
 } = require('enemies');
-const { createAttack, addEnemyAttackToState } = require('attacks');
 const { getTargetVector } = require('sprites');
 const { getHazardCeilingHeight, getHazardHeight } = require('world');
 

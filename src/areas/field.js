@@ -4,13 +4,13 @@ const {
     ENEMY_FLY, ENEMY_MONK,
     ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE,
 } = require('gameConstants');
 const random = require('random');
 const { createAnimation, r } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
+const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
 
 const plainsBg = createAnimation('gfx/scene/field/plainsbg.png', r(800, 800));
 const groundAnimation = createAnimation('gfx/scene/field/groundloop.png', r(200, 60));
@@ -253,7 +253,7 @@ allWorlds[WORLD_FIELD] = {
         if (world.time === 40000) state = setCheckpoint(state, CHECK_POINT_FIELD_MIDDLE);
         if (TEST_ENEMY) {
             if (!state.enemies.length) {
-                state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 700)});
+                state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 600)});
             }
             return state;
         }
