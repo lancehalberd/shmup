@@ -1,8 +1,11 @@
 const { drawImage, drawTintedImage } = require('draw');
+const Rectangle = require('Rectangle');
 
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
-    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB, ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
+    ATTACK_BLAST, ATTACK_SLASH, ATTACK_STAB,
+    ATTACK_BULLET, ATTACK_RED_LASER,
+    ATTACK_DEFEATED_ENEMY,
     ATTACK_SPRAY_UP, ATTACK_SPRAY_RIGHT, ATTACK_SPRAY_DOWN,
     ATTACK_ORB, ATTACK_LASER,
     ATTACK_EXPLOSION,
@@ -33,15 +36,6 @@ const orbAnimation = {
     frameDuration: 2,
 };
 
-const laserRectangle = r(20, 7);
-const laserStartAnimation = {
-    frames: [
-        {...laserRectangle, image: requireImage('gfx/attacks/r1.png')},
-        {...laserRectangle, image: requireImage('gfx/attacks/r2.png')},
-    ],
-    frameDuration: 3,
-};
-const laserAnimation = createAnimation('gfx/attacks/r3.png', laserRectangle);
 
 const sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(9, 9));
 const sprayAnimationUp = createAnimation('gfx/attacks/s3.png', r(9, 9));
@@ -102,11 +96,97 @@ const attacks = {
         animation: orbAnimation,
     },
     [ATTACK_LASER]: {
-        startAnimation: laserStartAnimation,
-        animation: laserAnimation,
+        laserBallFrame: {...r(7, 7), image: requireImage('gfx/attacks/r1.png')},
+        laserStartFrame: {...r(20, 7), image: requireImage('gfx/attacks/r2.png')},
+        laserBeamFrame: {...r(18, 7), image: requireImage('gfx/attacks/r3.png')},
+        advance(state, attack) {
+            let animationTime = attack.animationTime;
+            animationTime += FRAME_LENGTH;
+            return {
+                ...attack,
+                animationTime,
+                // Attack is finished once the duration runs out or the attacker is not present.
+                done: animationTime > attack.duration || !this.getSource(state, attack)
+            };
+        },
+        render(context, state, attack) {
+            const {x, y, isFiringRight, beamWidth} = this.getGeometry(state, attack);
+            if (attack.animationTime <= attack.frameDelay * FRAME_LENGTH) {
+                const target = new Rectangle(this.laserBallFrame).moveTo(isFiringRight ? x : x - this.laserBallFrame.width, y - 4);
+                drawImage(context, this.laserBallFrame.image, this.laserBallFrame, target);
+            } else if (isFiringRight) {
+                const target = new Rectangle(this.laserStartFrame).moveTo(x, y - 4);
+                context.save();
+                context.translate(target.left + target.width / 2, target.top + target.height / 2);
+                context.scale(-1, 1);
+                context.translate(-target.left - target.width / 2, -target.top - target.height / 2)
+                drawImage(context, this.laserStartFrame.image, this.laserStartFrame, target);
+                context.restore();
+                if (beamWidth - this.laserStartFrame.width > 0) {
+                    target.left = x + this.laserStartFrame.width;
+                    target.width = beamWidth - this.laserStartFrame.width;
+                    drawImage(context, this.laserBeamFrame.image, this.laserBeamFrame, target);
+                }
+            } else {
+                const target = new Rectangle(this.laserStartFrame).moveTo(x - this.laserStartFrame.width, y - 4);
+                drawImage(context, this.laserStartFrame.image, this.laserStartFrame, target);
+                if (beamWidth - this.laserStartFrame.width > 0) {
+                    target.left = x - beamWidth;
+                    target.width = beamWidth - this.laserStartFrame.width;
+                    drawImage(context, this.laserBeamFrame.image, this.laserBeamFrame, target);
+                }
+            }
+        },
+        getHitBox(state, attack) {
+            // Hack to make no hitBox when the beam hasn't fired yet.
+            if (attack.animationTime <= attack.frameDelay * FRAME_LENGTH) {
+                return new Rectangle(-1000, -1000, 0, 0);
+            }
+            const {x, y, isFiringRight, beamWidth} = this.getGeometry(state, attack);
+            return new Rectangle(isFiringRight ? x : x - beamWidth, y - 4, beamWidth, 7);
+        },
+        getSource(state, attack) {
+            const {playerIndex, ladybugIndex, enemyId} = attack;
+            if (enemyId) {
+                const enemy = state.idMap[enemyId];
+                if (enemyIsActive(state, enemy)) return enemy;
+            }
+            if (playerIndex >= 0) {
+                const player = state.players[playerIndex];
+                if (player.spawning || player.done) return null;
+                if (ladybugIndex >= 0) {
+                    return state.players[playerIndex].ladybugs[ladybugIndex];
+                }
+                return player.sprite;
+            }
+            return null;
+        },
+        getGeometry(state, attack) {
+            const source = this.getSource(state, attack);
+            if (!source) return {x: -1000, y: -1000};
+            const isFiringRight = !attack.enemyId || (!source.doNotFlip && source.vx > 0);
+            let x, y;
+            if (attack.enemyId) {
+                const enemy = source;
+                const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
+                const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
+                const hitBox = getEnemyHitBox(state, enemy);
+                x = isFiringRight ?
+                    hitBox.left + bulletX * hitBox.width + enemy.vx : // Facing right.
+                    hitBox.left + (1 - bulletX) * hitBox.width + enemy.vx; // Facing left.
+                y = hitBox.top + enemy.vy + bulletY * hitBox.height;
+            } else {
+                x = source.left + source.vx + (attack.xOffset || 0) + (isFiringRight ? source.width : 0);
+                y = source.top + source.vy + (attack.yOffset || 0) + source.height / 2;
+            }
+            const beamWidth = Math.min(800, (attack.animationTime - attack.frameDelay * FRAME_LENGTH) * 4);
+            return {x, y, isFiringRight, beamWidth};
+        },
         props: {
             damage: 2,
             piercing: true,
+            duration: 400,
+            frameDelay: 3,
         },
     },
     [ATTACK_DEFEATED_ENEMY]: {
@@ -126,8 +206,20 @@ const attacks = {
     },
 }
 
+attacks[ATTACK_RED_LASER] = {
+    ...attacks[ATTACK_LASER],
+    laserBallFrame: {...r(8, 7), image: requireImage('gfx/attacks/elaser1.png')},
+    laserStartFrame: {...r(20, 7), image: requireImage('gfx/attacks/elaser2.png')},
+    laserBeamFrame: {...r(20, 7), image: requireImage('gfx/attacks/elaser3.png')},
+    props: {
+        piercing: true,
+        duration: 700,
+        frameDelay: 20,
+    },
+};
+
 const createAttack = (type, props) => {
-    const frame = (props.animation || attacks[type].animation).frames[0];
+    const frame = (props.animation || attacks[type].animation || {frames: [{}]}).frames[0];
     return getNewSpriteState({
         ...frame,
         ...attacks[type].props,
@@ -136,6 +228,29 @@ const createAttack = (type, props) => {
         ...props,
     });
 };
+
+function getAttackFrame(state, attack) {
+    const attackData = attacks[attack.type];
+    let animationTime = attack.animationTime;
+    let animation = attack.animation || attackData.animation;
+    if (attackData.startAnimation) {
+        const startAnimationLength = attackData.startAnimation.frames.length * attackData.startAnimation.frameDuration * FRAME_LENGTH;
+        if (animationTime >= startAnimationLength) {
+            animationTime -= startAnimationLength;
+        } else {
+            animation = attackData.startAnimation;
+        }
+    }
+    return getFrame(animation, animationTime);
+}
+
+function getAttackHitBox(state, attack) {
+    const attackData = attacks[attack.type];
+    if (attackData.getHitBox) return attackData.getHitBox(state, attack);
+    const frame = getAttackFrame(state, attack);
+    if (frame.hitBox) return new Rectangle(frame.hitBox).translate(attack.left, attack.top);
+    return new Rectangle(frame).moveTo(attack.left, attack.top);
+}
 
 const addPlayerAttackToState = (state, attack) => {
     let sfx = state.sfx;
@@ -155,24 +270,25 @@ const addNeutralAttackToState = (state, attack) => {
     return {...state, newNeutralAttacks: [...state.newNeutralAttacks, attack], sfx };
 };
 
-const renderAttack = (context, attack) => {
-    let {animationTime} = attack;
+const renderAttack = (context, state, attack) => {
     const attackData = attacks[attack.type];
-    let animation = attack.animation || attackData.animation;
-    if (attackData.startAnimation) {
-        const startAnimationLength = attackData.startAnimation.frames.length * attackData.startAnimation.frameDuration * FRAME_LENGTH;
-        if (animationTime >= startAnimationLength) {
-            animationTime -= startAnimationLength;
-        } else {
-            animation = attackData.startAnimation;
-        }
-    }
-    const frame = getFrame(animation, animationTime);
+    if (attackData.render) return attackData.render(context, state, attack);
     if (attack.explosion && attack.delay) return;
+    const frame = getAttackFrame(state, attack);
     // These should only apply to player attacks since any damage defeats a player.
     const {color, amount} = getAttackTint(attack);
-    if (!amount) drawImage(context, frame.image, frame, attack);
-    else drawTintedImage(context, frame.image, color, amount, frame, attack);
+    const scaleX = attack.scaleX || 1;
+    const scaleY = attack.scaleY || 1;
+    let target = attack;
+    context.save();
+    if (scaleX !== 1 || scaleY !== 1) {
+        context.translate(attack.left + attack.width / 2, attack.top + attack.height / 2);
+        context.scale(scaleX, scaleY);
+        target = new Rectangle(attack).moveCenterTo(0, 0);
+    }
+    if (!amount) drawImage(context, frame.image, frame, target);
+    else drawTintedImage(context, frame.image, color, amount, frame, target);
+    context.restore();
 };
 
 function getAttackTint(attack) {
@@ -185,13 +301,15 @@ function getAttackTint(attack) {
     if (damage >= 2) return {color: 'orange', amount: 0.5};
     return {};
 }
-
-const advanceAttack = (state, attack) => {
-    let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, melee, explosion, ttl} = attack;
+function default_advanceAttack(state, attack) {
+    let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, ladybugIndex, melee, explosion, ttl} = attack;
     if ((delay > 0 || melee)) {
         delay--;
         if (!explosion && playerIndex >= 0) {
-            const source = state.players[playerIndex].sprite;
+            let source = state.players[playerIndex].sprite;
+            if (ladybugIndex >= 0) {
+                source = state.players[playerIndex].ladybugs[ladybugIndex];
+            }
             left = source.left + source.vx + source.width + (attack.xOffset || 0);
             top = source.top + source.vy + Math.round((source.height - height) / 2) + (attack.yOffset || 0);
         }
@@ -199,6 +317,8 @@ const advanceAttack = (state, attack) => {
     if (!(delay > 0)) {
         left += vx;
         top += vy;
+    } else {
+        return {...attack, delay, left, top, animationTime, done, ttl};
     }
     animationTime += FRAME_LENGTH;
     let done = false;
@@ -213,16 +333,25 @@ const advanceAttack = (state, attack) => {
                 top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
     }
     return {...attack, delay, left, top, animationTime, done, ttl};
-};
+}
 
+function advanceAttack(state, attack) {
+    const attackData = attacks[attack.type];
+    if (attackData.advance) return attackData.advance(state, attack);
+    return default_advanceAttack(state, attack);
+}
 
 module.exports = {
     attacks,
     createAttack,
+    getAttackHitBox,
     addPlayerAttackToState,
     addNeutralAttackToState,
     addEnemyAttackToState,
     advanceAttack,
+    default_advanceAttack,
     renderAttack,
     getAttackTint,
 };
+
+const { enemyIsActive, getEnemyHitBox } = require('enemies');

@@ -3,7 +3,7 @@ module.exports = {
     TEST_ITEMS: false,
     //TEST_ITEMS: ['tripleCombo', 'combo'],
     //TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
-    TEST_ENEMY: 'wren',
+    //TEST_ENEMY: 'lightningBeetle',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
@@ -20,7 +20,8 @@ module.exports = {
     ENEMY_LOCUST: 'locust',
     ENEMY_LOCUST_SOLDIER: 'locustSoldier',
 
-    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab', ATTACK_BULLET: 'bullet',
+    ATTACK_BLAST: 'blast', ATTACK_SLASH: 'slash', ATTACK_STAB: 'stab',
+    ATTACK_BULLET: 'bullet', ATTACK_RED_LASER: 'redLaser',
     ATTACK_SPRAY_UP: 'sprayUp',
     ATTACK_SPRAY_RIGHT: 'sprayRight',
     ATTACK_SPRAY_DOWN: 'sprayDown',
@@ -33,7 +34,7 @@ module.exports = {
     EFFECT_DEAD_MOTH: 'deadMoth', EFFECT_SWITCH_MOTH: 'switchMoth',
     EFFECT_NEEDLE_FLIP: 'needleFlip',
     EFFECT_RATE_UP: 'rateUp', EFFECT_SIZE_UP: 'sizeUp', EFFECT_SPEED_UP: 'speedUp',
-    EFFECT_DEFLECT_BULLET: 'deflect',
+    EFFECT_DEFLECT_BULLET: 'deflect', EFFECT_BLOCK_ATTACK: 'blockAttack',
     LOOT_COIN: 'coin',
     LOOT_LIFE: 'life',
     LOOT_NORMAL_LADYBUG: 'normalLadybug',

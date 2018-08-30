@@ -66,7 +66,7 @@ const addElementToLayer = (state, layerName) => {
         yOffset *= (spriteData.scale || 1);
         newSprite = getNewSpriteState({
             ...animation.frames[0],
-            top: getBaseHeight(state) + layer.yOffset + yOffset,
+            top: getBaseHeight(state, layer) + layer.yOffset + yOffset,
             // only allow items to be added to directly to the visible portion of the
             // screen during the population section (no sprite on the layer yet).
             left: offset,
@@ -106,8 +106,8 @@ const advanceLayer = (state, layerName) => {
         let sprite = state.world[layerName].sprites[i];
         state = updateLayerSprite(state, layerName, i, {
             ...sprite,
-            left: sprite.left + sprite.vx - state.world.vx * layer.xFactor,
-            top: sprite.top + sprite.vy + state.world.vy * layer.yFactor,
+            left: sprite.left + (sprite.vx - state.world.vx) * layer.xFactor,
+            top: sprite.top + (sprite.vy + state.world.vy) * layer.yFactor,
             animationTime: sprite.animationTime + FRAME_LENGTH,
         });
         sprite = state.world[layerName].sprites[i];
@@ -191,8 +191,9 @@ const getGroundHeight = (state) => {
     return GAME_HEIGHT - state.world.groundHeight + state.world.y * state.world.ground.yFactor;
 };
 
-const getBaseHeight = (state) => {
-    return GAME_HEIGHT + state.world.y * (state.world.ground ? state.world.ground.yFactor : 1);
+const getBaseHeight = (state, layer) => {
+    layer = layer || state.world.ground;
+    return GAME_HEIGHT + state.world.y * (layer ? layer.yFactor : 1);
 }
 
 const renderBackgroundLayer = (context, {frame, x, y, maxY}) => {

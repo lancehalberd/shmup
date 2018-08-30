@@ -70,12 +70,12 @@ const render = (state) => {
         context.save();
         context.translate(0, hudImage.height);
         state.enemies.map(enemy => renderEnemy(context, state, enemy));
-        state.playerAttacks.map(attack => renderAttack(context, attack));
+        state.playerAttacks.map(attack => renderAttack(context, state, attack));
         state.loot.map(loot => renderLoot(context, state, loot));
         state.effects.map(effect => renderEffect(context, effect));
-        state.neutralAttacks.map(attack => renderAttack(context, attack));
+        state.neutralAttacks.map(attack => renderAttack(context, state, attack));
         // Thinking an attack shuold display on top of other effects so it can be avoided.
-        state.enemyAttacks.map(attack => renderAttack(context, attack));
+        state.enemyAttacks.map(attack => renderAttack(context, state, attack));
         state.players.map(hero => renderHero(context, hero));
         context.restore();
 

@@ -141,7 +141,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
                 lastSpawnTime = time;
             }
         }
-        if (time > 2500 && nest) {
+        if (time > 2500 && !nest) {
             return transitionToSky(state);
         }
         if (time > 2500 && queen && queen.dead) {

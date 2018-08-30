@@ -1,23 +1,42 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ENEMY_FLY,
-    ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
-    ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
+    ATTACK_RED_LASER,
 } = require('gameConstants');
 const random = require('random');
-const { createAnimation, r, requireImage } = require('animations');
+const { createAnimation, a, r, requireImage } = require('animations');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
-const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
 
 
-const spawnEnemy = (state, enemyType, props) => {
+function spawnEnemy(state, enemyType, props) {
     const newEnemy = createEnemy(enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
     return addEnemyToState(state, newEnemy);
-};
+}
+function spawnWrenPack(state, number) {
+    if (random.chance(0.5)) {
+        const top = random.range(SAFE_HEIGHT / 6, 5 * SAFE_HEIGHT / 6);
+        for (let i = 0; i < number; i++)
+            state = spawnEnemy(state, ENEMY_WREN, {left: WIDTH + 80 * i, top});
+    } else {
+        const top1 = random.range(SAFE_HEIGHT / 6, 5 * SAFE_HEIGHT / 6);
+        const top2 = random.range(SAFE_HEIGHT / 6, 5 * SAFE_HEIGHT / 6);
+        for (let i = 0; i < number; i++)
+            state = spawnEnemy(state, ENEMY_WREN, {left: WIDTH + 80 * i, top: top1 + (top2 - top1) * i / number });
+    }
+    return state;
+}
+function spawnGust(state, {top, left}) {
+    let leaf = createEffect(EFFECT_GUST_LEAF, {top: top - 20, left: left + 50, animationTime: random.range(0, 300)});
+    state = addEffectToState(state, leaf);
+    leaf = createEffect(EFFECT_GUST_LEAF, {top: top + 100, left: left + 70, animationTime: random.range(500, 800)});
+    leaf.vx -= 2;
+    state = addEffectToState(state, leaf);
+    const gust = createEffect(EFFECT_GUST, {top, left: left});
+    return addEffectToState(state, gust);
+}
 
 const setEvent = (state, event) => {
     // FRAME_LENGTH will be added to eventTime before the event is processed next, so we
@@ -49,15 +68,15 @@ checkpoints[CHECK_POINT_SKY_END] = function (state) {
 };
 checkpoints[CHECK_POINT_SKY_BOSS] = function (state) {
     const world = getSkyWorld();
+    world.y = 150;
     world.time = 120000;
     return transitionToSkyBoss({...state, world});
 };
-const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_LIGHTNING_BEETLE];
 
 const SKY_DURATION = 120000;
 const SKY_EASY_DURATION = 30000;
 
-const SAFE_HEIGHT = GAME_HEIGHT - 90;
+const SAFE_HEIGHT = GAME_HEIGHT;
 
 const WORLD_SKY = 'sky';
 allWorlds[WORLD_SKY] = {
@@ -74,23 +93,20 @@ allWorlds[WORLD_SKY] = {
         },
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
-                return setEvent(state, 'easyFlies');
+                return setEvent(state, 'easyWrens');
             }
         },
-        easyFlies: (state, eventTime) => {
+        easyWrens: (state, eventTime) => {
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
+                return spawnWrenPack(state, 2);
             }
             eventTime -= 2000;
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
+                return spawnWrenPack(state, 2);
             }
             eventTime -= 2000;
             if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
+                return spawnWrenPack(state, 2);
             }
             eventTime -= 2000;
             if (eventTime >= 0) {
@@ -103,30 +119,23 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle', 'hornet']));
+                return setEvent(state, random.element(['wrens']));
             }
         },
-        flyingAnts: (state, eventTime) => {
+        wrens: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            const baseNumber = 2 - numFormidable;
-            let spacing = state.world.time < SKY_EASY_DURATION ? 3000 : 1000;
+            const baseNumber = 5 - numFormidable;
+            let spacing = state.world.time < SKY_EASY_DURATION ? 3000 : 2000;
             if (eventTime === 0) {
-                for (let i = 0; i < baseNumber - 1; i++) {
-                    state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
-                }
-                return state;
+                return spawnWrenPack(state, baseNumber - 1);
             }
             eventTime -= spacing
             if (eventTime === 0) {
-                for (let i = 0; i < baseNumber; i++) {
-                    const enemyType = random.element([ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER]);
-                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
-                }
-                return state;
+                return spawnWrenPack(state, baseNumber);
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['hornet']));
+                return setEvent(state, random.element(['lightningBeetle', 'blueBird']));
             }
         },
         lightningBeetle: (state, eventTime) => {
@@ -136,18 +145,19 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'hornet');
+                return setEvent(state, 'blueBird');
             }
         },
-        hornet: (state, eventTime) => {
+        blueBird: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable < 2) {
+                const type = state.world.time < SKY_EASY_DURATION  ? ENEMY_BLUE_BIRD : ENEMY_BLUE_BIRD_SOLDIER;
                 let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_HORNET, {left: WIDTH, top});
+                return spawnEnemy(state, type, {left: WIDTH, top});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle', 'flyingAnts']));
+                return setEvent(state, random.element(['lightningBeetle', 'wrens']));
             }
         },
         bossPrep: (state) => {
@@ -164,9 +174,27 @@ allWorlds[WORLD_SKY] = {
         const targetFrames = 70 * 5;
         const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
+        // 20s before the end of the level raise screen so we can transition to the sunrise graphics
+        // during the boss fight.
+        if (world.time > SKY_DURATION - 20000) targetY = 150;
+
+
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
+
+        if (!(world.time % 2000)) {
+            if (!(world.time % 16000)) {
+                for (let i = 0; i < 5; i++) {
+                    state = spawnGust(state, {top: 10 + i * 100, left: WIDTH + i * 50});
+                }
+            } else if (random.chance(0.2)) {
+                state = spawnGust(state, {top: random.range(10, 190), left: WIDTH});
+                state = spawnGust(state, {top: random.range(230, 410), left: WIDTH + 100});
+            } else {
+                state = spawnGust(state, {top: random.range(10, 410), left: WIDTH});
+            }
+        }
 
         if (world.type === WORLD_SKY && world.time >= SKY_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');
@@ -238,15 +266,15 @@ const getSkyLayers = () => ({
     clouds: getNewLayer({
         xFactor: 0.3, yFactor: 0.5, yOffset: -300,
         spriteData: {
-            cloudA: {animation: clouds[0], scale: 2, alpha: 0.7, next: ['cloudB', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
-            cloudB: {animation: clouds[1], scale: 2, alpha: 0.7, next: ['cloudA', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
-            cloudC: {animation: clouds[2], scale: 2, alpha: 0.7, next: ['cloudA', 'cloudB'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+            cloudA: {animation: clouds[0], scale: 2, alpha: 0.7, vx: -1, next: ['cloudB', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+            cloudB: {animation: clouds[1], scale: 2, alpha: 0.7, vx: -2, next: ['cloudA', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+            cloudC: {animation: clouds[2], scale: 2, alpha: 0.7, vx: -1, next: ['cloudA', 'cloudB'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
         },
     }),
     fastClouds: getNewLayer({
         xFactor: 0.7, yFactor: 0.5, yOffset: -305,
         spriteData: {
-            cloud: {animation: clouds, scale: 2, alpha: 0.5, next: ['cloud'], offset: [150, 200], yOffset: [0, 10, 20, 30, 40]},
+            cloud: {animation: clouds, scale: 2, alpha: 0.5, vx: -4, next: ['cloud'], offset: [150, 200], yOffset: [0, 10, 20, 30, 40]},
         },
     }),
     // Background layers start at the top left corner of the screen.
@@ -265,22 +293,33 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, addEnemyToState, enemyData, removeEnemy,
-    accelerate_followPlayer, onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer,
+const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy,
+    accelerate_followPlayer, onHitGroundEffect_spawnMonk,
 } = require('enemies');
 // Bluebirds, slowly follow the Knight, when mounted can fire long lasers.
 const ENEMY_BLUE_BIRD = 'blueBird';
 const blueBirdGeometry = {
     ...r(130, 130),
     hitBox: {left: 27, top: 25, width: 65, height: 80},
+    hitBoxes: [
+        {left: 18, top: 40, width: 30, height: 33}, // Head
+        {left: 42, top: 52, width: 45, height: 65}, // Body
+    ]
 };
+const mountedBlueBirdGeometry = {
+    ...blueBirdGeometry,
+    hitBoxes: [
+        ...blueBirdGeometry.hitBoxes,
+        {left: 33, top: 19, width: 27, height: 38}, // Mount
+    ]
+}
 enemyData[ENEMY_BLUE_BIRD] = {
     animation: createAnimation('gfx/enemies/birds/bluebird.png', blueBirdGeometry, {cols: 4}),
     deathAnimation: createAnimation('gfx/enemies/birds/bluebird.png', blueBirdGeometry, {x: 4}),
     deathSound: 'sfx/birds/bird.mp3',
     accelerate: accelerate_followPlayer,
     props: {
-        life: 20,
+        life: 15,
         followPlayerFor: 10000,
         score: 40,
         speed: 4,
@@ -288,16 +327,41 @@ enemyData[ENEMY_BLUE_BIRD] = {
 };
 const ENEMY_BLUE_BIRD_SOLDIER = 'blueBirdSoldier';
 enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
-    animation: createAnimation('gfx/enemies/birds/mountbluebird.png', blueBirdGeometry, {cols: 4}),
-    deathAnimation: createAnimation('gfx/enemies/birds/mountbluebird.png', blueBirdGeometry, {x: 4}),
+    animation: createAnimation('gfx/enemies/birds/mountbluebird.png', mountedBlueBirdGeometry, {cols: 4}),
+    deathAnimation: createAnimation('gfx/enemies/birds/mountbluebird.png', mountedBlueBirdGeometry, {x: 4}),
     deathSound: 'sfx/hit.mp3',
     accelerate: accelerate_followPlayer,
-    shoot: shoot_bulletAtPlayer,
+    shoot(state, enemy) {
+        if (enemy.shotCooldown === undefined) {
+            const initialShotCooldownFrames = enemy.initialShotCooldownFrames || 50
+            const shotCooldown = Array.isArray(initialShotCooldownFrames) ?
+                random.range(initialShotCooldownFrames[0], initialShotCooldownFrames[1]) :
+                initialShotCooldownFrames;
+            state = updateEnemy(state, enemy, {shotCooldown});
+            enemy = state.idMap[enemy.id];
+        }
+        if (enemy.shotCooldown > 0) {
+            return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
+        }
+        // Set attackCooldownFramesLeft if the enemy uses an attack animation.
+        let bulletsFired = enemy.bulletsFired || 0;
+        const shotCooldown = Array.isArray(enemy.shotCooldownFrames) ?
+            enemy.shotCooldownFrames[bulletsFired % enemy.shotCooldownFrames.length] :
+            enemy.shotCooldownFrames;
+        bulletsFired++;
+        if (enemy.attackCooldownFrames) {
+            state = updateEnemy(state, enemy, {shotCooldown, bulletsFired, attackCooldownFramesLeft: enemy.attackCooldownFrames});
+        } else {
+            state = updateEnemy(state, enemy, {shotCooldown, bulletsFired});
+        }
+        const laser = createAttack(ATTACK_RED_LASER, {enemyId: enemy.id});
+        return addEnemyAttackToState(state, laser);
+    },
     onDeathEffect(state, enemy) {
         const blueBird = createEnemy(ENEMY_BLUE_BIRD, {
             left: enemy.left,
             top: enemy.top,
-            vx: 20,
+            vx: enemy.left > state.players[0].sprite.left ? 20 : -20,
             vy: Math.random() < .5 ? -5 : 5,
             animationTime: 20,
         });
@@ -309,8 +373,9 @@ enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
     },
     onHitGroundEffect: onHitGroundEffect_spawnMonk,
     props: {
-        life: 20,
+        life: 15,
         followPlayerFor: 10000,
+        followYOffset: 50,
         score: 50,
         speed: 3,
         shotCooldownFrames: 50,
@@ -357,10 +422,55 @@ enemyData[ENEMY_WREN] = {
     deathAnimation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {x: 4}),
     deathSound: 'sfx/birds/bird.mp3',
     props: {
-        life: 4,
+        life: 3,
         score: 50,
-        speed: 4,
+        vx: -4,
     },
 };
 
+const formidableEnemies = [ENEMY_BLUE_BIRD, ENEMY_BLUE_BIRD_SOLDIER];
+
 const { transitionToSkyBoss } = require('areas/skyBoss');
+const { createAttack, addEnemyAttackToState, } = require('attacks');
+
+const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
+
+const EFFECT_GUST = 'gust';
+effects[EFFECT_GUST] = {
+    animation: createAnimation('gfx/effects/wind.png', r(150, 100), {duration: 1000}),
+    advanceEffect: (state, effectIndex) => {
+        const effect = state.effects[effectIndex];
+        return updateEffect(state, effectIndex, {
+            vy: 3 * Math.sin(effect.animationTime / 100),
+        });
+    },
+    onHitPlayer(state, effectIndex, playerIndex) {
+        return updatePlayer(state, playerIndex, {}, {vx: state.players[playerIndex].sprite.vx - 1.5});
+    },
+    props: {
+        relativeToGround: true,
+        loops: 20,
+        vy: 0,
+        vx: -10
+    },
+};
+
+const EFFECT_GUST_LEAF = 'gustLeaf';
+// Make the leaf scale from the center of its hitbox instead of the top left corner.
+const leafGeometry = a({...r(40, 37), hitBox: r(30, 37)}, 0.5, 0.5);
+effects[EFFECT_GUST_LEAF] = {
+    animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry),
+    advanceEffect: (state, effectIndex) => {
+        const effect = state.effects[effectIndex];
+        return updateEffect(state, effectIndex, {
+            vy: 5 * Math.sin(effect.animationTime / 100),
+            yScale: (effect.animationTime % 500 > 250) ? -1 : 1
+        });
+    },
+    props: {
+        relativeToGround: true,
+        loops: 20,
+        vy: 0,
+        vx: -11
+    },
+};

@@ -10,13 +10,14 @@ const {
     EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
     EFFECT_NEEDLE_FLIP,
     EFFECT_RATE_UP, EFFECT_SIZE_UP, EFFECT_SPEED_UP,
-    EFFECT_DEFLECT_BULLET,
+    EFFECT_DEFLECT_BULLET, EFFECT_BLOCK_ATTACK,
 } = require('gameConstants');
 
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
     requireImage,
+    createAnimation,
     getFrame,
     getHitBox,
     damageAnimation,
@@ -150,7 +151,10 @@ const effects = {
     },
     [EFFECT_DEFLECT_BULLET]: {
         animation: deflectAnimation,
-    }
+    },
+    [EFFECT_BLOCK_ATTACK]: {
+        animation: createAnimation('gfx/effects/blocksheet.png', r(50, 39), {cols: 4, duration: 3}),
+    },
 };
 window.effects = effects;
 
@@ -238,6 +242,14 @@ const advanceEffect = (state, effectIndex) => {
     if (effectInfo.advanceEffect) {
         state = effectInfo.advanceEffect(state, effectIndex);
     }
+    if (effectInfo.onHitPlayer) {
+        const effectHitBox = getEffectHitBox(effect);
+        for (let j = 0; j < state.players.length; j++) {
+            if (Rectangle.collision(getHeroHitBox(state.players[j]), effectHitBox)) {
+                state = effectInfo.onHitPlayer(state, effectIndex, j);
+            }
+        }
+    }
     let { done, left, top, width, height, vx, vy, animationTime,
         relativeToGround, loops, delay,
     } = state.effects[effectIndex];
@@ -254,18 +266,18 @@ const advanceEffect = (state, effectIndex) => {
         return updateEffect(state, effectIndex, {delay, top, left});
     }
     const animation = effectInfo.animation;
-    left += vx;
-    top += vy;
     if (relativeToGround) {
         const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
-        left -= state.world[neargroundKey].xFactor * state.world.vx;
-        top += state.world[neargroundKey].yFactor * state.world.vy;
+        vx -= state.world[neargroundKey].xFactor * state.world.vx;
+        vy += state.world[neargroundKey].yFactor * state.world.vy;
     }
+    left += vx;
+    top += vy;
     animationTime += FRAME_LENGTH;
 
     if (!effect.permanent) {
         done = done || animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (loops || 1) ||
-            left + width < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
+            (left + width < -OFFSCREEN_PADDING && vx < 0) || (left > WIDTH + OFFSCREEN_PADDING && vx > 0) ||
             top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
     }
 
@@ -297,3 +309,5 @@ module.exports = {
     getEffectIndex,
     getEffectHitBox,
 };
+
+const { getHeroHitBox } = require('heroes');

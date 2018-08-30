@@ -10,7 +10,7 @@ const {
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
     ATTACK_SLASH, ATTACK_STAB,
-    EFFECT_EXPLOSION, EFFECT_DAMAGE, EFFECT_DUST,
+    EFFECT_EXPLOSION, EFFECT_DUST,
     LOOT_COIN,
 } = require('gameConstants');
 
@@ -35,7 +35,7 @@ const onHitGroundEffect_spawnMonk = (state, enemy) => {
     const fallDamage = Math.floor(enemy.vy / 13);
     const monk = createEnemy(ENEMY_MONK, {
         left: enemy.left,
-        top: getGroundHeight(state),
+        top: Math.min(getHazardHeight(state), getGroundHeight(state)),
         animationTime: 20,
         pendingDamage: fallDamage,
     });
@@ -50,7 +50,7 @@ function accelerate_followPlayer(state, enemy) {
     let {vx, vy} = enemy;
     const speed = enemy.speed;
     const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
-    const theta = Math.atan2(dy, dx);
+    const theta = Math.atan2(dy + (enemy.followYOffset || 0), dx + (enemy.followXOffset || 0));
     if (enemy.animationTime === 0) {
         vx = speed * Math.cos(theta);
         vy = speed * Math.sin(theta);
@@ -92,14 +92,13 @@ function shoot_bulletAtAngle(state, enemy, getTheta) {
     const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
     const hitBox = getEnemyHitBox(state, enemy);
     bullet.left = (enemy.vx > 0 && !enemy.doNotFlip) ?
-        hitBox.left + bulletX * hitBox.width - enemy.vx + bullet.width * (bulletX - 1): // Facing right.
+        hitBox.left + bulletX * hitBox.width + enemy.vx + bullet.width * (bulletX - 1): // Facing right.
         hitBox.left + (1 - bulletX) * hitBox.width + enemy.vx - bullet.width * bulletX; // Facing left.
     bullet.top = hitBox.top + enemy.vy + bulletY * hitBox.height + bullet.height * (bulletY - 1);
     const theta = getTheta(bullet);
     bullet.vx = enemy.bulletSpeed * Math.cos(theta);
     bullet.vy = enemy.bulletSpeed * Math.sin(theta);
     return addEnemyAttackToState(state, bullet);
-
 }
 function shoot_bulletForward(state, enemy) {
     return shoot_bulletAtAngle(state, enemy, () => Math.atan2(0, enemy.vx));
@@ -344,8 +343,9 @@ function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
         if (enemy.vx > 0 && !enemy.doNotFlip) {
             hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
         }
-        if (Rectangle.collision(new Rectangle(hitBox).translate(enemy.left, enemy.top), rectangle)) {
-            return true;
+        hitBox = new Rectangle(hitBox).translate(enemy.left, enemy.top);
+        if (Rectangle.collision(hitBox, rectangle)) {
+            return hitBox;
         }
     }
     return false;
@@ -435,22 +435,11 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemy);
         }
     } else {
-        if (enemyIsInvulnerable) {
-            updatedState = {...updatedState, sfx: {...updatedState.sfx, 'reflect': true}};
-        } else {
-
+        if (!enemyIsInvulnerable) {
             if (enemyData[enemy.type].onDamageEffect) {
                 // This actuall changes the enemy index, so we do it last. In the long term it is probably
                 // better to use the unique enemy id instead of the index.
                 updatedState = enemyData[enemy.type].onDamageEffect(updatedState, enemy, attack);
-            }
-            if (attack.left) {
-                const damage = createEffect(EFFECT_DAMAGE, {
-                    sfx: 'sfx/hit.mp3',
-                });
-                damage.left = attack.left + attack.vx + (attack.width - damage.width ) / 2;
-                damage.top = attack.top + attack.vy + (attack.height - damage.height ) / 2;
-                updatedState = addEffectToState(updatedState, damage);
             }
         }
     }
@@ -466,7 +455,7 @@ function renderEnemyFrame(context, state, enemy, frame) {
         context.globalAlpha = .6;
     }
     let hitBox = getEnemyHitBox(state, enemy).translate(-enemy.left, -enemy.top);
-    if (enemy.vx > 0 && !enemy.doNotFlip) {
+    if ((enemy.vx > 0 && !enemy.flipped && !enemy.doNotFlip) || (enemy.vx <= 0 && enemy.flipped)) {
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
         context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
@@ -620,10 +609,11 @@ const advanceEnemy = (state, enemy) => {
         if (enemy && enemy.dead && !enemy.hitGround) {
             const onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
-                if (enemy.top + hitBox.top + hitBox.height > getGroundHeight(state) + groundOffset) {
+
+                if (enemy.top + hitBox.top + hitBox.height > Math.min(getHazardHeight(state), getGroundHeight(state) + groundOffset)) {
                     state = onHitGroundEffect(state, enemy);
                     enemy = state.idMap[enemy.id];
-                    if (enemy) {
+                    if (enemy && getHazardHeight(state) < getGroundHeight(state) + groundOffset) {
                         // Add a dust cloud to signify something happened when the enemy hit the ground.
                         const dust = createEffect(EFFECT_DUST, {
                             sfx: 'sfx/hit.mp3',

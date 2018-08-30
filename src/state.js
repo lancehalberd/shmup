@@ -3,6 +3,7 @@ const Rectangle = require('Rectangle');
 const {
     FRAME_LENGTH,
     EFFECT_DEFLECT_BULLET,
+    EFFECT_DAMAGE, EFFECT_BLOCK_ATTACK,
 } = require('gameConstants');
 const {
     applyCheckpointToState,
@@ -48,9 +49,9 @@ const advanceState = (state) => {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
-        //updatedState = {...updatedState, title: false};
-        //updatedState = setCheckpoint(updatedState, 'fieldStart');
-        //return applyCheckpointToState(updatedState);
+        updatedState = {...updatedState, title: false};
+        updatedState = setCheckpoint(updatedState, 'skyBoss');
+        return applyCheckpointToState(updatedState);
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
@@ -148,18 +149,28 @@ const advanceState = (state) => {
         if (!enemy) continue;
         for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
+            const attackHitBox = getAttackHitBox(state, attack);
+            let hitBox = null;
             if (!attack.done && !attack.hitIds[enemy.id]
-                && isIntersectingEnemyHitBoxes(updatedState, enemy, attack)
+                && (hitBox = isIntersectingEnemyHitBoxes(updatedState, enemy, attackHitBox))
             ) {
+                let hitEffect;
                 if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy, attack)) {
+                    hitEffect = createEffect(EFFECT_BLOCK_ATTACK, {sfx: 'reflect'});
                     currentPlayerAttacks[j] = {...attack, done: !attack.piercing, hitIds: {...attack.hitIds, [enemy.id]: true}};
                 } else {
+                    hitEffect = createEffect(EFFECT_DAMAGE, {sfx: 'sfx/hit.mp3'});
                     currentPlayerAttacks[j] = {...attack,
                         damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
                         done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
                         hitIds: {...attack.hitIds, [enemy.id]: true},
                     };
                 }
+                let x = attack.left + attack.width / 2;
+                x = Math.max(hitBox.left, Math.min(hitBox.left + hitBox.width, x));
+                hitEffect.left = x - hitEffect.width / 2;
+                hitEffect.top = attack.top + (attack.height - hitEffect.height ) / 2;
+                updatedState = addEffectToState(updatedState, hitEffect);
                 updatedState = damageEnemy(updatedState, enemy.id, attack);
                 enemy = updatedState.idMap[updatedState.enemies[i].id];
             }
@@ -182,9 +193,10 @@ const advanceState = (state) => {
         const playerHitBox = getHeroHitBox(updatedState.players[i]);
         for (let j = 0; j < currentEnemyAttacks.length && !updatedState.players[i].done; j++) {
             const attack = currentEnemyAttacks[j];
-            if (Rectangle.collision(playerHitBox, attack)) {
+            const attackHitBox = getAttackHitBox(state, attack);
+            if (Rectangle.collision(playerHitBox, attackHitBox)) {
                 updatedState = damageHero(updatedState, i);
-                currentEnemyAttacks[j] = {...attack, done: true};
+                currentEnemyAttacks[j] = {...attack, done: !attack.piercing};
             }
         }
     }
@@ -219,12 +231,13 @@ const advanceState = (state) => {
     let currentNeutralAttacks = updatedState.neutralAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
     for (let i = 0; i < currentNeutralAttacks.length; i++) {
         const attack = currentNeutralAttacks[i];
+        const attackHitBox = getAttackHitBox(state, attack);
         for (let j = 0; j < updatedState.players.length; j++) {
             const player = updatedState.players[j];
             const playerKey = `player${j}`;
             if (isPlayerInvulnerable(updatedState, j) || attack.hitIds[playerKey]) continue;
             const playerHitBox = getHeroHitBox(player);
-            if (Rectangle.collision(playerHitBox, attack)) {
+            if (Rectangle.collision(playerHitBox, attackHitBox)) {
                 updatedState = damageHero(updatedState, j);
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - 1,
@@ -236,7 +249,7 @@ const advanceState = (state) => {
         for (let j = 0; j < updatedState.enemies.length; j++) {
             const enemy = updatedState.idMap[updatedState.enemies[j].id];
             if (!enemyIsActive(updatedState, enemy) || attack.hitIds[enemy.id]) continue;
-            if (isIntersectingEnemyHitBoxes(updatedState, enemy, attack)) {
+            if (isIntersectingEnemyHitBoxes(updatedState, enemy, attackHitBox)) {
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
                     done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
@@ -286,7 +299,7 @@ module.exports = {
 };
 
 const {
-    advanceAttack,
+    advanceAttack, getAttackHitBox,
 } = require('attacks');
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
 const {

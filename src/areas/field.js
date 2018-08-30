@@ -253,7 +253,7 @@ allWorlds[WORLD_FIELD] = {
         if (world.time === 40000) state = setCheckpoint(state, CHECK_POINT_FIELD_MIDDLE);
         if (TEST_ENEMY) {
             if (!state.enemies.length) {
-                state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 600)});
+                state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 400)});
             }
             return state;
         }

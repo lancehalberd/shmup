@@ -17,6 +17,7 @@ const {
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const Rectangle = require('Rectangle');
+const random = require('random');
 
 const {
     drawImage,
@@ -42,6 +43,15 @@ const heroesData = { };
     type:"lightningLadybug",
     vx:0, vy:0,
 };*/
+/*const testPenetratingLadybug = {
+    color:"#4860A0",
+    animationTime: 0,
+    width:25, height:20,
+    left: 0, top: 0,
+    type:"penetratingLadybug",
+    vx:0, vy:0,
+};*/
+
 
 const getNewPlayerState = () => ({
     score: 0,
@@ -98,8 +108,6 @@ function updatePlayerOnContinue(state, playerIndex) {
         invulnerableFor: 0,
         spawning: true,
         shotCooldown: 0,
-        powerups: [],
-        ladybugs: []
     }, {
         left: -100, top: 300,
         targetLeft: 170, targetTop: 200,
@@ -240,7 +248,7 @@ const advanceHero = (state, playerIndex) => {
     } else if (top < getHazardCeilingHeight(state)) {
         return damageHero(state, playerIndex);
     }
-    if (targetLeft != false) {
+    if (targetLeft !== false) {
         const theta = Math.atan2(targetTop - top, targetLeft - left);
         const nextLeft = left + player.sprite.spawnSpeed * Math.cos(theta);
         const nextTop = top + player.sprite.spawnSpeed * Math.sin(theta);
@@ -265,18 +273,20 @@ const advanceHero = (state, playerIndex) => {
     const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups;
     const accleration = ACCELERATION + speedPowerups / 2 + tripleSpeedPowerups;
     // Accelerate player based on their input.
-    if (player.actions.up) vy -= accleration;
-    if (player.actions.down) vy += accleration;
-    if (player.actions.left) vx -= accleration;
-    if (player.actions.right) vx += accleration;
-    vy *= (.9 - tripleSpeedPowerups * .01);
-    vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
-    vx *= (.9 - tripleSpeedPowerups * .01);
-    vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
+    if (!isHeroSwapping(player)) {
+        if (player.actions.up) vy -= accleration;
+        if (player.actions.down) vy += accleration;
+        if (player.actions.left) vx -= accleration;
+        if (player.actions.right) vx += accleration;
+        vy *= (.9 - tripleSpeedPowerups * .01);
+        vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
+        vx *= (.9 - tripleSpeedPowerups * .01);
+        vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
 
-    // Update player position based on their
-    left += vx;
-    top +=  vy;
+        // Update player position based on their
+        left += vx;
+        top +=  vy;
+    }
     const hitBox = new Rectangle(getHeroHitBox(player)).translate(-player.sprite.left, -player.sprite.top);
     if (top + hitBox.top < 0) {
         top = -hitBox.top;
@@ -347,11 +357,12 @@ const advanceLadybugs = (state, playerIndex) => {
             shotCooldown--;
         } else if (player.actions.shoot && !player.spawning) {
             if (ladybug.type === LOOT_PENETRATING_LADYBUG) {
-                shotCooldown = 2 * SHOT_COOLDOWN;
+                shotCooldown = 5 * SHOT_COOLDOWN;
                 const laser = createAttack(ATTACK_LASER, {
-                    left: ladybug.left + player.sprite.vx + ladybug.width + ATTACK_OFFSET,
-                    vx: 25,
+                    yOffset: 6,
+                    xOffset: 2,
                     playerIndex,
+                    ladybugIndex: i,
                 });
                 laser.width *= 3;
                 laser.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - laser.height) / 2) + 6
@@ -380,6 +391,7 @@ const advanceLadybugs = (state, playerIndex) => {
                 orb.top = ladybug.top + player.sprite.vy + Math.round((ladybug.height - orb.height) / 2) + 6
                 state = addPlayerAttackToState(state, orb);
             }
+            if (random.chance(0.5)) shotCooldown += i;
         }
         ladybugs[i] = {
             ...ladybugs[i],
@@ -490,7 +502,6 @@ const damageHero = (updatedState, playerIndex) => {
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
         heroes,
-        dead: true,
         usingSpecial: false,
         done,
         invulnerableFor: 2000,

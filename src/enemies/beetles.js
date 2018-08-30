@@ -3,7 +3,7 @@ const { requireImage, createAnimation, r } = require('animations');
 
 const { ATTACK_EXPLOSION } = require('gameConstants');
 const { enemyData } = require('enemies');
-const { createAttack, addNeutralAttackToState } = require('attacks');
+const { attacks, createAttack, addNeutralAttackToState, default_advanceAttack } = require('attacks');
 
 const beetleRectangle = r(100, 100, {hitBox: {left: 0, top: 16, width: 100, height: 84}});
 
@@ -83,27 +83,43 @@ enemyData[ENEMY_LIGHTNING_BEETLE] = {
     // deathSound: 'sfx/flydeath.mp3',
     onDeathEffect(state, enemy, playerIndex = 0) {
         // The bucket explodes on death.
-        const explosion = createAttack(ATTACK_EXPLOSION, {
+        const lightning = createAttack(ATTACK_LIGHTNING_BOLT, {
             // These offsets are chosen to match the position of the bucket.
             left: enemy.left + 30 + enemy.vx,
-            top: enemy.top + 90 + enemy.vy,
+            top: 0,
             playerIndex,
             delay: 10,
-            vx: enemy.vx, vy: enemy.vy,
+            vy: 30,
+            //vx: enemy.vx, vy: enemy.vy,
         });
-        explosion.width *= 4;
-        explosion.height *= 4;
-        explosion.left -= explosion.width / 2;
-        explosion.top -= explosion.height / 2;
-        return addNeutralAttackToState(state, explosion);
+        lightning.left -= lightning.width / 2;
+        return addNeutralAttackToState(state, lightning);
     },
 };
+
+const ATTACK_LIGHTNING_BOLT = 'lightningBolt';
 
 module.exports = {
     ENEMY_CARGO_BEETLE,
     ENEMY_EXPLOSIVE_BEETLE,
     ENEMY_LIGHTNING_BEETLE,
+    ATTACK_LIGHTNING_BOLT,
 };
 
 const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
 
+
+attacks[ATTACK_LIGHTNING_BOLT] = {
+    animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 36}),
+    advance(state, attack) {
+        return default_advanceAttack(state, {
+            ...attack,
+            top: (attack.top + 50) % 50 - 50,
+        });
+    },
+    props: {
+        damage: 20, piercing: true,
+        sfx: 'lightningBolt',
+        explosion: true,
+    },
+};
