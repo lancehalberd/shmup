@@ -4,6 +4,7 @@ const {
 } = require('gameConstants');
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
+const { getNewSpriteState } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
 
@@ -52,6 +53,16 @@ const CHECK_POINT_SKY_END = 'skyEnd'
 const CHECK_POINT_SKY_BOSS = 'skyBoss'
 checkpoints[CHECK_POINT_SKY_START] = function (state) {
     const world = getSkyWorld();
+    const transitionAnimation = createAnimation('gfx/scene/sky/sunsettransition.png', r(600, 700));
+    const sunset = getNewSpriteState({
+        // Seems like I just had to eyeball this to get it to match correctly.
+        top: -350,
+        left: 0,
+        width: transitionAnimation.frames[0].width * 2,
+        height: transitionAnimation.frames[0].height * 2,
+        animation: transitionAnimation,
+    });
+    world.background = {...world.background, sprites: [sunset]};
     return {...state, world};
 };
 checkpoints[CHECK_POINT_SKY_MIDDLE] = function (state) {
