@@ -11,17 +11,8 @@ const { drawImage } = require('draw');
 const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { allWorlds, getGroundHeight, getNewLayer } = require('world');
-const { enterStarWorldEnd } = require('areas/stars');
 
 const WORLD_FOREST_LOWER_BOSS = 'forestLowerBoss';
-/*
-Add frog boss -
-Main Phase can be made harder with adding flying ants.
-
-Spawn water bugs in pond
-
-Frog: It ribbits here and there and flashes red more often the lower it gets to dying.
-*/
 
 function transitionToForestLowerBoss(state) {
     const world = {
@@ -87,8 +78,11 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         }
         const frog = state.enemies.filter(enemy => enemy.type === ENEMY_FROG)[0];
         const grate = state.enemies.filter(enemy => enemy.type === ENEMY_GRATE)[0];
-        if (pool && (!frog || !grate)) {
-            return enterStarWorldEnd(state);
+        if (pool && !grate) {
+            return transitionToCity(state);
+        }
+        if (pool && !frog) {
+            return transitionToSewer(state);
         }
         if (startPoolPhase(state) && !pool) {
             world = {...world,
@@ -159,6 +153,8 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
 module.exports = {
     transitionToForestLowerBoss,
 };
+const { transitionToCity } = require('areas/forestLowerToCity');
+const { transitionToSewer } = require('areas/forestLowerToSewer');
 
 const {
     enemyData, createEnemy, addEnemyToState, getDefaultEnemyAnimation,

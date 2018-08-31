@@ -86,7 +86,6 @@ allWorlds[FOREST_UPPER_TO_SKY2] = {
                 y: 0,
                 targetY: 0,
             };
-            console.log({world});
         }
         return {...state, world};
     },

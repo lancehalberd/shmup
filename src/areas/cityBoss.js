@@ -7,28 +7,19 @@ const Rectangle = require('Rectangle');
 const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
 const { allWorlds, getNewLayer } = require('world');
 
-const WORLD_SKY_BOSS = 'skyBoss';
+const WORLD_CITY_BOSS = 'cityBoss';
 const BOSS_DURATION = 80000;
 
-function transitionToSkyBoss(state) {
+function transitionToCityBoss(state) {
     const world = {
         ...state.world,
-        type: WORLD_SKY_BOSS,
-        // Remove the moon layer.
-        mgLayerNames: ['background', 'clouds', 'fastClouds'],
-        // Set the next background image to the sunrise graphics
-        background: getNewLayer({
-            xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
-            spriteData: {
-                sky: {animation: createAnimation('gfx/scene/sky/sky.png', r(400, 400)), scale: 2},
-            },
-        }),
+        type: WORLD_CITY_BOSS,
         time: 0,
         targetFrames: 50 * 5,
     };
     return {...state, world};
 }
-allWorlds[WORLD_SKY_BOSS] = {
+allWorlds[WORLD_CITY_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
@@ -61,6 +52,13 @@ allWorlds[WORLD_SKY_BOSS] = {
             world = {...world, lifebars, bgm: 'bgm/boss.mp3'};
             state = {...state, bgm: world.bgm};
         }
+        const seagull = state.enemies.filter(enemy => enemy.type === ENEMY_SEAGULL)[0];
+        if (time > 500 && !seagull && random.chance(0.5)) {
+            return transitionToBeach(state);
+        }
+        if (time > 500 && !seagull) {
+            return transitionToZoo(state);
+        }
 
         state = {...state, world};
         return state;
@@ -68,22 +66,13 @@ allWorlds[WORLD_SKY_BOSS] = {
 };
 
 module.exports = {
-    transitionToSkyBoss,
+    transitionToCityBoss,
 };
+const { transitionToBeach } = require('areas/cityToBeach');
+const { transitionToZoo } = require('areas/cityToZoo');
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
-
-
-/*
-Seagull Boss - the idea is this happens during transition to day time.
-Start the camera high on the night sky background (so there are no tree tops).
-The sunset background overtakes the night sky and eventually turns into the 4A backgrounds.
-The Seagull is chasing the whole time, sometimes swooping in, flying off screen, dropping feathers,
-diving, flapping wind gusts.
-There can be some enemies that spawn on the right side of the screen to also shoot at you.
-During the last part when on the beach, there are rocks to spawn across the sand ground loop.
-*/
 
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,

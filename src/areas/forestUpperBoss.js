@@ -8,7 +8,6 @@ const { drawImage } = require('draw');
 const { createAnimation, r, getFrame } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { allWorlds, getHazardHeight } = require('world');
-const { enterStarWorldEnd } = require('areas/stars');
 
 const WORLD_FOREST_UPPER_BOSS = 'forestUpperBoss';
 const layerNamesToClear = ['largeTrunks', 'willows'];
@@ -145,7 +144,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             return transitionToSky(state);
         }
         if (time > 2500 && queen && queen.dead) {
-            return enterStarWorldEnd(state);
+            return transitionToCity(state);
         }
         world = {...world, time, lastSpawnTime};
         state = {...state, world};
@@ -157,6 +156,7 @@ module.exports = {
     transitionToForestUpperBoss,
 };
 
+const { transitionToCity } = require('areas/forestUpperToCity');
 const { transitionToSky } = require('areas/forestUpperToSky');
 
 const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitBox } = require('enemies');
