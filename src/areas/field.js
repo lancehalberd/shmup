@@ -261,46 +261,6 @@ allWorlds[WORLD_FIELD] = {
         else world = {...world, eventTime: world.eventTime + FRAME_LENGTH};
         state = {...state, world};
         return allWorlds[world.type].events[world.event](state, state.world.eventTime || 0) || state;
-
-        // This was the original random enemy spawning code for the game.
-        /*
-        let {enemyCooldown} = state;
-        const spawnDuration = Math.min(2500, 100 + time / 20 + state.players[0].score / 10);
-        if (enemyCooldown > 0) {
-            enemyCooldown--;
-        } else if (time % 5000 < spawnDuration - 800 * numFormidable) {
-            let newEnemyType = ENEMY_FLY;
-            if (time > 15000 && Math.random() < 1 / 6) {
-                newEnemyType = ENEMY_FLYING_ANT_SOLDIER;
-            } else if (time > 10000 && Math.random() < 1 / 3) {
-                newEnemyType = ENEMY_FLYING_ANT;
-            } else if (time > 20000 && Math.random() > Math.max(.9, 1 - .1 * state.players[0].score / 3000)) {
-                newEnemyType = random.element(formidableEnemies);
-            } else if (getGroundHeight(state) < GAME_HEIGHT && Math.random() < 1 / 10) {
-                newEnemyType = ENEMY_MONK;
-            }
-            const newEnemy = createEnemy(newEnemyType, {
-                left: WIDTH + 10,
-                top: 40 + (GAME_HEIGHT - 80) * (0.5 + 0.5 * Math.sin(time / (1000 - spawnDuration / 5))),
-            });
-            newEnemy.vx = newEnemy.vx || -6 + 3 * (time % 5000) / spawnDuration;
-            newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-            state = addEnemyToState(state, newEnemy);
-            switch (newEnemy.type) {
-                case ENEMY_HORNET:
-                    enemyCooldown = 3 * ENEMY_COOLDOWN;
-                    break;
-                case ENEMY_FLYING_ANT_SOLDIER:
-                    enemyCooldown = 2 * ENEMY_COOLDOWN;
-                    break;
-                default:
-                    enemyCooldown = ENEMY_COOLDOWN;
-                    break;
-            }
-        }
-        return {...state, enemyCooldown};
-        */
-
     },
 };
 

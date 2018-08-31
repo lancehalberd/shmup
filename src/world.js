@@ -34,12 +34,10 @@ const addElementToLayer = (state, layerName) => {
     let newSprite = null, lastSprite = layer.sprites[layer.sprites.length - 1];
     let safety = 0;
     const populating = !lastSprite;
-    //if (layerName === 'largeTrunks') console.log(spriteData);
     while ((!lastSprite || lastSprite.left < WIDTH) && !(lastSprite && layer.unique) && safety++ < 20) {
         let spriteData = (lastSprite && lastSprite.next)
             ? elementsData[random.element(lastSprite.next)]
             : random.element(elementsData);
-        //if (layerName === 'largeTrunks') console.log(spriteData);
         // This will often happen when transitioning between area types.
         if (!spriteData) {
             spriteData = random.element(elementsData);
@@ -66,7 +64,7 @@ const addElementToLayer = (state, layerName) => {
         yOffset *= (spriteData.scale || 1);
         newSprite = getNewSpriteState({
             ...animation.frames[0],
-            top: getBaseHeight(state, layer) + layer.yOffset + yOffset,
+            top: getBaseHeight(state, layer) + (layer.yOffset || 0) + yOffset,
             // only allow items to be added to directly to the visible portion of the
             // screen during the population section (no sprite on the layer yet).
             left: offset,
@@ -74,12 +72,13 @@ const addElementToLayer = (state, layerName) => {
             animation,
             animationTime: offset,
         });
-        newSprite.height *= scale;
-        newSprite.width *= scale;
+        newSprite.height *= (scale || 1);
+        newSprite.width *= (scale || 1);
         //console.log(getBaseHeight(state), layer.yOffset, yOffset, -newSprite.height);
         newSprite.top -= newSprite.height;
         if (!lastSprite) newSprite.left -= newSprite.width / 2; // Start with the first sprite half off of the screen.
         layer.sprites = [...layer.sprites, newSprite];
+        //if (layerName === 'ground') console.log(layer.sprites);
         //console.log(newSprite.left, newSprite.top, newSprite.width, newSprite.height);
         lastSprite = newSprite;
     }

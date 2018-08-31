@@ -6,7 +6,16 @@ const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
+/*
 
+Add in interactive candles that light when shot/go out when slashed
+Add jumping fleas that slow/bring down the Knight
+Add normal and mounted cockroaches
+Add trash cats that are invincible with meow SFX
+Add spider boss guarding the window - the spider can capture knights with a web and hold them unless slashed free. The web can only be slashed, and the spider is invincible behind it. After the web is down, the spider can then be attacked directly. There are many other spiders on screen, and possibly flies that also get caught in the web flying from left to right.
+Perhaps also add rats here for both 3B and 3C, climbing the walls of the alley areas.
+
+*/
 
 function spawnEnemy(state, enemyType, props) {
     const newEnemy = createEnemy(enemyType, props);
@@ -162,22 +171,55 @@ const getCityWorld = () => ({
     targetFrames: 50 * 10,
     time: 0,
     bgm: 'bgm/title.mp3',
+    groundHeight: 30,
     ...getCityLayers(),
 });
-
-const cityLoop = createAnimation('gfx/scene/sky/sky.png', r(400, 400));
+const skyLoop = createAnimation('gfx/scene/city/3bcityskybox.png', r(400, 300));
+const groundLoop = createAnimation('gfx/scene/city/3bgroundloop.png', r(200, 60));
+const cityScapeLoop = createAnimation('gfx/scene/city/cityscape.png', r(460, 300));
+const clouds = [
+    createAnimation('gfx/scene/sky/cloud1.png', r(150, 100)),
+    createAnimation('gfx/scene/sky/cloud2.png', r(150, 100)),
+    createAnimation('gfx/scene/sky/cloud3.png', r(150, 100)),
+];
 const getCityLayers = () => ({
     background: getNewLayer({
         xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
         spriteData: {
-            city: {animation: cityLoop, scale: 2},
+            sky: {animation: skyLoop, scale: 2, next: ['sky']},
+        },
+    }),
+    cityScape: getNewLayer({
+        xFactor: 0.2, yFactor: 0.5, yOffset: 0,
+        spriteData: {
+            cityScape: {animation: cityScapeLoop, scale: 2, next: ['cityScape'], offset: 0},
+        },
+    }),
+    ground: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: 0,
+        spriteData: {
+            pavement: { animation: groundLoop, next: ['pavement'], offset: 0},
+        },
+    }),
+    clouds: getNewLayer({
+        xFactor: 0.3, yFactor: 0.5, yOffset: -300,
+        spriteData: {
+            cloudA: {animation: clouds[0], scale: 2, alpha: 0.7, vx: -1, next: ['cloudB', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+            cloudB: {animation: clouds[1], scale: 2, alpha: 0.7, vx: -2, next: ['cloudA', 'cloudC'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+            cloudC: {animation: clouds[2], scale: 2, alpha: 0.7, vx: -1, next: ['cloudA', 'cloudB'], offset: [50, 80], yOffset: [0, 10, 20, 30, 40]},
+        },
+    }),
+    fastClouds: getNewLayer({
+        xFactor: 0.7, yFactor: 0.5, yOffset: -305,
+        spriteData: {
+            cloud: {animation: clouds, scale: 2, alpha: 0.5, vx: -4, next: ['cloud'], offset: [150, 200], yOffset: [0, 10, 20, 30, 40]},
         },
     }),
     // Background layers start at the top left corner of the screen.
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background'],
+    mgLayerNames: ['background', 'cityScape', 'ground'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: [],
 });

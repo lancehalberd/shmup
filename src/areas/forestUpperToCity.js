@@ -3,6 +3,7 @@ const { createAnimation, r } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { addElementToLayer, applyCheckpointToState, setCheckpoint, allWorlds } = require('world');
 
+//Add in normal skybox as well as the sunset transition
 function transitionToCity(state) {
     const world = {
         ...state.world,
