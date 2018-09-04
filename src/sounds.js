@@ -168,6 +168,7 @@ const preloadSounds = () => {
         'bgm/field.mp3+0+1',
         'bgm/lowerForest.mp3+0+2',
         'bgm/upperForest.mp3+0:104000+2',
+        'bgm/alley.mp3+0+3',
         'bgm/boss.mp3+0+2',
         'bgm/space.mp3+0+2',
     ].forEach(requireSound);

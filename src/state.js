@@ -49,9 +49,9 @@ const advanceState = (state) => {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
-        updatedState = {...updatedState, title: false};
-        updatedState = setCheckpoint(updatedState, 'skyBoss');
-        return applyCheckpointToState(updatedState);
+        //updatedState = {...updatedState, title: false};
+        //updatedState = setCheckpoint(updatedState, 'cityStart');
+        //return applyCheckpointToState(updatedState);
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
