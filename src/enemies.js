@@ -286,6 +286,10 @@ const createEnemy = (type, props) => {
     const frame = enemyData[type].animation.frames[0];
     return getNewSpriteState({
         ...frame,
+        // Do not inherit scaleX/scaleY from the frame, otherwise it will
+        // be applied twice.
+        scaleX: 1,
+        scaleY: 1,
         ...enemyData[type].props,
         type,
         seed: Math.random(),
@@ -329,26 +333,64 @@ const getDefaultEnemyAnimation = (state, enemy) => {
 
 function getEnemyHitBox(state, enemy) {
     let animation = getEnemyAnimation(state, enemy);
-    return new Rectangle(getHitBox(animation, enemy.animationTime)).translate(enemy.left, enemy.top);
+    const scaleX = enemy.scaleX || 1;
+    const scaleY = enemy.scaleY || 1;
+    return new Rectangle(getHitBox(animation, enemy.animationTime))
+        .stretch(scaleX, scaleY)
+        .translate(enemy.left, enemy.top);
 }
 function getEnemyCenter(state, enemy) {
     return getEnemyHitBox(state, enemy).getCenter();
 }
 function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
-    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+    /*const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
     const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
     const hitBoxes = frame.hitBoxes || [geometryBox];
     for (let hitBox of hitBoxes) {
+        const scaleX = (enemy.scaleX || 1) * frame.scaleX || 1);
+        const scaleY = (enemy.scaleY || 1) * frame.scaleY || 1);
         if (enemy.vx > 0 && !enemy.doNotFlip) {
             hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
         }
-        hitBox = new Rectangle(hitBox).translate(enemy.left, enemy.top);
+        hitBox = new Rectangle(hitBox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
+        if (Rectangle.collision(hitBox, rectangle)) {
+            return hitBox;
+        }
+    }
+    return false;*/
+    for (const hitBox of getEnemyHitBoxes(state, enemy)) {
         if (Rectangle.collision(hitBox, rectangle)) {
             return hitBox;
         }
     }
     return false;
+}
+// It would be good to make this into an iterator so we don't have to produce all of them for each
+// call.
+function getEnemyHitBoxes(state, enemy) {
+    const globalHitBoxes = [];
+    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+    const reflectX = geometryBox.left + geometryBox.width / 2;
+    const hitBoxes = frame.hitBoxes || [geometryBox];
+    for (let hitBox of hitBoxes) {
+        const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
+        const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
+        if (enemy.vx > 0 && !enemy.doNotFlip) {
+            hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+        }
+        hitBox = new Rectangle(hitBox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
+        globalHitBoxes.push(hitBox);
+    }
+    return globalHitBoxes;
+}
+
+function getEnemyDrawBox(state, enemy) {
+    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+    const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
+    const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
+    return new Rectangle(frame).stretch(scaleX, scaleY).moveTo(enemy.left, enemy.top);
 }
 
 function enemyIsActive(state, enemy) {
@@ -392,8 +434,9 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         const explosion = createEffect(EFFECT_EXPLOSION, {
             sfx: enemyData[enemy.type].deathSound,
         });
-        explosion.left = enemy.left + (enemy.width - explosion.width ) / 2;
-        explosion.top = enemy.top + (enemy.height - explosion.height ) / 2;
+        const hitBox = getEnemyHitBox(state, enemy);
+        explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2;
+        explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2;
         updatedState = addEffectToState(updatedState, explosion);
 
         if (attack.melee && !enemy.stationary) {
@@ -454,25 +497,26 @@ function renderEnemyFrame(context, state, enemy, frame) {
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
-    let hitBox = getEnemyHitBox(state, enemy).translate(-enemy.left, -enemy.top);
+    let hitBox = getEnemyHitBox(state, enemy);
+    const drawBox = getEnemyDrawBox(state, enemy);
     if ((enemy.vx > 0 && !enemy.flipped && !enemy.doNotFlip) || (enemy.vx <= 0 && enemy.flipped)) {
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
-        context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
+        context.translate(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2);
         context.scale(-1, 1);
         // This draws the image frame so that the center is exactly at the origin.
-        const target = new Rectangle(frame).moveTo(
-            -(hitBox.left + hitBox.width / 2),
-            -(hitBox.top + hitBox.height / 2),
+        const target = drawBox.moveTo(
+            -hitBox.width / 2 - hitBox.left + enemy.left,
+            -hitBox.height / 2 - hitBox.top + enemy.top,
         );
         drawImage(context, frame.image, frame, target);
         context.restore();
     } else {
         context.save();
-        context.translate(enemy.left + hitBox.left + hitBox.width / 2, enemy.top + hitBox.top + hitBox.height / 2);
-        const target = new Rectangle(frame).moveTo(
-            -(hitBox.left + hitBox.width / 2),
-            -(hitBox.top + hitBox.height / 2),
+        context.translate(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2);
+        const target = drawBox.moveTo(
+            -hitBox.width / 2 - hitBox.left + enemy.left,
+            -hitBox.height / 2 - hitBox.top + enemy.top,
         );
         drawImage(context, frame.image, frame, target);
         context.restore();
@@ -492,7 +536,7 @@ const renderEnemy = (context, state, enemy) => {
    // if (rotation) context.rotate(rotation * Math.PI/180);
    // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
 
-    if (isKeyDown(KEY_SHIFT)) {
+    /*if (isKeyDown(KEY_SHIFT)) {
         const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
         const reflectX = geometryBox.left + geometryBox.width / 2;
         const hitBoxes = frame.hitBoxes || [geometryBox];
@@ -508,6 +552,15 @@ const renderEnemy = (context, state, enemy) => {
             context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
             context.restore();
         }
+    }*/
+    if (isKeyDown(KEY_SHIFT)) {
+        context.save();
+        context.globalAlpha = .6;
+        context.fillStyle = 'red';
+        for (const hitBox of getEnemyHitBoxes(state, enemy)) {
+            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+        }
+        context.restore();
     }
     if (enemyData[enemy.type].drawOver) {
         enemyData[enemy.type].drawOver(context, state, enemy);
@@ -677,6 +730,7 @@ module.exports = {
     renderEnemy,
     renderEnemyFrame,
     getEnemyHitBox,
+    getEnemyDrawBox,
     getEnemyCenter,
     isIntersectingEnemyHitBoxes,
     updateEnemy,

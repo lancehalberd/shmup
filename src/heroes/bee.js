@@ -188,8 +188,9 @@ heroesData[HERO_BEE] = {
         const attackSpeedPowers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length
         const shotCooldown = (this.shotCooldown || SHOT_COOLDOWN) - attackSpeedPowers;
         state = updatePlayer(state, playerIndex, {shotCooldown});
+        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
         const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-        const damage = 1 + triplePowers;
+        const damage = 1 + triplePowers + powers / 3;
         const tint = getAttackTint({damage});
         let hit = false;
         const targets = [...player[HERO_BEE].targets];

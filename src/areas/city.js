@@ -185,6 +185,16 @@ const alleyLoop = createAnimation('gfx/scene/city/alley.png', r(320, 600));
 /*
 xxx Sunset slowly moves down.
 xxx The cityscape can scroll slowly and loop.
+
+
+I also made the new window, both for entering the restaurant and for the base of the spider boss.
+The window entering the restaurant has lines that are where different light bulbs go.
+I also made strings to appear in the alley with little lightning sparks to animate over the broken bulbs over and over,
+harming anything it is near. I am unsure if we should make the bulbs destroyable, as if the Knight has that power,
+they may accidentally kill themselves a lot.
+Anyway, the point of the bulbs around the window is to funnel the Knight into the open area,
+and not too high as to clip through the wall.
+
 Part way through, they travel down to ground floor and see a window - entering the window transitions them into the restaurant.
 In the restaurant, occasionally there can be ground as well (the table).
 I am unsure how you want to have it if a robes falls on the table but then reaches the end of the table - do they then fall off?

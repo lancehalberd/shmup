@@ -3,7 +3,7 @@ module.exports = {
     TEST_ITEMS: false,
     //TEST_ITEMS: ['tripleCombo', 'combo'],
     //TEST_ITEMS: ['normalLadybug','lightningLadybug','penetratingLadybug'],
-    //TEST_ENEMY: 'lightningBeetle',
+    //TEST_ENEMY: 'flyingAntSoldier',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,

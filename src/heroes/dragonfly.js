@@ -110,7 +110,7 @@ heroesData[HERO_DRAGONFLY] = {
         const scale = 1 + powers + triplePowers / 2;
         for (const blastOffsets of blastPattern) {
             const blast = createAttack(ATTACK_BLAST, {
-                damage: 1 + triplePowers,
+                damage: 1 + triplePowers + powers / 3,
                 left: player.sprite.left + player.sprite.vx + player.sprite.width,
                 xOffset: ATTACK_OFFSET,
                 yOffset: 0,

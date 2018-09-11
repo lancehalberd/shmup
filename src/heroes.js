@@ -129,7 +129,7 @@ const useMeleeAttack = (state, playerIndex) => {
     const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
     const scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
     const meleeAttack = createAttack(heroData.meleeAttack, {
-        damage: heroData.meleePower + triplePowers,
+        damage: heroData.meleePower + triplePowers + powers / 3,
         top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
         left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
         playerIndex,

@@ -71,7 +71,7 @@ module.exports = {
     transitionToSkyBoss,
 };
 
-const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
+const { enemyData, createEnemy, addEnemyToState, updateEnemy, getEnemyDrawBox } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 
 
@@ -87,7 +87,7 @@ During the last part when on the beach, there are rocks to spawn across the sand
 
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,
-    {hitBox: {left: 39, top: 63, width: 117, height: 40}},
+    {hitBox: {left: 39, top: 63, width: 117, height: 40}, scaleX: 3, scaleY: 3},
 );
 enemyData[ENEMY_SEAGULL] = {
     animation: createAnimation('gfx/enemies/birds/seagull.png', seagullGeometry, {rows: 4}),
@@ -102,26 +102,29 @@ enemyData[ENEMY_SEAGULL] = {
                 break;
             case 'attack': {
                 vx = (left > WIDTH) ? -enemy.speed : enemy.speed;
-                top = state.players[0].sprite.top - 150;
+                top = state.players[0].sprite.top - 250;
                 mode = 'glide';
                 modeTime = 0;
                 break;
             }
-            case 'glide':
-                vy = ((left + enemy.width / 2 - WIDTH / 2) * vx < 0) ? 3 : -3;
-                if ((vx > 0 && left > WIDTH + 200) || (vx < 0 && left + enemy.width < -200)) {
+            case 'glide': {
+                const drawBox = getEnemyDrawBox(state, enemy);
+                vy = ((left + drawBox.width / 2 - WIDTH / 2) * vx < 0) ? 3 : -3;
+                if ((vx > 0 && left > WIDTH + 200) || (vx < 0 && left + drawBox.width < -200)) {
+                    console.log(enemy.left + drawBox.width, enemy.left - WIDTH);
                     mode = 'prepare';
                     modeTime = 0;
                     vx = 0;
                 }
                 break;
+            }
         }
         modeTime += FRAME_LENGTH;
         return {...enemy, targetX, targetY, vx, vy, mode, modeTime, top, left};
     },
     props: {
         life: 10000,
-        speed: 15,
+        speed: 20,
         weakness: {[ATTACK_LIGHTNING_BOLT]: 1000},
         boss: true,
         permanent: true,
