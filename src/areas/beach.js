@@ -148,22 +148,50 @@ const getBeachWorld = () => ({
     targetFrames: 50 * 10,
     time: 0,
     bgm: 'bgm/title.mp3',
+    groundHeight: 30,
     ...getBeachLayers(),
 });
 
-const skyLoop = createAnimation('gfx/scene/sky/sky.png', r(400, 400));
+const skyLoop = createAnimation('gfx/scene/beach/4Asky.png', r(400, 250));
+const oceanLoop = createAnimation('gfx/scene/beach/4abacksheet.png', r(400, 150), {cols: 4, duration: 12, frameMap: [0, 0, 0, 1, 2, 3, 3, 3, 2, 1]});
+const beachLoop = createAnimation('gfx/scene/beach/sandground.png', r(200, 60));
+const rock1Animation = createAnimation('gfx/scene/beach/rock1.png', r(50, 50));
+const rock2Animation = createAnimation('gfx/scene/beach/rock2.png', r(50, 50));
+const shell1Animation = createAnimation('gfx/scene/beach/shell1.png', r(100, 100));
+const shell2Animation = createAnimation('gfx/scene/beach/shell2.png', r(100, 100));
 const getBeachLayers = () => ({
     background: getNewLayer({
-        xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
+        xFactor: 0, yFactor: 0, yOffset: -100, maxY: 0, xOffset: 400,
         spriteData: {
-            beach: {animation: skyLoop, scale: 2},
+            sky: {animation: skyLoop, scale: 2},
+        },
+    }),
+    ocean: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -50, maxY: 0, syncAnimations: true,
+        spriteData: {
+            ocean: {animation: oceanLoop, scale: 2},
+        },
+    }),
+    ground: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: 0, maxY: 0,
+        spriteData: {
+            beach: {animation: beachLoop, scale: 2},
+        },
+    }),
+    detritus: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -48,
+        spriteData: {
+            rock1: { animation: rock1Animation, scale: 2, next: ['rock2', 'shell2'], offset: [-10, 100, 150], yOffset: [-1, 2, 4] },
+            rock2: { animation: rock2Animation, scale: 2, next: ['rock1', 'shell1'], offset: [90, 180], yOffset: [-1, 2, 4] },
+            shell1: { animation: shell1Animation, scale: 2, next: ['shell2', 'rock1'], offset: [20, 120], yOffset: [-1, 2, 4] },
+            shell2: { animation: shell2Animation, scale: 2, next: ['shell1', 'rock2'], offset: [100], yOffset: [-1, 2, 4] },
         },
     }),
     // Background layers start at the top left corner of the screen.
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background'],
+    mgLayerNames: ['background', 'ocean', 'ground', 'detritus'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: [],
 });

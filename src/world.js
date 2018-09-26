@@ -70,7 +70,7 @@ const addElementToLayer = (state, layerName) => {
             left: offset,
             ...spriteData,
             animation,
-            animationTime: offset,
+            animationTime: layer.syncAnimations ? ((lastSprite && lastSprite.animationTime) || 0) : offset,
         });
         newSprite.height *= (scale || 1);
         newSprite.width *= (scale || 1);
