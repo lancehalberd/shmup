@@ -62,7 +62,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         world = {...world, time};
         if (time === 500) {
             const lifebars = {};
-            let frog = createEnemy(ENEMY_FROG, {left: WIDTH});
+            let frog = createEnemy(state, ENEMY_FROG, {left: WIDTH});
             const hitBox = getEnemyHitBox(state, frog).translate(-frog.left, -frog.top);
             frog.top = getGroundHeight(state) - (hitBox.top + hitBox.height);
             lifebars[frog.id] = {
@@ -110,7 +110,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
             world.targetX = world.x + 2 * WIDTH;
 
             const lifebars = {...world.lifebars};
-            let grate = createEnemy(ENEMY_GRATE, {left: 2 * WIDTH, top: -36});
+            let grate = createEnemy(state, ENEMY_GRATE, {left: 2 * WIDTH, top: -36});
             lifebars[grate.id] = {
                 left: 100, top: 52, width: 600, height: 8, startTime: world.time,
             };
@@ -124,7 +124,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         // seconds from the anthole (or offscreen before it is onscreen).
         if (pool && !(world.lastSpawnTime + 3000 > world.time)) {
             world = {...world, lastSpawnTime: world.time};
-            const fly = createEnemy(ENEMY_FLYING_ANT, {
+            const fly = createEnemy(state, ENEMY_FLYING_ANT, {
                 left: pool.left + 430,
                 top: pool.top + 500,
             });
@@ -142,7 +142,7 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         if (pool && pool.left + 200 < WIDTH && waterMonks.length < 3 &&
             world.lastSpawnTime + 1000 === world.time && random.chance(0.8)
         ) {
-            const waterMonk = createEnemy(ENEMY_WATER_MONK, {left: WIDTH, top: GAME_HEIGHT});
+            const waterMonk = createEnemy(state, ENEMY_WATER_MONK, {left: WIDTH, top: GAME_HEIGHT});
             state = addEnemyToState(state, waterMonk);
         }
         state = {...state, world};
@@ -724,7 +724,7 @@ enemyData[ENEMY_WATER_MONK] = {
         return state;
     },
     onDeathEffect(state, enemy) {
-        const drowningMonk = createEnemy(ENEMY_DROWNING_MONK, {
+        const drowningMonk = createEnemy(state, ENEMY_DROWNING_MONK, {
             top: enemy.top, left: enemy.left,
             // The rider gets knocked back, but the mount stays in places.
             vx: enemy.vx, vy: enemy.vy,

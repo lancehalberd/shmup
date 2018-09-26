@@ -25,7 +25,7 @@ the forest merely ends and the Knight is flying above the city skyline.
 */
 
 function spawnEnemy(state, enemyType, props) {
-    const newEnemy = createEnemy(enemyType, props);
+    const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
@@ -138,11 +138,11 @@ allWorlds[WORLD_CITY] = {
         const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
         if (world.time % 20000 < 5000) {
-            targetY = world.y;
+            targetY = -500;//world.y;
         } else if (world.time % 20000 < 10000) {
             targetY = -500;
         } else if (world.time % 20000 > 15000) {
-            targetY = 800;
+            targetY = -500; //800;
         }
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
@@ -181,6 +181,10 @@ const sunset = createAnimation('gfx/scene/city/sunsettransition.png', r(400, 300
 const groundLoop = createAnimation('gfx/scene/city/3bgroundloop.png', r(200, 60));
 const cityScapeLoop = createAnimation('gfx/scene/city/cityscape.png', r(460, 300));
 const alleyLoop = createAnimation('gfx/scene/city/alley.png', r(320, 600));
+
+const dumpsterAnimation = createAnimation('gfx/scene/city/dumpster.png', r(200, 150));
+const litterAnimation = createAnimation('gfx/scene/city/trash1.png', r(100, 100));
+const trashbagAnimation = createAnimation('gfx/scene/city/trash2.png', r(100, 100));
 
 /*
 xxx Sunset slowly moves down.
@@ -231,7 +235,7 @@ const getCityLayers = () => ({
     cityScape: getNewLayer({
         xFactor: 0.2, yFactor: 0.5, yOffset: -200,
         spriteData: {
-            cityScape: {animation: cityScapeLoop, scale: 2, next: ['cityScape'], offset: 0},
+            cityScape: { animation: cityScapeLoop, scale: 2, next: ['cityScape'], offset: 0 },
         },
     }),
     ground: getNewLayer({
@@ -241,16 +245,24 @@ const getCityLayers = () => ({
         },
     }),
     wall: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: 100,
+        xFactor: 1, yFactor: 1, yOffset: -54,
         spriteData: {
             wall: { animation: alleyLoop, next: ['wall'], offset: 0},
+        },
+    }),
+    dumpster: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -48,
+        spriteData: {
+            dumpster: { animation: dumpsterAnimation, scale: 2, next: ['trash'], offset: [-200, -50, 100] },
+            trash: { animation: [trashbagAnimation, litterAnimation], scale: 2, next: ['trash', 'trash', 'lastTrash'], offset: [20, 80, 120], yOffset: [3, 5] },
+            lastTrash: { animation: [trashbagAnimation, litterAnimation], scale: 2, next: ['dumpster'], offset: [150, 200], yOffset: [3, 5] },
         },
     }),
     // Background layers start at the top left corner of the screen.
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background', 'sunset', 'cityScape', 'wall', 'ground'],
+    mgLayerNames: ['background', 'sunset', 'cityScape', 'ground', 'wall', 'dumpster'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: [],
 });

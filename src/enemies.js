@@ -29,11 +29,9 @@ const {
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
 } = require('animations');
 
-let uniqueIdCounter = 0;
-
 const onHitGroundEffect_spawnMonk = (state, enemy) => {
     const fallDamage = Math.floor(enemy.vy / 13);
-    const monk = createEnemy(ENEMY_MONK, {
+    const monk = createEnemy(state, ENEMY_MONK, {
         left: enemy.left,
         top: Math.min(getHazardHeight(state), getGroundHeight(state)),
         animationTime: 20,
@@ -161,7 +159,7 @@ const enemyData = {
         },
         shoot: shoot_bulletForward,
         onDeathEffect(state, enemy) {
-            const locust = createEnemy(ENEMY_LOCUST, {
+            const locust = createEnemy(state, ENEMY_LOCUST, {
                 life: 6,
                 score: enemyData[ENEMY_LOCUST].props.score / 2,
                 left: enemy.left,
@@ -206,7 +204,7 @@ const enemyData = {
         accelerate: accelerate_followPlayer,
         shoot: shoot_bulletAtHeading,
         onDeathEffect(state, enemy) {
-            const flyingAnt = createEnemy(ENEMY_FLYING_ANT, {
+            const flyingAnt = createEnemy(state, ENEMY_FLYING_ANT, {
                 left: enemy.left,
                 top: enemy.top,
                 speed: 9,
@@ -282,7 +280,7 @@ enemyData[ENEMY_SHIELD_MONK] = {
 };
 window.enemyData = enemyData;
 
-const createEnemy = (type, props) => {
+function createEnemy(state, type, props) {
     const frame = enemyData[type].animation.frames[0];
     return getNewSpriteState({
         ...frame,
@@ -295,9 +293,9 @@ const createEnemy = (type, props) => {
         seed: Math.random(),
         maxLife: props && props.life || enemyData[type].props.life,
         ...props,
-        id: `enemy${uniqueIdCounter++}`,
+        id: `enemy${state.uniqueEnemyIdCounter++}`,
     });
-};
+}
 
 function updateEnemy(state, enemy, props) {
     const idMap = {...state.idMap};
@@ -715,7 +713,9 @@ const advanceEnemy = (state, enemy) => {
             state = updatePlayer(state, 0, { comboScore });
             // console.log('lost points:', enemy.type);
         }
-        if (done) return removeEnemy(state, enemy);
+        if (done) {
+            return removeEnemy(state, enemy);
+        }
     }
     return updateEnemy(state, enemy, {ttl, attackCooldownFramesLeft, pendingDamage: 0});
 };

@@ -38,7 +38,7 @@ const darkGrass = createAnimation('gfx/scene/field/plainsmg2.png', r(300, 300));
 const WORLD_FIELD = 'field';
 
 const spawnEnemy = (state, enemyType, props) => {
-    const newEnemy = createEnemy(enemyType, props);
+    const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -5);

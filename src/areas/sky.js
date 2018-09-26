@@ -10,7 +10,7 @@ const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles'
 
 
 function spawnEnemy(state, enemyType, props) {
-    const newEnemy = createEnemy(enemyType, props);
+    const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
@@ -369,7 +369,7 @@ enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
         return addEnemyAttackToState(state, laser);
     },
     onDeathEffect(state, enemy) {
-        const blueBird = createEnemy(ENEMY_BLUE_BIRD, {
+        const blueBird = createEnemy(state, ENEMY_BLUE_BIRD, {
             left: enemy.left,
             top: enemy.top,
             vx: enemy.left > state.players[0].sprite.left ? 20 : -20,

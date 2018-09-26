@@ -195,7 +195,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         return shoot_bulletAtPlayer(state, enemy);
     },
     onDeathEffect(state, enemy) {
-        const hornet = createEnemy(ENEMY_HORNET, {
+        const hornet = createEnemy(state, ENEMY_HORNET, {
             life: 20,
             score: enemyData[ENEMY_HORNET].props.score / 2,
             left: enemy.left,

@@ -1,6 +1,7 @@
 const { WIDTH, HEIGHT } = require('gameConstants');
 
 function drawImage(context, image, source, target) {
+    if (!image.src && image.originalSource) image = requireImage(image.originalSource);
     context.drawImage(
         image,
         source.left, source.top, source.width, source.height,
@@ -44,3 +45,5 @@ module.exports = {
     drawTintedImage,
     embossText,
 };
+
+const { requireImage } = require('animations');

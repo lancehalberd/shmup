@@ -9,7 +9,7 @@ const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles'
 
 
 function spawnEnemy(state, enemyType, props) {
-    const newEnemy = createEnemy(enemyType, props);
+    const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);

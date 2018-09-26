@@ -13,7 +13,7 @@ const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
 
 const spawnEnemy = (state, enemyType, props) => {
-    const newEnemy = createEnemy(enemyType, props);
+    const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);

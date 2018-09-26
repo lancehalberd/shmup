@@ -79,7 +79,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             const connectedIds = [];
             let left = nestSprite.left - state.world.vx,
                 top = nestSprite.top - state.world.vy;
-            let newEnemy = createEnemy(ENEMY_HORNET_NEST_1, {
+            let newEnemy = createEnemy(state, ENEMY_HORNET_NEST_1, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
@@ -88,22 +88,22 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             };
             world = {...world, lifebars, spawnsDisabled: true};
             state = addEnemyToState(state, newEnemy);
-            newEnemy = createEnemy(ENEMY_HORNET_NEST_2, {
+            newEnemy = createEnemy(state, ENEMY_HORNET_NEST_2, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
             state = addEnemyToState(state, newEnemy);
-            newEnemy = createEnemy(ENEMY_HORNET_NEST_3, {
+            newEnemy = createEnemy(state, ENEMY_HORNET_NEST_3, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
             state = addEnemyToState(state, newEnemy);
-            newEnemy = createEnemy(ENEMY_HORNET_NEST_4, {
+            newEnemy = createEnemy(state, ENEMY_HORNET_NEST_4, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
             state = addEnemyToState(state, newEnemy);
-            newEnemy = createEnemy(ENEMY_HORNET_NEST_5, {
+            newEnemy = createEnemy(state, ENEMY_HORNET_NEST_5, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
@@ -114,7 +114,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
         const queen = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_QUEEN)[0];
         // Spawn the hornet queen at 60% health of nest
         if (nest && nest.life > 0 && !queen && nest.life / NEST_LIFE < 0.6 ) {
-            const newEnemy = createEnemy(ENEMY_HORNET_QUEEN, {
+            const newEnemy = createEnemy(state, ENEMY_HORNET_QUEEN, {
                 left: WIDTH,
                 top: random.range(1, 3) * getHazardHeight(state) / 5,
             });
@@ -132,7 +132,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             if (nest.life < 0.66 * NEST_LIFE) enemyTypes.push(ENEMY_HORNET_DASHER);
             else if (nest.life < 0.25) enemyTypes = [ENEMY_HORNET_DASHER];
             if (time >= lastSpawnTime + spawnPeriod) {
-                const newEnemy = createEnemy(random.element(enemyTypes), {
+                const newEnemy = createEnemy(state, random.element(enemyTypes), {
                     left: WIDTH,
                     top: random.range(1, 3) * getHazardHeight(state) / 5,
                 });
@@ -216,7 +216,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         }
         delay = 3;
         for (const enemyType of enemy.spawns) {
-            let newEnemy = createEnemy(enemyType, {
+            let newEnemy = createEnemy(state, enemyType, {
                 left: hitBox.left + hitBox.width / 2,
                 top: hitBox.top + hitBox.height / 2,
                 delay,

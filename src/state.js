@@ -36,6 +36,7 @@ const getNewState = () => (advanceWorld({
     interacted: false,
     checkpoint: null,
     debug: false,
+    uniqueEnemyIdCounter: 0,
 }));
 
 const TEST_TIME = 0;

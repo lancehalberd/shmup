@@ -63,7 +63,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
         if (time === 2500) {
             const lifebars = {};
             const treeSprite = world.nearground.sprites[0];
-            let newEnemy = createEnemy(ENEMY_DOOR, {
+            let newEnemy = createEnemy(state, ENEMY_DOOR, {
                 left: treeSprite.left + 638,
                 top: treeSprite.top + 270,
             });
@@ -71,7 +71,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
             state = addEnemyToState(state, newEnemy);
-            newEnemy = createEnemy(ENEMY_LARGE_TURRET, {
+            newEnemy = createEnemy(state, ENEMY_LARGE_TURRET, {
                 left: treeSprite.left + treeSprite.width - 90,
                 top: treeSprite.top + 70,
             });
@@ -83,7 +83,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 [-40, 200], [-125, 240], [-35, 245],
             ];
             for (const coords of smallTurrets) {
-                newEnemy = createEnemy(ENEMY_SMALL_TURRET, {
+                newEnemy = createEnemy(state, ENEMY_SMALL_TURRET, {
                     left: treeSprite.left + treeSprite.width + coords[0],
                     top: treeSprite.top + coords[1],
                 });
@@ -117,7 +117,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
             const minMonkTime = 4000 + 1000 * turrets.length;
             if (turrets.length <= 4 && time - (world.lastMonkTime || 0) >= minMonkTime && Math.random() > 0.9) {
                 const treeSprite = world.nearground.sprites[0];
-                const newEnemy = createEnemy(ENEMY_GROUND_MONK, {
+                const newEnemy = createEnemy(state, ENEMY_GROUND_MONK, {
                     left: treeSprite.left + treeSprite.width - 270,
                     top: treeSprite.top + treeSprite.height - 36,
                     // Normally monks walk slowly left to right to keep up with scrolling,
@@ -149,7 +149,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 leaf.left -= leaf.width / 2;
                 state = addEffectToState(state, leaf);
 
-                let stick = createEnemy(random.element([ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3]), {
+                let stick = createEnemy(state, random.element([ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3]), {
                     left: spawnX,
                     top: -100,
                     vy: 0,

@@ -41,7 +41,7 @@ allWorlds[WORLD_SEWER_BOSS] = {
 
         if (time === 500) {
             const lifebars = {};
-            let newEnemy = createEnemy(ENEMY_SEAGULL, {
+            let newEnemy = createEnemy(state, ENEMY_SEAGULL, {
                 left: WIDTH + 1000,
                 top: -100,
             });

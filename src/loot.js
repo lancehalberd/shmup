@@ -369,7 +369,7 @@ const gainPoints = (state, playerIndex, points) => {
         powerupIndex = Math.min(powerupIndex + 1, powerupGoals.length - 1);
         const ceiling = Math.max(getHazardCeilingHeight(state), 0);
         const floor = Math.min(getHazardHeight(state), GAME_HEIGHT);
-        const cargoBeetle = createEnemy(ENEMY_CARGO_BEETLE, {
+        const cargoBeetle = createEnemy(state, ENEMY_CARGO_BEETLE, {
             left: WIDTH + 10,
             top: ceiling + (floor - ceiling) / 6 + Math.floor(Math.random() * 2 * (floor - ceiling) / 3),
         });
