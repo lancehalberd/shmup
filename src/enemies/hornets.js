@@ -49,7 +49,7 @@ enemyData[ENEMY_HORNET] = {
         if (state.players[0].usingFinisher) {
             vx = 8;
             vy = 0;
-            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
         }
         const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 2000;
         const radius = seed * 2 + 2;
@@ -129,7 +129,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         if (state.players[0].usingFinisher) {
             vx = 8;
             vy = 0;
-            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
         }
         const theta = Math.PI / 2 + Math.PI * 4 * modeTime / 8000;
         const radius = 1;
@@ -236,7 +236,7 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
         if (state.players[0].usingFinisher) {
             vx = 8;
             vy = 0;
-            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
         }
         const theta = Math.PI / 2 + seed * Math.PI + Math.PI * 4 * animationTime / 2000;
         const radius = 5 + animationTime / 1000;
@@ -269,7 +269,7 @@ enemyData[ENEMY_HORNET_DASHER] = {
         if (state.players[0].usingFinisher) {
             vx = 8;
             vy = 0;
-            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
         }
         const target = state.players[0].sprite;
         // Don't update the targetX/Y values once the hornet starts charging.
@@ -323,7 +323,7 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         if (state.players[0].usingFinisher) {
             vx = 7;
             vy = 0;
-            return {...enemy, vx, vy, doNotFlip: false, presist: false};
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
         }
         // Fly straight onto the screen initially.
         if (enemy.left + enemy.width > WIDTH) {

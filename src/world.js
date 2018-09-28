@@ -94,6 +94,22 @@ function updateLayerSprite(state, layerName, spriteIndex, newProperties) {
     return {...state, world};
 }
 
+function updateLayerSprites(state, layer, callback) {
+    const sprites = [...state.world[layer].sprites];
+    for (let i = 0; i < sprites.length; i++) {
+        sprites[i] = callback(state, sprites[i]);
+    }
+    return {...state, world: {...state.world, [layer]: {...state.world[layer], sprites}}};
+}
+function clearLayers(state, layerNames) {
+    const world = {...state.world};
+    for (const layerName of layerNames) {
+        const sprites = world[layerName].sprites.filter(sprite => sprite.left < WIDTH);
+        world[layerName] = {...world[layerName], spriteData: false, sprites};
+    }
+    return {...state, world};
+}
+
 const advanceLayer = (state, layerName) => {
     // Check to add a new element to scroll onto the screen.
     state = addElementToLayer(state, layerName);
@@ -250,7 +266,7 @@ const renderLayer = (context, state, layerName) => {
     for (const sprite of layer.sprites) {
         frame = getFrame(sprite.animation, sprite.animationTime);
         context.save();
-        if (sprite.alpha) context.globalAlpha = sprite.alpha;
+        if (typeof(sprite.alpha) === 'number') context.globalAlpha = sprite.alpha;
         drawImage(context, frame.image, frame, sprite);
         context.restore();
     }
@@ -280,6 +296,8 @@ module.exports = {
     renderForeground,
     clearSprites,
     updateLayerSprite,
+    updateLayerSprites,
+    clearLayers,
     setCheckpoint,
     applyCheckpointToState,
 };

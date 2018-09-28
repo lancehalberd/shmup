@@ -74,16 +74,7 @@ const SAFE_HEIGHT = GAME_HEIGHT;
 const WORLD_CITY = 'city';
 allWorlds[WORLD_CITY] = {
     initialEvent: 'nothing',
-
     events: {
-        transition: (state, eventTime) => {
-            state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
-            if (eventTime === 1000) {
-                state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 400});
-                return setEvent(state, 'nothing');
-            }
-            return state;
-        },
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
                 return setEvent(state, 'easyWrens');
@@ -137,7 +128,9 @@ allWorlds[WORLD_CITY] = {
         const targetFrames = 70 * 5;
         const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
-        if (world.time % 20000 < 5000) {
+        if (world.time < 10000) {
+            targetY = world.y;
+        } else if (world.time % 20000 < 5000) {
             targetY = -500;//world.y;
         } else if (world.time % 20000 < 10000) {
             targetY = -500;
@@ -223,7 +216,7 @@ const getCityLayers = () => ({
                     let sprites = [...layer.sprites];
                     const sprite = sprites[spriteIndex];
                     const left = 0;//-state.world.time / 200;
-                    const top = state.world.time / 100 - 50;
+                    const top = state.world.time / 100 - 150;
                     sprites[spriteIndex] = {...sprite, left, top};
                     layer = {...layer, sprites};
                     world = {...world, [layerName]: layer};
@@ -233,7 +226,7 @@ const getCityLayers = () => ({
         },
     }),
     cityScape: getNewLayer({
-        xFactor: 0.2, yFactor: 0.5, yOffset: -200,
+        xFactor: 0.2, yFactor: 0.5, yOffset: -300,
         spriteData: {
             cityScape: { animation: cityScapeLoop, scale: 2, next: ['cityScape'], offset: 0 },
         },
@@ -258,11 +251,15 @@ const getCityLayers = () => ({
             lastTrash: { animation: [trashbagAnimation, litterAnimation], scale: 2, next: ['dumpster'], offset: [150, 200], yOffset: [3, 5] },
         },
     }),
+    forestEdge: getNewLayer({
+        xFactor: 1, yFactor: 1, maxY: 0,
+        spriteData: {},
+    }),
     // Background layers start at the top left corner of the screen.
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['background', 'sunset', 'cityScape', 'ground', 'wall', 'dumpster'],
+    mgLayerNames: ['background', 'sunset', 'cityScape', 'ground', 'wall', 'dumpster', 'forestEdge'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: [],
 });

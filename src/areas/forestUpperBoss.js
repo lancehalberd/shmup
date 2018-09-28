@@ -1,6 +1,6 @@
 
 const {
-    FRAME_LENGTH, WIDTH, HEIGHT,
+    FRAME_LENGTH, WIDTH, HEIGHT, GAME_HEIGHT,
     EFFECT_EXPLOSION,
 } = require('gameConstants');
 const random = require('random');
@@ -143,7 +143,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
         if (time > 2500 && !nest) {
             return transitionToSky(state);
         }
-        if (time > 2500 && queen && queen.dead) {
+        if (time > 2500 && queen && queen.dead && queen.top > GAME_HEIGHT) {
             return transitionToCity(state);
         }
         world = {...world, time, lastSpawnTime};
