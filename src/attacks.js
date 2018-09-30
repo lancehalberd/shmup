@@ -248,8 +248,8 @@ function getAttackHitBox(state, attack) {
     const attackData = attacks[attack.type];
     if (attackData.getHitBox) return attackData.getHitBox(state, attack);
     const frame = getAttackFrame(state, attack);
-    if (frame.hitBox) return new Rectangle(frame.hitBox).translate(attack.left, attack.top);
-    return new Rectangle(frame).moveTo(attack.left, attack.top);
+    if (frame.hitBox) return new Rectangle(frame.hitBox).scale(attack.scale || 1).translate(attack.left, attack.top);
+    return new Rectangle(frame).scale(attack.scale || 1).moveTo(attack.left, attack.top);
 }
 
 const addPlayerAttackToState = (state, attack) => {
@@ -277,14 +277,14 @@ const renderAttack = (context, state, attack) => {
     const frame = getAttackFrame(state, attack);
     // These should only apply to player attacks since any damage defeats a player.
     const {color, amount} = getAttackTint(attack);
-    const scaleX = attack.scaleX || 1;
-    const scaleY = attack.scaleY || 1;
+    const scaleX = attack.scaleX || attack.scale || 1;
+    const scaleY = attack.scaleY || attack.scale || 1;
     let target = attack;
     context.save();
     if (scaleX !== 1 || scaleY !== 1) {
-        context.translate(attack.left + attack.width / 2, attack.top + attack.height / 2);
+        context.translate(attack.left, attack.top);
         context.scale(scaleX, scaleY);
-        target = new Rectangle(attack).moveCenterTo(0, 0);
+        target = new Rectangle(attack).moveTo(0, 0);
     }
     if (!amount) drawImage(context, frame.image, frame, target);
     else drawTintedImage(context, frame.image, color, amount, frame, target);
@@ -311,7 +311,7 @@ function default_advanceAttack(state, attack) {
                 source = state.players[playerIndex].ladybugs[ladybugIndex];
             }
             left = source.left + source.vx + source.width + (attack.xOffset || 0);
-            top = source.top + source.vy + Math.round((source.height - height) / 2) + (attack.yOffset || 0);
+            top = source.top + source.vy + Math.round((source.height - height * (attack.scale || 1)) / 2) + (attack.yOffset || 0);
         }
     }
     if (!(delay > 0)) {

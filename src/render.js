@@ -57,7 +57,7 @@ const render = (state) => {
             context.translate(WIDTH * p * p * p, 0);
             renderBackground(context, state);
         } else {
-            if (isKeyDown(KEY_R)) {
+            if (isKeyDown(KEY_R) || state.slowTimeFor > 0) {
                 rewindAlpha = Math.max(0.05, rewindAlpha - .06);
             } else {
                 rewindAlpha = Math.min(1, rewindAlpha + .02);

@@ -69,6 +69,7 @@ heroesData[HERO_BEE] = {
     baseSpeed: 7,
     meleePower: 2,
     meleeScaling: 0.25,
+    chargeXOffset: -30,
     hudColor: '#603820',
     // hudColor: '#E85038'
     specialCost: 12,
@@ -111,7 +112,7 @@ heroesData[HERO_BEE] = {
                 break;
             }
             // Follow the enemy
-            if (player.actions.shoot && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
+            if (!player.actions.melee && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
                 !state.idMap[targets[i].enemyId].dead
             ) {
                 const hitBox = getEnemyHitBox(state, state.idMap[targets[i].enemyId]);

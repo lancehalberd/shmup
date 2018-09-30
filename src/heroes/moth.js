@@ -59,6 +59,7 @@ heroesData[HERO_MOTH] = {
     baseSpeed: 6,
     meleePower: 1,
     meleeScaling: 0.5,
+    chargeXOffset: -24,
     hudColor: '#B0B0B0',
     specialCost: 10,
     applySpecial(state, playerIndex) {
@@ -108,9 +109,8 @@ heroesData[HERO_MOTH] = {
                 playerIndex,
                 ttl: 20,
                 piercing: true,
+                scale,
             });
-            blast.width *= scale;
-            blast.height *= scale;
             blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
             state = addPlayerAttackToState(state, blast);
         }

@@ -50,9 +50,8 @@ const advanceState = (state) => {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
-        //updatedState = {...updatedState, title: false};
-        //updatedState = setCheckpoint(updatedState, 'cityStart');
-        //return applyCheckpointToState(updatedState);
+        //return require('states/forestUpperToCity');
+        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'fieldEnd'));
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
@@ -119,26 +118,32 @@ const advanceState = (state) => {
     updatedState.newPlayerAttacks = [];
     updatedState.newEnemyAttacks = [];
     updatedState.newNeutralAttacks = [];
-    updatedState = advanceWorld(updatedState);
+    const skipSlowMotionFrame = state.slowTimeFor > 0 && (state.slowTimeFor % 40);
+    if (state.slowTimeFor) updatedState = {...updatedState, slowTimeFor: state.slowTimeFor - 20};
+    if (!skipSlowMotionFrame) {
+        updatedState = advanceWorld(updatedState);
+    }
     for (let playerIndex = 0; playerIndex < updatedState.players.length; playerIndex++) {
         updatedState = advanceHero(updatedState, playerIndex);
     }
     let currentPlayerAttacks = updatedState.playerAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
-    for (let enemy of updatedState.enemies) {
-        enemy = updatedState.idMap[enemy.id];
-        if (enemy) updatedState = advanceEnemy(updatedState, enemy);
-    }
-    if (
-        !updatedState.players[0].usingFinisher
-        && !updatedState.world.suppressAttacks
-        && !updatedState.enemies.filter(enemy => enemy.boss && enemy.dead).length
-    ) {
+    if (!skipSlowMotionFrame) {
         for (let enemy of updatedState.enemies) {
             enemy = updatedState.idMap[enemy.id];
-            if (enemyIsActive(updatedState, enemy) && enemyData[enemy.type].shoot && enemy.left > 0) {
-                // Don't shoot while spawning.
-                if (!enemyData[enemy.type].spawnAnimation || enemy.spawned) {
-                    updatedState = enemyData[enemy.type].shoot(updatedState, enemy);
+            if (enemy) updatedState = advanceEnemy(updatedState, enemy);
+        }
+        if (
+            !updatedState.players[0].usingFinisher
+            && !updatedState.world.suppressAttacks
+            && !updatedState.enemies.filter(enemy => enemy.boss && enemy.dead).length
+        ) {
+            for (let enemy of updatedState.enemies) {
+                enemy = updatedState.idMap[enemy.id];
+                if (enemyIsActive(updatedState, enemy) && enemyData[enemy.type].shoot && enemy.left > 0) {
+                    // Don't shoot while spawning.
+                    if (!enemyData[enemy.type].spawnAnimation || enemy.spawned) {
+                        updatedState = enemyData[enemy.type].shoot(updatedState, enemy);
+                    }
                 }
             }
         }
@@ -188,7 +193,10 @@ const advanceState = (state) => {
     updatedState.enemies = updatedState.enemies.filter(enemy => updatedState.idMap[enemy.id]);
 
     // Advance enemy attacks and check for hitting the player.
-    let currentEnemyAttacks = updatedState.enemyAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
+    let currentEnemyAttacks = updatedState.enemyAttacks;
+    if (!skipSlowMotionFrame) {
+        currentEnemyAttacks = currentEnemyAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
+    }
     for (let i = 0; i < updatedState.players.length; i++) {
         if (isPlayerInvulnerable(updatedState, i)) continue;
         const playerHitBox = getHeroHitBox(updatedState.players[i]);
@@ -216,9 +224,10 @@ const advanceState = (state) => {
     for (let i = 0; i < currentPlayerAttacks.length; i++) {
         const attack = currentPlayerAttacks[i];
         if (!attack.melee || attack.done) continue;
+        const attackHitBox = getAttackHitBox(state, attack);
         for (let j = 0; j < currentEnemyAttacks.length; j++) {
             const enemyAttack = currentEnemyAttacks[j];
-            if (Rectangle.collision(attack, enemyAttack)) {
+            if (Rectangle.collision(attackHitBox, getAttackHitBox(state, enemyAttack))) {
                 currentEnemyAttacks[j] = {...enemyAttack, done: true};
                 const deflectEffect = createEffect(EFFECT_DEFLECT_BULLET);
                 deflectEffect.left = enemyAttack.left + (enemyAttack.width - deflectEffect.width ) / 2;
@@ -229,7 +238,10 @@ const advanceState = (state) => {
     }
     currentEnemyAttacks = currentEnemyAttacks.filter(attack => !attack.done);
 
-    let currentNeutralAttacks = updatedState.neutralAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
+    let currentNeutralAttacks = updatedState
+    if (!skipSlowMotionFrame) {
+        currentNeutralAttacks = currentNeutralAttacks.neutralAttacks.map(attack => advanceAttack(updatedState, attack)).filter(attack => !attack.done);
+    }
     for (let i = 0; i < currentNeutralAttacks.length; i++) {
         const attack = currentNeutralAttacks[i];
         const attackHitBox = getAttackHitBox(state, attack);
@@ -260,8 +272,10 @@ const advanceState = (state) => {
             }
         }
     }
-    updatedState = advanceAllLoot(updatedState);
-    updatedState = advanceAllEffects(updatedState);
+    if (!skipSlowMotionFrame) {
+        updatedState = advanceAllLoot(updatedState);
+        updatedState = advanceAllEffects(updatedState);
+    }
     // Make sure enemies array is up to date, and filter out removed enemies.
     updatedState.enemies = updatedState.enemies
         .map(enemy => updatedState.idMap[enemy.id])

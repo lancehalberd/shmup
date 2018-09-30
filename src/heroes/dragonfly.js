@@ -59,9 +59,19 @@ heroesData[HERO_DRAGONFLY] = {
     baseSpeed: 8,
     meleePower: 1,
     meleeScaling: 0.25,
+    chargeXOffset: -18,
     hudColor: '#F03010',
     specialCost: 8,
     applySpecial(state, playerIndex) {
+        const player = state.players[playerIndex];
+        if (player.specialFrames < 6 * 4) {
+            return updatePlayer(state, playerIndex,
+                {specialFrames: player.specialFrames + 1},
+            );
+        }
+        state = updatePlayer(state, playerIndex, {usingSpecial: false, invulnerableFor: 500});
+        return {...state, slowTimeFor: 20000};
+        /*
         // TODO: support multiple directions, add ghost trail behind her.
         const player = state.players[playerIndex];
         for (let i = 0; i < state.enemies.length; i++) {
@@ -81,7 +91,7 @@ heroesData[HERO_DRAGONFLY] = {
         state = useMeleeAttack(state, playerIndex);
         return updatePlayer(state, playerIndex,
             {usingSpecial: false, invulnerableFor: 500},
-        );
+        );*/
     },
     shoot(state, playerIndex) {
         let player = state.players[playerIndex];
@@ -118,10 +128,9 @@ heroesData[HERO_DRAGONFLY] = {
                 vy: blastOffsets.vy,
                 delay: 2,
                 playerIndex,
+                scale,
             });
-            blast.width *= scale;
-            blast.height *= scale;
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height * scale) / 2);
             state = addPlayerAttackToState(state, blast);
         }
         return state;

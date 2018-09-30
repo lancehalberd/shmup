@@ -2,6 +2,8 @@ const {
     WIDTH,
     GAME_HEIGHT,
     FRAME_LENGTH,
+    CHARGE_FRAMES_FIRST,
+    CHARGE_FRAMES_SECOND,
     DEATH_COOLDOWN,
     SHOT_COOLDOWN, ATTACK_OFFSET,
     ACCELERATION,
@@ -71,6 +73,7 @@ const getNewPlayerState = () => ({
     invulnerableFor: 0,
     spawning: true,
     shotCooldown: 0,
+    chargeAttackFrames: 0,
     powerups: [],
     relics: {},
     ladybugs: [],
@@ -98,6 +101,7 @@ function updatePlayerOnContinue(state, playerIndex) {
         score: 0,
         powerupPoints: 0,
         powerupIndex: 0,
+        chargeAttackFrames: 0,
         comboScore: 0,
         dead: false,
         done: false,
@@ -127,16 +131,22 @@ const useMeleeAttack = (state, playerIndex) => {
     const meleeCooldown = 3 * SHOT_COOLDOWN - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
     const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
     const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-    const scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
+    let scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
     const meleeAttack = createAttack(heroData.meleeAttack, {
         damage: heroData.meleePower + triplePowers + powers / 3,
         top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
         left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
         playerIndex,
+        scale,
     });
-    meleeAttack.width *= scale;
-    meleeAttack.height *= scale;
-    meleeAttack.top -=  meleeAttack.height / 2;
+    if (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) {
+        meleeAttack.scale *= 3;
+        meleeAttack.damage += 5;
+    } else if (player.chargeAttackFrames >= CHARGE_FRAMES_FIRST) {
+        meleeAttack.scale *= 2;
+        meleeAttack.damage += 2;
+    }
+    meleeAttack.top -= meleeAttack.height * meleeAttack.scale / 2;
     state = addPlayerAttackToState(state, meleeAttack);
     return updatePlayer(state, playerIndex, {meleeAttackTime: 0, meleeCooldown});
 };
@@ -229,12 +239,16 @@ const advanceHero = (state, playerIndex) => {
         state = updatePlayer(state, playerIndex, {meleeCooldown: player.meleeCooldown - 1});
         player = state.players[playerIndex];
     } else if (player.actions.melee && !isHeroSwapping(player)) {
+        state = updatePlayer(state, playerIndex, {chargeAttackFrames: player.chargeAttackFrames + 1});
+        player = state.players[playerIndex];
+    } else if (player.chargeAttackFrames && !isHeroSwapping(player)) {
         state = useMeleeAttack(state, playerIndex);
+        state = updatePlayer(state, playerIndex, {chargeAttackFrames: 0});
         player = state.players[playerIndex];
     } else if (shotCooldown > 0) {
         state = updatePlayer(state, playerIndex, {shotCooldown: shotCooldown - 1});
         player = state.players[playerIndex];
-    } else if (player.actions.shoot && !isHeroSwapping(player)) {
+    } else if (!player.actions.melee && !player.chargeAttackFrames && !isHeroSwapping(player)) {
         state = heroData.shoot(state, playerIndex);
         player = state.players[playerIndex];
     }
@@ -355,7 +369,7 @@ const advanceLadybugs = (state, playerIndex) => {
         let shotCooldown = ladybug.shotCooldown || 0;
         if (shotCooldown > 0) {
             shotCooldown--;
-        } else if (player.actions.shoot && !player.spawning) {
+        } else if (!player.actions.melee && !player.chargeAttackFrames && !player.spawning) {
             if (ladybug.type === LOOT_PENETRATING_LADYBUG) {
                 shotCooldown = 5 * SHOT_COOLDOWN;
                 const laser = createAttack(ATTACK_LASER, {
@@ -439,6 +453,7 @@ const switchHeroes = (updatedState, playerIndex) => {
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
             invulnerableFor: 25 * FRAME_LENGTH,
+            chargeAttackFrames: 0,
             spawning: true,
             chasingNeedle: true,
             [player.heroes[0]]: {...player[player.heroes[0]], targets: [] },
@@ -507,6 +522,7 @@ const damageHero = (updatedState, playerIndex) => {
         invulnerableFor: 2000,
         spawning: true,
         chasingNeedle: true,
+        chargeAttackFrames: 0,
         // powerupIndex: 0,
         // powerupPoints: 0,
         comboScore: 0,
@@ -545,6 +561,8 @@ function getHeroCenter(player) {
     return getHeroHitBox(player).getCenter();
 }
 
+const chargingAnimation = createAnimation('gfx/heroes/charging.png', r(80, 79), {rows: 2, cols: 3});
+const chargedAnimation = createAnimation('gfx/heroes/charging.png', r(80, 79), {y: 2, cols: 2});
 const renderHero = (context, player) => {
     let {sprite, invulnerableFor, done, ladybugs} = player;
     if (done) return;
@@ -581,6 +599,34 @@ const renderHero = (context, player) => {
     const frame = getFrame(animation, animationTime);
     drawImage(context, frame.image, frame, sprite);
     context.restore();
+    if (player.chargeAttackFrames > 10) {
+        context.save();
+        if (player.chargeAttackFrames < CHARGE_FRAMES_SECOND) {
+            context.globalAlpha = 0.8;
+            let chargingFrameIndex = Math.floor(player.chargeAttackFrames / chargingAnimation.frameDuration);
+            chargingFrameIndex %= chargingAnimation.frames.length;
+            let chargingFrame = chargingAnimation.frames[chargingFrameIndex];
+            let targetRectangle = new Rectangle(chargingFrame).moveCenterTo(
+                sprite.left + sprite.width - chargingFrame.width / 2,
+                sprite.top + sprite.height / 2,
+            );
+            drawImage(context, chargingFrame.image, chargingFrame, targetRectangle);
+        }
+        if (player.chargeAttackFrames > CHARGE_FRAMES_FIRST) {
+            const scale = (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) ? 1 : 0.5;
+            context.globalAlpha = 0.8;
+            let chargedFrameIndex = Math.floor(player.chargeAttackFrames / chargedAnimation.frameDuration);
+            chargedFrameIndex %= chargedAnimation.frames.length;
+            let chargedFrame = chargedAnimation.frames[chargedFrameIndex];
+            let targetRectangle = new Rectangle(chargedFrame).scale(scale).moveCenterTo(
+                sprite.left + sprite.width + heroData.chargeXOffset,
+                sprite.top + sprite.height / 2,
+            );
+            drawImage(context, chargedFrame.image, chargedFrame, targetRectangle);
+
+        }
+        context.restore();
+    }
     if (isKeyDown(KEY_SHIFT)) {
         const hitBox = getHeroHitBox(player);
         context.save();

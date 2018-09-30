@@ -32,9 +32,8 @@ const update = () => {
         // Make sure up/down only trigger once per press during the title sequence.
         up: isKeyDown(KEY_UP, singlePressOnly), down: isKeyDown(KEY_DOWN, singlePressOnly),
         left: isKeyDown(KEY_LEFT, singlePressOnly), right: isKeyDown(KEY_RIGHT, singlePressOnly),
-        shoot: isKeyDown(KEY_SPACE),
-        melee: isKeyDown(KEY_C),
-        special: isKeyDown(KEY_V),
+        melee: isKeyDown(KEY_SPACE),
+        special: isKeyDown(KEY_C),
         switch: isKeyDown(KEY_X),
         toggleDebug: isKeyDown(KEY_T, true),
         start: isKeyDown(KEY_ENTER, true),
