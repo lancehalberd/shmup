@@ -168,7 +168,7 @@ const advanceState = (state) => {
                     hitEffect = createEffect(EFFECT_DAMAGE, {sfx: 'sfx/hit.mp3'});
                     currentPlayerAttacks[j] = {...attack,
                         damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
-                        done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
+                        done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) < 1,
                         hitIds: {...attack.hitIds, [enemy.id]: true},
                     };
                 }
