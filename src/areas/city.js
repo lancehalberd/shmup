@@ -216,7 +216,7 @@ const getCityLayers = () => ({
                     let sprites = [...layer.sprites];
                     const sprite = sprites[spriteIndex];
                     const left = 0;//-state.world.time / 200;
-                    const top = state.world.time / 100 - 150;
+                    const top = state.world.time / 100;
                     sprites[spriteIndex] = {...sprite, left, top};
                     layer = {...layer, sprites};
                     world = {...world, [layerName]: layer};
