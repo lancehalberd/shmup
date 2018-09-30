@@ -239,15 +239,18 @@ const renderHUD = (context, state) => {
     }
 };
 
+const titleFrame = r(298, 88, {image: requireImage('gfx/logo.png')});
 const renderTitle = (context, state) => {
     renderBackground(context, state);
     renderForeground(context, state);
     const frame = dragonflyIdleAnimation.frames[0];
     const sprite = state.players[0].sprite;
     drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(sprite.left, hudImage.height + sprite.top));
+    const titleRectangle = new Rectangle(titleFrame).scale(2).moveCenterTo(WIDTH / 2, 120);
+    drawImage(context, titleFrame.image, titleFrame, titleRectangle);
 
     const options = [startGameImage, optionsImage];
-    const targets = [new Rectangle(options[0]).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2)];
+    const targets = [new Rectangle(options[0]).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2 + 40)];
     for (let i = 1; i < options.length; i++) {
         targets.push(new Rectangle(options[i]).scale(3).moveCenterTo(
             WIDTH / 2,
