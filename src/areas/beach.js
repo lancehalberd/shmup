@@ -183,8 +183,8 @@ const getBeachLayers = () => ({
         spriteData: {
             rock1: { animation: rock1Animation, scale: 2, next: ['rock2', 'shell2'], offset: [-10, 100, 150], yOffset: [-1, 2, 4] },
             rock2: { animation: rock2Animation, scale: 2, next: ['rock1', 'shell1'], offset: [90, 180], yOffset: [-1, 2, 4] },
-            shell1: { animation: shell1Animation, scale: 2, next: ['shell2', 'rock1'], offset: [20, 120], yOffset: [-1, 2, 4] },
-            shell2: { animation: shell2Animation, scale: 2, next: ['shell1', 'rock2'], offset: [100], yOffset: [-1, 2, 4] },
+            shell1: { animation: shell1Animation, scale: 1, next: ['shell2', 'rock1'], offset: [20, 120], yOffset: [-1, 2, 4] },
+            shell2: { animation: shell2Animation, scale: 1, next: ['shell1', 'rock2'], offset: [100], yOffset: [-1, 2, 4] },
         },
     }),
     // Background layers start at the top left corner of the screen.
@@ -203,6 +203,35 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy } = require('enemies');
+const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy, shoot_bulletAtPlayer } = require('enemies');
+
+const shellMonkGeometry = r(100, 100);
+const ENEMY_SHELL_MONK = 'shellMonk';
+enemyData[ENEMY_SHELL_MONK] = {
+    animation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
+    deathAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
+    attackAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 1], duration: 12}),
+    deathSound: 'sfx/robedeath1.mp3',
+    isInvulnerable(state, enemy) {
+        return !(enemy.attackCooldownFramesLeft > 0);
+    },
+    shoot: shoot_bulletAtPlayer,
+    onDeathEffect(state, enemy) {
+        return updateEnemy(state, enemy, {ttl: 600});
+    },
+    props: {
+        life: 6,
+        score: 100,
+        grounded: true,
+        stationary: true,
+        bulletSpeed: 5,
+        attackCooldownFrames: 60,
+        shotCooldownFrames: [80, 100],
+        bulletX: 0.8,
+        bulletY: 0.74,
+        shootFrames: [33, 22, 14],
+    },
+};
+
 const { transitionToBeachBoss } = require('areas/beachBoss');
 

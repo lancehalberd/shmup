@@ -52,6 +52,9 @@ const advanceState = (state) => {
     if (updatedState.title) {
         //return require('states/forestUpperToCity');
         //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'fieldEnd'));
+        //updatedState = {...updatedState, title: false};
+        //updatedState = setCheckpoint(updatedState, 'cityStart');
+        //return applyCheckpointToState(updatedState);
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;

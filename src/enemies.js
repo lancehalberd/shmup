@@ -62,29 +62,7 @@ function accelerate_followPlayer(state, enemy) {
     }
     return {...enemy, vx, vy};
 }
-function shoot_bulletAtAngle(state, enemy, getTheta) {
-    if (enemy.shotCooldown === undefined) {
-        const initialShotCooldownFrames = enemy.initialShotCooldownFrames || 50
-        const shotCooldown = Array.isArray(initialShotCooldownFrames) ?
-            random.range(initialShotCooldownFrames[0], initialShotCooldownFrames[1]) :
-            initialShotCooldownFrames;
-        state = updateEnemy(state, enemy, {shotCooldown});
-        enemy = state.idMap[enemy.id];
-    }
-    if (enemy.shotCooldown > 0) {
-        return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
-    }
-    // Set attackCooldownFramesLeft if the enemy uses an attack animation.
-    let bulletsFired = enemy.bulletsFired || 0;
-    const shotCooldown = Array.isArray(enemy.shotCooldownFrames) ?
-        enemy.shotCooldownFrames[bulletsFired % enemy.shotCooldownFrames.length] :
-        enemy.shotCooldownFrames;
-    bulletsFired++;
-    if (enemy.attackCooldownFrames) {
-        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired, attackCooldownFramesLeft: enemy.attackCooldownFrames});
-    } else {
-        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired});
-    }
+function addBullet(state, enemy, getTheta) {
     const bullet = createAttack(ATTACK_BULLET, {});
     const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
     const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
@@ -97,6 +75,38 @@ function shoot_bulletAtAngle(state, enemy, getTheta) {
     bullet.vx = enemy.bulletSpeed * Math.cos(theta);
     bullet.vy = enemy.bulletSpeed * Math.sin(theta);
     return addEnemyAttackToState(state, bullet);
+}
+function shoot_bulletAtAngle(state, enemy, getTheta) {
+    if (enemy.shotCooldown === undefined) {
+        const initialShotCooldownFrames = enemy.initialShotCooldownFrames || 50
+        const shotCooldown = Array.isArray(initialShotCooldownFrames) ?
+            random.range(initialShotCooldownFrames[0], initialShotCooldownFrames[1]) :
+            initialShotCooldownFrames;
+        state = updateEnemy(state, enemy, {shotCooldown});
+        enemy = state.idMap[enemy.id];
+    }
+    if (enemy.attackCooldownFramesLeft > 0 &&
+        (enemy.shootFrames || [enemy.attackCooldownFrames - 1]).includes(enemy.attackCooldownFramesLeft)
+    ) {
+        state = addBullet(state, enemy, getTheta);
+    }
+    if (enemy.shotCooldown > 0) {
+        return updateEnemy(state, enemy, {shotCooldown: enemy.shotCooldown - 1});
+    }
+    // Set attackCooldownFramesLeft if the enemy uses an attack animation.
+    let bulletsFired = enemy.bulletsFired || 0;
+    const shotCooldown = Array.isArray(enemy.shotCooldownFrames) ?
+        enemy.shotCooldownFrames[bulletsFired % enemy.shotCooldownFrames.length] :
+        enemy.shotCooldownFrames;
+    bulletsFired++;
+    if (enemy.attackCooldownFrames) {
+        console.log('cooldown');
+        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
+    } else {
+        state = updateEnemy(state, enemy, {shotCooldown, bulletsFired});
+        state = addBullet(state, enemy, getTheta);
+    }
+    return state;
 }
 function shoot_bulletForward(state, enemy) {
     return shoot_bulletAtAngle(state, enemy, () => Math.atan2(0, enemy.vx));
