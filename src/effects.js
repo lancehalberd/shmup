@@ -5,9 +5,9 @@ const Rectangle = require('Rectangle');
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
     EFFECT_DAMAGE, EFFECT_EXPLOSION, EFFECT_DUST,
-    EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE,
-    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
-    EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
+    EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE, EFFECT_REVIVE_BEE,
+    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY, EFFECT_REVIVE_DRAGONFLY,
+    EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH, EFFECT_REVIVE_MOTH,
     EFFECT_NEEDLE_FLIP,
     EFFECT_RATE_UP, EFFECT_SIZE_UP, EFFECT_SPEED_UP,
     EFFECT_DEFLECT_BULLET, EFFECT_BLOCK_ATTACK,
@@ -116,17 +116,26 @@ const effects = {
     [EFFECT_SWITCH_BEE]: {
         animation: beeSwitchAnimation,
     },
+    [EFFECT_REVIVE_BEE]: {
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 0, duration: 12}),
+    },
     [EFFECT_DEAD_DRAGONFLY]: {
         animation: dragonflyDeathAnimation,
     },
     [EFFECT_SWITCH_DRAGONFLY]: {
         animation: dragonflySwitchAnimation,
     },
+    [EFFECT_REVIVE_DRAGONFLY]: {
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 1, duration: 12}),
+    },
     [EFFECT_DEAD_MOTH]: {
         animation: mothDeathAnimation,
     },
     [EFFECT_SWITCH_MOTH]: {
         animation: mothSwitchAnimation,
+    },
+    [EFFECT_REVIVE_MOTH]: {
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 2, duration: 12}),
     },
     [EFFECT_RATE_UP]: {
         animation: rateTextAnimation,

@@ -1,7 +1,7 @@
 const {
     ATTACK_OFFSET, SHOT_COOLDOWN,
     ATTACK_SPRAY_UP, ATTACK_SPRAY_RIGHT, ATTACK_SPRAY_DOWN, ATTACK_SLASH,
-    EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH,
+    EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH, EFFECT_REVIVE_MOTH,
     HERO_MOTH,
     LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
@@ -52,7 +52,9 @@ heroesData[HERO_MOTH] = {
     meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_MOTH,
     deathSfx: 'sfx/exclamation2.mp3',
+    reviveSfx: 'sfx/special.mp3',
     specialSfx: 'activateInvisibility',
+    reviveEffect: EFFECT_REVIVE_MOTH,
     switchEffect: EFFECT_SWITCH_MOTH,
     portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
     defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),

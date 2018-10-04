@@ -32,9 +32,17 @@ module.exports = {
     ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 
     EFFECT_DAMAGE: 'damage', EFFECT_EXPLOSION: 'explosion', EFFECT_DUST: 'dust',
-    EFFECT_DEAD_BEE: 'deadBee', EFFECT_SWITCH_BEE: 'switchBee',
-    EFFECT_DEAD_DRAGONFLY: 'deadDragonfly', EFFECT_SWITCH_DRAGONFLY: 'switchDragonfly',
-    EFFECT_DEAD_MOTH: 'deadMoth', EFFECT_SWITCH_MOTH: 'switchMoth',
+
+    EFFECT_DEAD_BEE: 'deadBee',
+    EFFECT_SWITCH_BEE: 'switchBee',
+    EFFECT_REVIVE_BEE: 'reviveBee',
+    EFFECT_DEAD_DRAGONFLY: 'deadDragonfly',
+    EFFECT_SWITCH_DRAGONFLY: 'switchDragonfly',
+    EFFECT_REVIVE_DRAGONFLY: 'reviveDragonfly',
+    EFFECT_DEAD_MOTH: 'deadMoth',
+    EFFECT_SWITCH_MOTH: 'switchMoth',
+    EFFECT_REVIVE_MOTH: 'reviveMoth',
+
     EFFECT_NEEDLE_FLIP: 'needleFlip',
     EFFECT_RATE_UP: 'rateUp', EFFECT_SIZE_UP: 'sizeUp', EFFECT_SPEED_UP: 'speedUp',
     EFFECT_DEFLECT_BULLET: 'deflect', EFFECT_BLOCK_ATTACK: 'blockAttack',

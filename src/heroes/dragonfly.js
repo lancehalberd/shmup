@@ -1,7 +1,7 @@
 const {
     ATTACK_OFFSET, SHOT_COOLDOWN,
     ATTACK_BLAST, ATTACK_SLASH,
-    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY,
+    EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY, EFFECT_REVIVE_DRAGONFLY,
     HERO_DRAGONFLY,
     LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
@@ -52,7 +52,9 @@ heroesData[HERO_DRAGONFLY] = {
     meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_DRAGONFLY,
     deathSfx: 'sfx/exclamation3.mp3',
+    reviveSfx: 'sfx/dash.mp3',
     specialSfx: 'sfx/dash.mp3',
+    reviveEffect: EFFECT_REVIVE_DRAGONFLY,
     switchEffect: EFFECT_SWITCH_DRAGONFLY,
     portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
     defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),

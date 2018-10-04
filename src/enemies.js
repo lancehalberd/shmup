@@ -100,7 +100,6 @@ function shoot_bulletAtAngle(state, enemy, getTheta) {
         enemy.shotCooldownFrames;
     bulletsFired++;
     if (enemy.attackCooldownFrames) {
-        console.log('cooldown');
         state = updateEnemy(state, enemy, {shotCooldown, bulletsFired, animationTime: 0, attackCooldownFramesLeft: enemy.attackCooldownFrames});
     } else {
         state = updateEnemy(state, enemy, {shotCooldown, bulletsFired});

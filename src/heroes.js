@@ -190,6 +190,15 @@ const advanceHero = (state, playerIndex) => {
                 state = updatePlayer(state, playerIndex,
                     {[heroType]: {...player[heroType], energy: player[heroType].energy + 0.02}}
                 );
+                // Add an effect to show that a hero has revived when they first hit 0 energy.
+                if (player[heroType].energy < 0 && state.players[playerIndex][heroType].energy >= 0) {
+                    const sprite = player.sprite;
+                    const reviveEffect = createEffect(heroesData[heroType].reviveEffect);
+                    reviveEffect.left = sprite.left + sprite.width - reviveEffect.width / 2;
+                    reviveEffect.top = sprite.top + (sprite.height - reviveEffect.height ) / 2;
+                    state = addEffectToState(state, reviveEffect);
+                    state = {...state, sfx: {...state.sfx, [heroesData[heroType].reviveSfx]: true}};
+                }
             }
         }
     }
