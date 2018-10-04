@@ -183,8 +183,10 @@ const advanceHero = (state, playerIndex) => {
                 continue;
             }
             if (player[heroType].energy < MAX_ENERGY &&
+                // Dragonfly energy does not restore during her slowmotion effect.
+                !(heroType === HERO_DRAGONFLY && state.slowTimeFor > 0) &&
                 // Do not restore energy for the current hero if they are currently using a special
-                // move or are invulnerable.
+                // move or are invulnerable/slowing time.
                 (heroType !== player.heroes[0] || (!(player.invulnerableFor > 0) && !player.usingSpecial))
             ) {
                 state = updatePlayer(state, playerIndex,
