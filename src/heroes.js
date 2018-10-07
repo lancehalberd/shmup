@@ -219,7 +219,10 @@ const advanceHero = (state, playerIndex) => {
     if (player[player.heroes[0]].energy < 0 && !(player.invulnerableFor > 0)) {
         return switchHeroes(state, playerIndex);
     }
-    if (player.actions.special && !isHeroSwapping(player)) {
+    // The buttons for shooting(if added again), special move or melee attack can all activate
+    // the finisher.
+    const buttonPressed = player.actions.special || player.actions.shoot || player.actions.melee;
+    if (buttonPressed && !isHeroSwapping(player)) {
         const heroHitBox = getHeroHitBox(player);
         for (const finisherEffect of state.effects.filter(effect => effect.type === EFFECT_FINISHER)) {
             if (Rectangle.collision(heroHitBox, getEffectHitBox(finisherEffect))) {
