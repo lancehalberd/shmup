@@ -177,6 +177,7 @@ heroesData[HERO_BEE] = {
         for (const target of player[HERO_BEE].targets) {
             const animation = target.enemyId ? crosshairLockedAnimation : crosshairAnimation;
             const frame = getFrame(animation, player.sprite.animationTime);
+            context.globalAlpha = 0.5;
             drawImage(context, frame.image, frame, target);
         }
         /*context.globalAlpha = 0.5;

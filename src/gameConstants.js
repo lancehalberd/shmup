@@ -31,7 +31,10 @@ module.exports = {
     ATTACK_LASER: 'laser', ATTACK_ORB: 'orb',
     ATTACK_DEFEATED_ENEMY: 'defeatedEnemy', ATTACK_EXPLOSION: 'explosion',
 
-    EFFECT_DAMAGE: 'damage', EFFECT_EXPLOSION: 'explosion', EFFECT_DUST: 'dust',
+    EFFECT_DAMAGE: 'damage',
+    EFFECT_HUGE_EXPLOSION: 'hugeExplosion',
+    EFFECT_EXPLOSION: 'explosion',
+    EFFECT_DUST: 'dust',
 
     EFFECT_DEAD_BEE: 'deadBee',
     EFFECT_SWITCH_BEE: 'switchBee',

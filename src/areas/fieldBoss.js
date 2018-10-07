@@ -3,6 +3,7 @@ const {
     FRAME_LENGTH, WIDTH, HEIGHT,
     ENEMY_MONK,
     EFFECT_EXPLOSION,
+    EFFECT_HUGE_EXPLOSION,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
 } = require('gameConstants');
 const random = require('random');
@@ -358,14 +359,14 @@ enemyData[ENEMY_DOOR] = {
     onDeathEffect(state, enemy) {
         let delay = 6;
         for (let i = 0; i < 7; i++) {
-            const explosion = createEffect(EFFECT_EXPLOSION, {
+            const explosion = createEffect(EFFECT_HUGE_EXPLOSION, {
                 sfx: 'sfx/explosion.mp3',
                 delay,
             });
             delay += random.range(8, 12);
             if (i % 3 === 2) delay += 10;
-            explosion.width *= 3;
-            explosion.height *= 3;
+            explosion.width *= 2;
+            explosion.height *= 2;
             explosion.left = enemy.left + (enemy.width - explosion.width ) / 2 + random.range(-40, 40);
             explosion.top = enemy.top + (enemy.height - explosion.height ) / 2 + random.range(-100, 100);
             state = addEffectToState(state, explosion);

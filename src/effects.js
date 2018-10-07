@@ -4,7 +4,7 @@ const Rectangle = require('Rectangle');
 
 const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT, OFFSCREEN_PADDING,
-    EFFECT_DAMAGE, EFFECT_EXPLOSION, EFFECT_DUST,
+    EFFECT_DAMAGE, EFFECT_EXPLOSION, EFFECT_HUGE_EXPLOSION, EFFECT_DUST,
     EFFECT_DEAD_BEE, EFFECT_SWITCH_BEE, EFFECT_REVIVE_BEE,
     EFFECT_DEAD_DRAGONFLY, EFFECT_SWITCH_DRAGONFLY, EFFECT_REVIVE_DRAGONFLY,
     EFFECT_DEAD_MOTH, EFFECT_SWITCH_MOTH, EFFECT_REVIVE_MOTH,
@@ -23,6 +23,7 @@ const {
     damageAnimation,
     dustAnimation,
     explosionAnimation,
+    hugeExplosionAnimation,
     needleFlipAnimation,
     rateTextAnimation,
     sizeTextAnimation,
@@ -97,6 +98,12 @@ const effects = {
     },
     [EFFECT_EXPLOSION]: {
         animation: explosionAnimation,
+        props: {
+            relativeToGround: true,
+        },
+    },
+    [EFFECT_HUGE_EXPLOSION]: {
+        animation: hugeExplosionAnimation,
         props: {
             relativeToGround: true,
         },
@@ -201,6 +208,10 @@ function renderEffectFrame(context, frame, target, effect) {
 
 const renderEffect = (context, effect) => {
     if (effect.delay > 0) return;
+    context.save();
+    if (typeof effect.alpha === 'number') {
+        context.globalAlpha = effect.alpha;
+    }
     const frame = getFrame(effects[effect.type].animation, effect.animationTime);
     if ((effect.xScale || 1) === 1 && (effect.yScale || 1) === 1 && (effect.rotation || 0) === 0) {
         renderEffectFrame(context, frame, effect, effect);
@@ -243,6 +254,7 @@ const renderEffect = (context, effect) => {
             context.restore();
         }
     }
+    context.restore();
 };
 
 const advanceEffect = (state, effectIndex) => {

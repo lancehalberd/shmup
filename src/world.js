@@ -222,13 +222,13 @@ const renderBackgroundLayer = (context, {frame, x, y, maxY}) => {
     const right = Math.floor(x + WIDTH / scale) % frame.width;
     if (right <= left) {
         let leftWidth = frame.width - left;
-        context.drawImage(frame.image, left, 0, leftWidth, frame.height,
-            0, y, leftWidth, frame.height);
-        context.drawImage(frame.image, 0, 0, right, frame.height,
-            leftWidth, y, right, frame.height);
+        drawImage(context, frame.image, new Rectangle(left, 0, leftWidth, frame.height),
+            new Rectangle(0, y, leftWidth, frame.height));
+        drawImage(context, frame.image, new Rectangle(0, 0, right, frame.height),
+            new Rectangle(leftWidth, y, right, frame.height));
     } else {
-        context.drawImage(frame.image, left, 0, frame.width, frame.height,
-            0, y, frame.width, frame.height);
+        drawImage(context, frame.image, new Rectangle(left, 0, frame.width, frame.height),
+            new Rectangle(0, y, frame.width, frame.height));
     }
 };
 // Render scenery that appear behind the main game sprites.
