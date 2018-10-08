@@ -432,7 +432,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     if (updatedState.idMap[enemyId].dead) {
         if (attack.playerIndex >= 0) {
             let hits = attack.hitIds ? Object.keys(attack.hitIds).length : 0;
-            let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 5 + 10 * hits);
+            let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 4 + 8 * hits);
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });
         }
         if (enemy.score) {
@@ -716,12 +716,6 @@ const advanceEnemy = (state, enemy) => {
         const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&
             (enemy.left + enemy.width < -OFFSCREEN_PADDING || (effectiveVx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
             (enemy.vy < 0 && enemy.top + enemy.height < -OFFSCREEN_PADDING) || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
-        // Don't penalize players for grounded enemies disappearing when they aren't visible on the screen.
-        if (done && !enemy.dead && !(enemy.grounded && enemyIsBelowScreen)) {
-            let comboScore = Math.max(0, state.players[0].comboScore - 50);
-            state = updatePlayer(state, 0, { comboScore });
-            // console.log('lost points:', enemy.type);
-        }
         if (done) {
             return removeEnemy(state, enemy);
         }

@@ -267,7 +267,15 @@ const renderLayer = (context, state, layerName) => {
         frame = getFrame(sprite.animation, sprite.animationTime);
         context.save();
         if (typeof(sprite.alpha) === 'number') context.globalAlpha = sprite.alpha;
-        drawImage(context, frame.image, frame, sprite);
+        const yScale = (sprite.yScale || 1);
+        const xScale = (sprite.xScale || 1);
+        if (xScale !== 1 || yScale !==1) {
+            context.translate(sprite.left + sprite.width / 2, sprite.top + sprite.height / 2);
+            context.scale(xScale, yScale);
+            drawImage(context, frame.image, frame, new Rectangle(sprite).moveCenterTo(0, 0));
+        } else {
+            drawImage(context, frame.image, frame, sprite);
+        }
         context.restore();
     }
 };

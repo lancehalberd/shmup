@@ -295,9 +295,9 @@ const getForestLowerLayers = () => ({
         },
     }),
     thorns: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -GAME_HEIGHT + THORN_HEIGHT,
+        xFactor: 1, yFactor: 1, yOffset: -GAME_HEIGHT + THORN_HEIGHT + 10,
         spriteData: {
-            thorns: {animation: thornloop, scale: 2, next: ['thorns'], offset: 0},
+            thorns: {animation: thornloop, scale: 2, yScale: -1, next: ['thorns'], offset: 0},
         },
     }),
     foreground: getNewLayer({
