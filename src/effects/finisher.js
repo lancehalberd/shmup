@@ -149,7 +149,7 @@ effects[EFFECT_FINISHER] = {
     advanceEffect(state, effectIndex) {
         const effect = state.effects[effectIndex];
         const enemy = state.idMap[effect.enemyId];
-        state = updateEffect(state, effectIndex, {alpha: (state.world.time % 800 < 400) ? 1 : 0});
+        state = updateEffect(state, effectIndex, {tint: (state.world.time % 1000 > 500) ? {color: 'white', amount: 1} : undefined});
         if (!enemy || enemy.dead) {
             return updateEffect(state, effectIndex, {done: true});
         }
