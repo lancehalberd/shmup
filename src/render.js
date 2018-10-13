@@ -293,7 +293,7 @@ const renderTitle = (context, state) => {
 
 const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png', PRIORITY_FIELD)});
 const gameOverAnimation = createAnimation('gfx/goversheet.png', r(100, 100),
-    {duration: 6, cols: 10, frameMap: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0], priority: PRIORITY_FIELD},
+    {duration: 4, cols: 10, frameMap: [9, 4, 5, 6, 7, 8, 7, 6, 5, 6, 3, 2, 1, 0], priority: PRIORITY_FIELD},
     {loop: false}
 );
 const continueImage = r(82, 30, {image: requireImage('gfx/continue.png', PRIORITY_FIELD)});
@@ -307,8 +307,9 @@ function renderGameOver(context, state) {
         new Rectangle(gameOverImage).scale(3).moveCenterTo(menuX, HEIGHT / 5));
     // Animated needle falls and breaks.
     const frame = getFrame(gameOverAnimation, state.gameOverTime);
+    const fallTime = 0.5 - Math.max(0, 500 - state.gameOverTime) / 1000;
     drawImage(context, frame.image, frame,
-        new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, HEIGHT - 200),
+        new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, HEIGHT - 500 + 300 * (fallTime * fallTime + fallTime)),
     );
     // Continue options are shown after the animation over the broken needle.
     if (state.gameOverTime > 1500) {
