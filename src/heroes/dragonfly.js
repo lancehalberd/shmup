@@ -53,7 +53,7 @@ heroesData[HERO_DRAGONFLY] = {
     meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_DRAGONFLY,
     deathSfx: 'sfx/exclamation3.mp3',
-    reviveSfx: 'sfx/dash.mp3',
+    reviveSfx: 'dragonFlyRevive',
     specialSfx: 'sfx/dash.mp3',
     reviveEffect: EFFECT_REVIVE_DRAGONFLY,
     switchEffect: EFFECT_SWITCH_DRAGONFLY,

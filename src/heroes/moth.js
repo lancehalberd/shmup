@@ -53,7 +53,7 @@ heroesData[HERO_MOTH] = {
     meleeAttack: ATTACK_SLASH,
     deathEffect: EFFECT_DEAD_MOTH,
     deathSfx: 'sfx/exclamation2.mp3',
-    reviveSfx: 'sfx/special.mp3',
+    reviveSfx: 'mothRevive',
     specialSfx: 'activateInvisibility',
     reviveEffect: EFFECT_REVIVE_MOTH,
     switchEffect: EFFECT_SWITCH_MOTH,

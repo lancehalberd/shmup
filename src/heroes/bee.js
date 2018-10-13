@@ -63,7 +63,7 @@ heroesData[HERO_BEE] = {
     meleeAttack: ATTACK_STAB,
     deathEffect: EFFECT_DEAD_BEE,
     deathSfx: 'sfx/exclamation.mp3',
-    reviveSfx: 'sfx/special.mp3',
+    reviveSfx: 'beeRevive',
     specialSfx: 'sfx/special.mp3',
     reviveEffect: EFFECT_REVIVE_BEE,
     switchEffect: EFFECT_SWITCH_BEE,

@@ -163,6 +163,9 @@ const preloadSounds = () => {
         {source: 'sfx/special.mp3', volume: 3, limit: 1},
         {key: 'activateInvisibility', source: 'sfx/invisibility.mp3', volume: 1, limit: 1},
         {key: 'warnInvisibilityIsEnding', source: 'sfx/warninginvisibile.mp3', volume: 0.3, limit: 1},
+        {key: 'dragonFlyRevive', source: 'sfx/revive1.mp3', offset: 400, volume: 10},
+        {key: 'beeRevive', source: 'sfx/revive2.mp3', volume: 10},
+        {key: 'mothRevive', source: 'sfx/revive3.mp3', volume: 10},
         // See credits.html for: mobbrobb.
         'bgm/title.mp3+0+2',
         'bgm/field.mp3+0+1',
