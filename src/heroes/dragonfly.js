@@ -7,6 +7,7 @@ const {
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const {
+    PRIORITY_HEROES,
     requireImage, r,
     createAnimation,
 } = require('animations');
@@ -16,23 +17,23 @@ const dragonflyHitBox = {left: 10, top: 15, width: 70, height: 30};
 const dragonflyRectangle = r(88, 56, {hitBox: dragonflyHitBox});
 const dragonflyAnimation = {
     frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly4.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly2.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly3.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 3,
 };
-const dragonflyEnterAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin1.png', dragonflyRectangle);
+const dragonflyEnterAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin1.png', dragonflyRectangle, {priority: PRIORITY_HEROES});
 
-const dragonflyCatchAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin2.png', dragonflyRectangle);
+const dragonflyCatchAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyflyin2.png', dragonflyRectangle, {priority: PRIORITY_HEROES});
 
 const dragonflyMeleeAnimation = {
     frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym4.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym1.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym2.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym3.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflym4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 3,
 };
@@ -44,8 +45,8 @@ heroesData[HERO_DRAGONFLY] = {
     meleeAnimation: dragonflyMeleeAnimation,
     specialAnimation: {
         frames: [
-            {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial1.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial2.png')},
+            {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial1.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/dragonfly/knightspecial2.png', PRIORITY_HEROES)},
         ],
         frameDuration: 8,
     },
@@ -56,8 +57,8 @@ heroesData[HERO_DRAGONFLY] = {
     specialSfx: 'sfx/dash.mp3',
     reviveEffect: EFFECT_REVIVE_DRAGONFLY,
     switchEffect: EFFECT_SWITCH_DRAGONFLY,
-    portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18)),
+    portraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportrait.png', r(17, 18), {priority: PRIORITY_HEROES}),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/dragonfly/dragonflyportraitdead.png', r(17, 18), {priority: PRIORITY_HEROES}),
     baseSpeed: 8,
     meleePower: 1,
     meleeScaling: 0.25,

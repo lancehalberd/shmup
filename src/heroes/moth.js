@@ -7,6 +7,7 @@ const {
     LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE, LOOT_COMBO, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const {
+    PRIORITY_HEROES,
     requireImage, r,
     createAnimation,
 } = require('animations');
@@ -16,21 +17,21 @@ const mothHitBox = {left: 27, top: 10, width: 48, height: 40};
 const mothRectangle = r(88, 56, {hitBox: mothHitBox});
 const mothAnimation = {
     frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth4.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth1.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth2.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth3.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/moth4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 3,
 };
-const mothEnterAnimation = createAnimation('gfx/heroes/moth/mothflyin1.png', mothRectangle);
-const mothCatchAnimation = createAnimation('gfx/heroes/moth/mothflyin2.png', mothRectangle);
+const mothEnterAnimation = createAnimation('gfx/heroes/moth/mothflyin1.png', mothRectangle, {priority: PRIORITY_HEROES});
+const mothCatchAnimation = createAnimation('gfx/heroes/moth/mothflyin2.png', mothRectangle, {priority: PRIORITY_HEROES});
 const mothMeleeAnimation = {
     frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm4.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm1.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm2.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm3.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothm4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 3,
 };
@@ -42,10 +43,10 @@ heroesData[HERO_MOTH] = {
     meleeAnimation: mothMeleeAnimation,
     specialAnimation: {
         frames: [
-            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial1.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial2.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial3.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial4.png')},
+            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial1.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial2.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial3.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/moth/mothspecial4.png', PRIORITY_HEROES)},
         ],
         frameDuration: 6,
     },
@@ -56,8 +57,8 @@ heroesData[HERO_MOTH] = {
     specialSfx: 'activateInvisibility',
     reviveEffect: EFFECT_REVIVE_MOTH,
     switchEffect: EFFECT_SWITCH_MOTH,
-    portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18)),
+    portraitAnimation: createAnimation('gfx/heroes/moth/mothportrait.png', r(17, 18), {priority: PRIORITY_HEROES}),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/moth/mothportraitdead.png', r(17, 18), {priority: PRIORITY_HEROES}),
     baseSpeed: 6,
     meleePower: 1,
     meleeScaling: 0.5,

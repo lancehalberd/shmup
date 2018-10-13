@@ -2,6 +2,11 @@ const {
     FRAME_LENGTH,
 } = require('gameConstants');
 
+const {
+    PRIORITY_PRELOADER, PRIORITY_TITLE,
+    PRIORITY_HEROES, PRIORITY_FIELD,
+    priorityCounts,
+} = require('animations');
 const { preloadSounds } = require('sounds');
 
 const {
@@ -20,8 +25,8 @@ const { isKeyDown,
 // Currently we only support a single player.
 const playerIndex = 0;
 
-preloadSounds();
-let preloadedSounds = true;
+// preloadSounds();
+let preloadedSounds = false;
 let stateQueue = [];
 let state = {};
 
@@ -39,7 +44,14 @@ const update = () => {
         start: isKeyDown(KEY_ENTER, true),
     });
 
-    if (!preloadedSounds && state.interacted) {
+    // Wait to load sounds until the graphics are loaded for the first few scenes.
+    if (!preloadedSounds && !(
+            priorityCounts[PRIORITY_PRELOADER] > 0 ||
+            priorityCounts[PRIORITY_TITLE] > 0 ||
+            priorityCounts[PRIORITY_FIELD] > 0 ||
+            priorityCounts[PRIORITY_HEROES] > 0
+        )
+    ) {
         preloadSounds();
         preloadedSounds = true;
     }

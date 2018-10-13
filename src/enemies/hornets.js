@@ -1,5 +1,5 @@
 
-const { requireImage, createAnimation, r } = require('animations');
+const { PRIORITY_FIELD, requireImage, createAnimation, r } = require('animations');
 
 const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH,
@@ -16,26 +16,31 @@ const hornetRectangle = r(120, 120);
 const hornetHitBox = {left: 0, top: 33, width: 110, height: 87};
 const hornetAnimation = {
     frames: [
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet1.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet2.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet3.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet4.png')},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet1.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet2.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet3.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/hornet4.png', PRIORITY_FIELD)},
     ],
     frameDuration: 3,
 };
-const hornetDeathAnimation = createAnimation('gfx/enemies/hornets/hornetded.png', hornetRectangle);
+const hornetDeathAnimation = createAnimation('gfx/enemies/hornets/hornetded.png',
+    hornetRectangle,
+    {priority: PRIORITY_FIELD}
+);
 const hornetSoldierAnimation = {
     frames: [
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet1.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet2.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet3.png')},
-        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet4.png')},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet1.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet2.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet3.png', PRIORITY_FIELD)},
+        {...hornetRectangle, hitBox: hornetHitBox, image: requireImage('gfx/enemies/hornets/mhornet4.png', PRIORITY_FIELD)},
     ],
     frameDuration: 3,
 };
 const fallingHornetSoldierHitBox = {left: 46, top: 48, width: 40, height: 40};
-const hornetSoldierDeathAnimation =
-    createAnimation('gfx/enemies/hornets/mhornetded.png', {...hornetRectangle, hitBox: fallingHornetSoldierHitBox});
+const hornetSoldierDeathAnimation = createAnimation('gfx/enemies/hornets/mhornetded.png',
+    {...hornetRectangle, hitBox: fallingHornetSoldierHitBox},
+    {priority: PRIORITY_FIELD}
+);
 
 const ENEMY_HORNET = 'hornet';
 const ENEMY_HORNET_SOLDIER = 'hornetSoldier';

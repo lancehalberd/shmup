@@ -7,14 +7,16 @@ const {
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
 } = require('gameConstants');
 const random = require('random');
-const { requireImage, createAnimation, r, a } = require('animations');
+const { PRIORITY_FIELD_BOSS, requireImage, createAnimation, r, a } = require('animations');
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, allWorlds } = require('world');
 
+const priority = PRIORITY_FIELD_BOSS;
+
 const WORLD_FIELD_BOSS = 'fieldBoss';
 const layerNamesToClear = ['wheat', 'darkGrass', 'thickGrass', 'nearground', 'foreground'];
-const treeFortAnimation = createAnimation('gfx/enemies/plainsboss/plainsbossbase.png', r(800, 600));
-const forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginbase.png', r(800, 600));
+const treeFortAnimation = createAnimation('gfx/enemies/plainsboss/plainsbossbase.png', r(800, 600), {priority});
+const forestEdgeAnimation = createAnimation('gfx/enemies/plainsboss/forestbeginbase.png', r(800, 600), {priority});
 allWorlds[WORLD_FIELD_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
@@ -191,13 +193,13 @@ const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemie
 const smallTurretRectangle = r(41, 41);
 const ENEMY_SMALL_TURRET = 'smallTurret';
 enemyData[ENEMY_SMALL_TURRET] = {
-    animation: createAnimation('gfx/enemies/plainsboss/sweetspot.png', smallTurretRectangle),
-    deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspot4.png', smallTurretRectangle),
+    animation: createAnimation('gfx/enemies/plainsboss/sweetspot.png', smallTurretRectangle, {priority}),
+    deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspot4.png', smallTurretRectangle, {priority}),
     attackAnimation: {
         frames: [
-            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot2.png')},
-            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot3.png')},
-            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot2.png')},
+            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot2.png', priority)},
+            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot3.png', priority)},
+            {...smallTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspot2.png', priority)},
         ],
         frameDuration: 12,
     },
@@ -263,18 +265,18 @@ function addTurretShot(state, enemy, {tdx = 0, sdx = 0, sdy = 0, speedFactor = 1
 const largeTurretRectangle = r(41, 41);
 const ENEMY_LARGE_TURRET = 'largeTurret';
 enemyData[ENEMY_LARGE_TURRET] = {
-    animation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge1.png', largeTurretRectangle),
-    deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge4.png', largeTurretRectangle),
+    animation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge1.png', largeTurretRectangle, {priority}),
+    deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge4.png', largeTurretRectangle, {priority}),
     attackAnimation: {
         frames: [
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge2.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png')},
-            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge2.png')},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge2.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge3.png', priority)},
+            {...largeTurretRectangle, image: requireImage('gfx/enemies/plainsboss/sweetspotlarge2.png', priority)},
         ],
         frameDuration: 12,
     },
@@ -331,7 +333,7 @@ enemyData[ENEMY_LARGE_TURRET] = {
 const ENEMY_GROUND_MONK = 'groundMonk';
 enemyData[ENEMY_GROUND_MONK] = {
     ...enemyData[ENEMY_MONK],
-    spawnAnimation: createAnimation('gfx/enemies/monks/robesclimb.png', r(49, 31), {duration: 500}),
+    spawnAnimation: createAnimation('gfx/enemies/monks/robesclimb.png', r(49, 31), {duration: 500, priority}),
     props: {
         ...enemyData[ENEMY_MONK].props,
         life: 2,
@@ -343,13 +345,13 @@ const doorRectangle = r(129, 275, {hitBox: {left: 22, top: 23, width: 96, height
 enemyData[ENEMY_DOOR] = {
     animation: {
         frames: [
-            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door1.png')},
-            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door2.png')},
-            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door3.png')},
+            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door1.png', priority)},
+            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door2.png', priority)},
+            {...doorRectangle, image: requireImage('gfx/enemies/plainsboss/door3.png', priority)},
         ],
         frameDuration: 12,
     },
-    deathAnimation: createAnimation('gfx/enemies/plainsboss/door3.png', doorRectangle),
+    deathAnimation: createAnimation('gfx/enemies/plainsboss/door3.png', doorRectangle, {priority}),
     updateState(state, enemy) {
         let animationTime = 0;
         if (enemy.life <= enemy.maxLife / 3) animationTime = 2 * FRAME_LENGTH * 12;
@@ -409,8 +411,8 @@ const ENEMY_STICK_1 = 'stick1';
 const ENEMY_STICK_2 = 'stick2';
 const ENEMY_STICK_3 = 'stick3';
 enemyData[ENEMY_STICK_1] = {
-    animation: createAnimation('gfx/enemies/plainsboss/branch1.png', r(80, 40)),
-    deathAnimation: createAnimation('gfx/enemies/plainsboss/branch4.png', r(80, 40)),
+    animation: createAnimation('gfx/enemies/plainsboss/branch1.png', r(80, 40), {priority}),
+    deathAnimation: createAnimation('gfx/enemies/plainsboss/branch4.png', r(80, 40), {priority}),
     accelerate: (state, enemy) => {
         if (enemy.top + enemy.height >= getGroundHeight(state)) {
             return {...enemy, dead: true, vx: 3+ Math.random() * 3, vy: -4};
@@ -424,11 +426,11 @@ enemyData[ENEMY_STICK_1] = {
 };
 enemyData[ENEMY_STICK_2] = {
     ...enemyData[ENEMY_STICK_1],
-    animation: createAnimation('gfx/enemies/plainsboss/branch2.png', r(80, 40)),
+    animation: createAnimation('gfx/enemies/plainsboss/branch2.png', r(80, 40), {priority}),
 };
 enemyData[ENEMY_STICK_3] = {
     ...enemyData[ENEMY_STICK_1],
-    animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24)),
+    animation: createAnimation('gfx/enemies/plainsboss/branch3.png', r(113, 24), {priority}),
 };
 
 const { transitionToUpperForest } = require('areas/fieldToUpperForest');
@@ -441,7 +443,7 @@ const EFFECT_LEAF = 'leaf';
 // Make the leaf scale from the center of its hitbox instead of the top left corner.
 const leafGeometry = a({...r(40, 37), hitBox: r(30, 37)}, 0.5, 0.5);
 effects[EFFECT_LEAF] = {
-    animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry),
+    animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry, {priority}),
     advanceEffect: (state, effectIndex) => {
         const effect = state.effects[effectIndex];
         /*if (effect.vy > 20) {
@@ -464,7 +466,7 @@ effects[EFFECT_LEAF] = {
 };
 const EFFECT_DOOR_DAMAGE = 'doorDamage';
 effects[EFFECT_DOOR_DAMAGE] = {
-    animation: createAnimation('gfx/enemies/plainsboss/doorhurt.png', r(103,153), {duration: 20}),
+    animation: createAnimation('gfx/enemies/plainsboss/doorhurt.png', r(103,153), {duration: 20, priority}),
     advanceEffect: (state, effectIndex) => {
         const effect = state.effects[effectIndex];
         return updateEffect(state, effectIndex, {

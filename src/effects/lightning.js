@@ -2,6 +2,7 @@ const {
     FRAME_LENGTH,
 } = require('gameConstants');
 const {
+    PRIORITY_HEROES,
     requireImage, r, a,
 } = require('animations');
 
@@ -11,10 +12,10 @@ const EFFECT_ARC_LIGHTNING = 'arcLightning';
 
 const lightningGeometry = a(r(50, 10), 0.5, 0.5);
 const lightningFrames = [
-    {...lightningGeometry, image: requireImage('gfx/attacks/chain1.png')},
-    {...lightningGeometry, image: requireImage('gfx/attacks/chain2.png')},
-    {...lightningGeometry, image: requireImage('gfx/attacks/chain3.png')},
-    {...lightningGeometry, image: requireImage('gfx/attacks/chain4.png')},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain1.png', PRIORITY_HEROES)},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain2.png', PRIORITY_HEROES)},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain3.png', PRIORITY_HEROES)},
+    {...lightningGeometry, image: requireImage('gfx/attacks/chain4.png', PRIORITY_HEROES)},
 ];
 function advanceLightning(state, effectIndex) {
     const effect = state.effects[effectIndex];

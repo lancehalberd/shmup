@@ -23,6 +23,8 @@ const {
 const { isKeyDown, KEY_SHIFT, KEY_R } = require('keyboard');
 
 const {
+    PRIORITY_TITLE,
+    PRIORITY_FIELD,
     requireImage,
     r, createAnimation,
     selectNeedleImage,
@@ -40,7 +42,7 @@ document.body.appendChild(canvas);
 
 const HUD_PADDING = 9;
 
-const dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyidle.png', r(88, 56));
+const dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyidle.png', r(88, 56), {priority: PRIORITY_TITLE});
 
 let rewindAlpha = 1;
 const render = (state) => {
@@ -130,9 +132,9 @@ const render = (state) => {
     state.sfx = {};
 };
 
-const hudImage = r(800, 36, {image: requireImage('gfx/hud/newhud.png')});
-const powerupBarAnimation = createAnimation('gfx/hud/powerup0.png', r(100, 19));
-const comboBarAnimation = createAnimation('gfx/hud/combo0.png', r(100, 19));
+const hudImage = r(800, 36, {image: requireImage('gfx/hud/newhud.png', PRIORITY_FIELD)});
+const powerupBarAnimation = createAnimation('gfx/hud/powerup0.png', r(100, 19), {priority: PRIORITY_FIELD});
+const comboBarAnimation = createAnimation('gfx/hud/combo0.png', r(100, 19), {priority: PRIORITY_FIELD});
 const renderHUD = (context, state) => {
     drawImage(context, hudImage.image, hudImage, hudImage);
     for (let i = 0; i < state.players[0].heroes.length; i++) {
@@ -235,11 +237,11 @@ const renderHUD = (context, state) => {
         drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 5, 8));
     }
     if (state.flashHudUntil > state.world.time) {
-        drawImage(context, requireImage('gfx/hud/hudflash.png'), r(800, 36), r(800, 36));
+        drawImage(context, requireImage('gfx/hud/hudflash.png', PRIORITY_FIELD), r(800, 36), r(800, 36));
     }
 };
 
-const titleFrame = r(298, 88, {image: requireImage('gfx/logo.png')});
+const titleFrame = r(298, 88, {image: requireImage('gfx/logo.png', PRIORITY_TITLE)});
 const renderTitle = (context, state) => {
     renderBackground(context, state);
     renderForeground(context, state);
@@ -289,31 +291,44 @@ const renderTitle = (context, state) => {
     // renderForeground(state.world);
 };
 
-const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png')});
-const continueImage = r(82, 30, {image: requireImage('gfx/continue.png')});
-const yesImage = r(20, 20, {image: requireImage('gfx/yes.png')});
-const noImage = r(20, 20, {image: requireImage('gfx/no.png')});
+const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png', PRIORITY_FIELD)});
+const gameOverAnimation = createAnimation('gfx/goversheet.png', r(100, 100),
+    {duration: 6, cols: 10, frameMap: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0], priority: PRIORITY_FIELD},
+    {loop: false}
+);
+const continueImage = r(82, 30, {image: requireImage('gfx/continue.png', PRIORITY_FIELD)});
+const yesImage = r(20, 20, {image: requireImage('gfx/yes.png', PRIORITY_FIELD)});
+const noImage = r(20, 20, {image: requireImage('gfx/no.png', PRIORITY_FIELD)});
 function renderGameOver(context, state) {
     context.fillStyle = 'black';
     context.fillRect(0, 0, WIDTH, HEIGHT);
+    const menuX = WIDTH / 2;
     drawImage(context, gameOverImage.image, gameOverImage,
-        new Rectangle(gameOverImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 5));
-    drawImage(context, continueImage.image, continueImage,
-        new Rectangle(continueImage).scale(3).moveCenterTo(WIDTH / 2, 2 * HEIGHT / 5));
-    const targets = [
-        new Rectangle(yesImage).scale(3).moveCenterTo(WIDTH / 2, 3 * HEIGHT / 5),
-        new Rectangle(noImage).scale(3).moveCenterTo(WIDTH / 2, 4 * HEIGHT / 5),
-    ];
-    drawImage(context, yesImage.image, yesImage, targets[0]);
-    drawImage(context, noImage.image, noImage, targets[1]);
-
-    const target = targets[state.continueIndex];
-    drawImage(context, selectNeedleImage.image, selectNeedleImage,
-        new Rectangle(selectNeedleImage).scale(2).moveCenterTo(
-            WIDTH / 2 - (2 * selectNeedleImage.width + target.width) / 2 + 5 * Math.sin(Date.now() / 150) - 15,
-            target.top + target.height / 2,
-        ),
+        new Rectangle(gameOverImage).scale(3).moveCenterTo(menuX, HEIGHT / 5));
+    // Animated needle falls and breaks.
+    const frame = getFrame(gameOverAnimation, state.gameOverTime);
+    drawImage(context, frame.image, frame,
+        new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, HEIGHT - 200),
     );
+    // Continue options are shown after the animation over the broken needle.
+    if (state.gameOverTime > 1500) {
+        drawImage(context, continueImage.image, continueImage,
+            new Rectangle(continueImage).scale(3).moveCenterTo(menuX, 2 * HEIGHT / 5));
+        const targets = [
+            new Rectangle(yesImage).scale(3).moveCenterTo(menuX, 3 * HEIGHT / 5),
+            new Rectangle(noImage).scale(3).moveCenterTo(menuX, 4 * HEIGHT / 5),
+        ];
+        drawImage(context, yesImage.image, yesImage, targets[0]);
+        drawImage(context, noImage.image, noImage, targets[1]);
+
+        const target = targets[state.continueIndex];
+        drawImage(context, selectNeedleImage.image, selectNeedleImage,
+            new Rectangle(selectNeedleImage).scale(2).moveCenterTo(
+                menuX - (2 * selectNeedleImage.width + target.width) / 2 + 5 * Math.sin(Date.now() / 150) - 15,
+                target.top + target.height / 2,
+            ),
+        );
+    }
 
     renderHUD(context, state);
 }

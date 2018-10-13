@@ -30,6 +30,7 @@ const getNewState = () => (advanceWorld({
     stageSelectIndex: -1,
     paused: false,
     gameover: false,
+    gameOverTime: 0,
     continueIndex: 0,
     world: getNewWorld(),
     bgm: 'bgm/title.mp3',
@@ -50,11 +51,8 @@ const advanceState = (state) => {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
     if (updatedState.title) {
-        //return require('states/forestUpperToCity');
-        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'fieldEnd'));
-        //updatedState = {...updatedState, title: false};
-        //updatedState = setCheckpoint(updatedState, 'cityStart');
-        //return applyCheckpointToState(updatedState);
+        //return require('states/fieldBossDoor');
+        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'forestLowerStart'));
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
@@ -82,6 +80,7 @@ const advanceState = (state) => {
     }
     if (updatedState.gameover) {
         let continueIndex = updatedState.continueIndex;
+        updatedState = {...updatedState, gameOverTime: updatedState.gameOverTime + FRAME_LENGTH};
         if (updatedState.players[0].actions.start) {
             if (continueIndex === 0) { // Continue
                 updatedState = updatePlayerOnContinue({...updatedState, gameover: false}, 0);
@@ -101,7 +100,7 @@ const advanceState = (state) => {
     if (updatedState.deathCooldown > 0) {
         updatedState.deathCooldown -= FRAME_LENGTH;
         if (updatedState.deathCooldown <= 0) {
-            return { ...updatedState, gameover: true, continueIndex: 0, };
+            return { ...updatedState, gameover: true, gameOverTime: 0, continueIndex: 0, };
         }
     }
     let { paused } = updatedState;

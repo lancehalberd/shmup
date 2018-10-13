@@ -1,4 +1,5 @@
 const {
+    PRIORITY_FIELD_BOSS,
     r, a,
     requireImage,
     createAnimation,
@@ -142,7 +143,8 @@ const {
 
 effects[EFFECT_FINISHER] = {
     animation: createAnimation('gfx/effects/crosshair.png',
-        r(150, 100, { hitBox: { left: 46, top: 0, width: 55, height: 55 } })
+        r(150, 100, { hitBox: { left: 46, top: 0, width: 55, height: 55 } }),
+        {priority: PRIORITY_FIELD_BOSS},
     ),
     advanceEffect(state, effectIndex) {
         const effect = state.effects[effectIndex];
@@ -161,7 +163,10 @@ effects[EFFECT_FINISHER] = {
 
 const EFFECT_FINISHER_BALL = 'effectFinisherBall';
 effects[EFFECT_FINISHER_BALL] = {
-    animation: createAnimation('gfx/attacks/finisherball.png', a(r(10, 10), 0.5, 0.5)),
+    animation: createAnimation('gfx/attacks/finisherball.png',
+        a(r(10, 10), 0.5, 0.5),
+        {priority: PRIORITY_FIELD_BOSS},
+    ),
     advanceEffect(state, effectIndex) {
         let rotation = (state.effects[effectIndex].rotation || 0) + Math.PI / 20;
         return updateEffect(state, effectIndex, { rotation });
@@ -175,9 +180,9 @@ const EFFECT_FINISHER_BEAM_START = 'effectFinisherBeamStart';
 effects[EFFECT_FINISHER_BEAM_START] = {
     animation: {
         frames: [
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher4.png')},
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher5.png')},
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher6.png')},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher4.png', PRIORITY_FIELD_BOSS)},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher5.png', PRIORITY_FIELD_BOSS)},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher6.png', PRIORITY_FIELD_BOSS)},
         ],
         frameDuration: 4,
         loop: false,
@@ -191,9 +196,9 @@ const EFFECT_FINISHER_BEAM = 'effectFinisherBeam';
 effects[EFFECT_FINISHER_BEAM] = {
     animation: {
         frames: [
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher1.png')},
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher2.png')},
-            {...r(20, 30), image: requireImage('gfx/attacks/finisher3.png')},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher1.png', PRIORITY_FIELD_BOSS)},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher2.png', PRIORITY_FIELD_BOSS)},
+            {...r(20, 30), image: requireImage('gfx/attacks/finisher3.png', PRIORITY_FIELD_BOSS)},
         ],
         frameDuration: 4,
         loop: false,

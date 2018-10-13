@@ -16,6 +16,7 @@ const {
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
+    PRIORITY_HEROES,
     requireImage,
     createAnimation,
     getFrame,
@@ -37,57 +38,57 @@ const { getNewSpriteState } = require('sprites');
 const beeRectangle = r(88, 56);
 const beeSwitchAnimation = {
     frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch4.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch1.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch2.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch3.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beeswitch4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
 const beeDeathAnimation = {
     frames: [
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie1.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie2.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie3.png')},
-        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie4.png')},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie1.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie2.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie3.png', PRIORITY_HEROES)},
+        {...beeRectangle, image: requireImage('gfx/heroes/bee/beedie4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
 const dragonflyRectangle = r(88, 56);
 const dragonflySwitchAnimation = {
     frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch1.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch2.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch3.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflyswitch4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
 const dragonflyDeathAnimation = {
     frames: [
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png')},
-        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png')},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie1.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie2.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie3.png', PRIORITY_HEROES)},
+        {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonflydie4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
 const mothRectangle = r(88, 56);
 const mothSwitchAnimation = {
     frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch4.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch1.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch2.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch3.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothswitch4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
 const mothDeathAnimation = {
     frames: [
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie1.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie2.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie3.png')},
-        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie4.png')},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie1.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie2.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie3.png', PRIORITY_HEROES)},
+        {...mothRectangle, image: requireImage('gfx/heroes/moth/mothdie4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 6,
 };
@@ -124,7 +125,7 @@ const effects = {
         animation: beeSwitchAnimation,
     },
     [EFFECT_REVIVE_BEE]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 0, duration: 12}),
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 0, duration: 12, priority: PRIORITY_HEROES}),
     },
     [EFFECT_DEAD_DRAGONFLY]: {
         animation: dragonflyDeathAnimation,
@@ -133,7 +134,7 @@ const effects = {
         animation: dragonflySwitchAnimation,
     },
     [EFFECT_REVIVE_DRAGONFLY]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 1, duration: 12}),
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 1, duration: 12, priority: PRIORITY_HEROES}),
     },
     [EFFECT_DEAD_MOTH]: {
         animation: mothDeathAnimation,
@@ -142,7 +143,7 @@ const effects = {
         animation: mothSwitchAnimation,
     },
     [EFFECT_REVIVE_MOTH]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 2, duration: 12}),
+        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 2, duration: 12, priority: PRIORITY_HEROES}),
     },
     [EFFECT_RATE_UP]: {
         animation: rateTextAnimation,
@@ -169,7 +170,7 @@ const effects = {
         animation: deflectAnimation,
     },
     [EFFECT_BLOCK_ATTACK]: {
-        animation: createAnimation('gfx/effects/blocksheet.png', r(50, 39), {cols: 4, duration: 3}),
+        animation: createAnimation('gfx/effects/blocksheet.png', r(50, 39), {cols: 4, duration: 3, priority: PRIORITY_HEROES}),
     },
 };
 window.effects = effects;

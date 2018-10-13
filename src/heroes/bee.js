@@ -12,6 +12,7 @@ const {
 const random = require('random');
 const { drawImage } = require('draw');
 const {
+    PRIORITY_HEROES,
     requireImage, r,
     createAnimation,
     getFrame,
@@ -21,11 +22,11 @@ const { heroesData, updatePlayer, isHeroSwapping } = require('heroes');
 const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
 const beeRectangle = r(88, 56, {hitBox: beeHitBox});
 
-const crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30));
+const crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30), {priority: PRIORITY_HEROES});
 const crosshairLockedAnimation = {
     frames: [
-        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair2.png')},
-        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair3.png')},
+        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair2.png', PRIORITY_HEROES)},
+        {...r(30, 30), image: requireImage('gfx/heroes/bee/crosshair3.png', PRIORITY_HEROES)},
     ],
     frameDuration: 12,
 };
@@ -33,29 +34,29 @@ const crosshairLockedAnimation = {
 heroesData[HERO_BEE] = {
     animation: {
         frames: [
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee1.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee2.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee3.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee4.png')},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee1.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee2.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee3.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/bee4.png', PRIORITY_HEROES)},
         ],
         frameDuration: 3,
     },
-    enterAnimation: createAnimation('gfx/heroes/bee/beeflyin1.png', beeRectangle),
-    catchAnimation: createAnimation('gfx/heroes/bee/beeflyin2.png', beeRectangle),
+    enterAnimation: createAnimation('gfx/heroes/bee/beeflyin1.png', beeRectangle, {priority: PRIORITY_HEROES}),
+    catchAnimation: createAnimation('gfx/heroes/bee/beeflyin2.png', beeRectangle, {priority: PRIORITY_HEROES}),
     meleeAnimation: {
         frames: [
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem1.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem2.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem3.png')},
-            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem4.png')},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem1.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem2.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem3.png', PRIORITY_HEROES)},
+            {...beeRectangle, image: requireImage('gfx/heroes/bee/beem4.png', PRIORITY_HEROES)},
         ],
         frameDuration: 3,
     },
     specialAnimation: {
         frames: [
-            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial1.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial2.png')},
-            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial3.png')},
+            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial1.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial2.png', PRIORITY_HEROES)},
+            {...r(88, 56), image: requireImage('gfx/heroes/bee/beespecial3.png', PRIORITY_HEROES)},
         ],
         frameDuration: 6,
     },
@@ -66,8 +67,8 @@ heroesData[HERO_BEE] = {
     specialSfx: 'sfx/special.mp3',
     reviveEffect: EFFECT_REVIVE_BEE,
     switchEffect: EFFECT_SWITCH_BEE,
-    portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18)),
-    defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18)),
+    portraitAnimation: createAnimation('gfx/heroes/bee/beeportrait.png', r(17, 18), {priority: PRIORITY_HEROES}),
+    defeatedPortraitAnimation: createAnimation('gfx/heroes/bee/beeportraitdead.png', r(17, 18), {priority: PRIORITY_HEROES}),
     baseSpeed: 7,
     meleePower: 2,
     meleeScaling: 0.25,

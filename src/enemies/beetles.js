@@ -1,5 +1,5 @@
 
-const { requireImage, createAnimation, r } = require('animations');
+const { PRIORITY_FIELD, requireImage, createAnimation, r } = require('animations');
 
 const { ATTACK_EXPLOSION } = require('gameConstants');
 const { enemyData } = require('enemies');
@@ -13,14 +13,14 @@ const ENEMY_LIGHTNING_BEETLE = 'lightningBeetle';
 enemyData[ENEMY_CARGO_BEETLE] = {
     animation: {
         frames: [
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly1.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly2.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly3.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly4.png')},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly1.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly2.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly3.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/bfly4.png', PRIORITY_FIELD)},
         ],
         frameDuration: 6,
     },
-    deathAnimation: createAnimation('gfx/enemies/beetles/bflyded.png', beetleRectangle),
+    deathAnimation: createAnimation('gfx/enemies/beetles/bflyded.png', beetleRectangle, {priority: PRIORITY_FIELD}),
     accelerate(state, enemy) {
         // Move up and down in a sin wave.
         const theta = Math.PI / 2 + Math.PI * 4 * enemy.animationTime / 2000;
@@ -46,14 +46,14 @@ enemyData[ENEMY_EXPLOSIVE_BEETLE] = {
     ...enemyData[ENEMY_CARGO_BEETLE],
     animation: {
         frames: [
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly1.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly2.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly3.png')},
-            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly4.png')},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly1.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly2.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly3.png', PRIORITY_FIELD)},
+            {...beetleRectangle, image: requireImage('gfx/enemies/beetles/expbfly4.png', PRIORITY_FIELD)},
         ],
         frameDuration: 6,
     },
-    deathAnimation: createAnimation('gfx/enemies/beetles/expbflyded.png', beetleRectangle),
+    deathAnimation: createAnimation('gfx/enemies/beetles/expbflyded.png', beetleRectangle, {priority: PRIORITY_FIELD}),
     // deathSound: 'sfx/flydeath.mp3',
     onDeathEffect(state, enemy, playerIndex = 0) {
         // The bucket explodes on death.
