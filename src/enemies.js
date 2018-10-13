@@ -499,13 +499,13 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     return updatedState;
 }
 
-function renderEnemyFrame(context, state, enemy, frame) {
+function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
     context.save();
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
     let hitBox = getEnemyHitBox(state, enemy);
-    const drawBox = getEnemyDrawBox(state, enemy);
+    drawBox = drawBox || getEnemyDrawBox(state, enemy);
     if ((enemy.vx > 0 && !enemy.flipped && !enemy.doNotFlip) || (enemy.vx <= 0 && enemy.flipped)) {
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();

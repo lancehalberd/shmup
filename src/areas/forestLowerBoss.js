@@ -564,8 +564,11 @@ enemyData[ENEMY_FROG] = {
         if (enemy.mode.includes('swimming')) {
             renderEnemyFrame(context, state, enemy, frame);
         } else {
+            // The land frog is a different height than the start tongue animation,
+            // so we have to override the draw box for rendering this frame and offset it a little.
             enemy.top += 18;
-            renderEnemyFrame(context, state, enemy, frame);
+            const drawBox = new Rectangle(frame);
+            renderEnemyFrame(context, state, enemy, frame, drawBox);
             enemy.top -= 18;
             // drawImage(context, frame.image, frame, new Rectangle(enemy).translate(0, 18));
         }
