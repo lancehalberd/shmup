@@ -1,6 +1,7 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ATTACK_RED_LASER,
+    LOOT_LIFE,
 } = require('gameConstants');
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
@@ -114,8 +115,11 @@ allWorlds[WORLD_CITY] = {
                 return setEvent(state, 'wrens');
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
+        bossPrep: (state, eventTime) => {
+            if (eventTime === 3000) {
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
+            }
+            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_CITY_END);
                 return transitionToCityBoss(state);
             }
@@ -140,6 +144,10 @@ allWorlds[WORLD_CITY] = {
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
+
+        if (state.demo && world.type === WORLD_CITY && world.time >= 15000 && world.event !== 'bossPrep') {
+            return setEvent(state, 'bossPrep');
+        }
 
         if (world.type === WORLD_CITY && world.time >= CITY_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');

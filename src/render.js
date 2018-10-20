@@ -27,15 +27,13 @@ const {
     PRIORITY_FIELD,
     requireImage,
     r, createAnimation,
-    selectNeedleImage,
-    startGameImage,
-    optionsImage,
     getFrame,
 } = require('animations');
 
 const canvas = document.createElement('canvas');
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
+canvas.style = 'display: block; margin: 0 auto;';
 const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 document.body.appendChild(canvas);
@@ -241,20 +239,49 @@ const renderHUD = (context, state) => {
     }
 };
 
+
+const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png', PRIORITY_TITLE)});
+const startGameImage = r(116, 26, {image: requireImage('gfx/startgame.png', PRIORITY_TITLE)});
+const optionsImage = r(90, 26, {image: requireImage('gfx/options.png', PRIORITY_TITLE)});
+const instructionsImage = r(120, 26, {image: requireImage('gfx/instructions.png', PRIORITY_TITLE)});
+// const startImage = r(58, 30, {image: requireImage('gfx/start.png', PRIORITY_TITLE)});
 const titleFrame = r(298, 88, {image: requireImage('gfx/logo.png', PRIORITY_TITLE)});
+
+const instructionsCard1 = r(360, 216, {image: requireImage('gfx/instructioncard.png', PRIORITY_TITLE)});
+const instructionsCard2 = r(360, 216, {image: requireImage('gfx/instructioncard2.png', PRIORITY_TITLE)});
+
+
 const renderTitle = (context, state) => {
     renderBackground(context, state);
     renderForeground(context, state);
+
+
+    // Draw a black gradient over the bright background to make the title pop out a little more.
+    let gradient = context.createLinearGradient(0, 200, 0, HEIGHT / 2);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = gradient;
+
+    context.fillRect(0, 0, WIDTH, HEIGHT);
     const frame = dragonflyIdleAnimation.frames[0];
     const sprite = state.players[0].sprite;
     drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(sprite.left, hudImage.height + sprite.top));
     const titleRectangle = new Rectangle(titleFrame).scale(2).moveCenterTo(WIDTH / 2, 120);
     drawImage(context, titleFrame.image, titleFrame, titleRectangle);
 
-    const options = [startGameImage, optionsImage];
-    const targets = [new Rectangle(options[0]).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2 + 40)];
+    // When instructions are displayed, we put them in place of the title screen options.
+    if (state.instructions) {
+        const cardImage = state.instructions === 1 ? instructionsCard1 : instructionsCard2;
+        drawImage(context, cardImage.image, cardImage,
+            new Rectangle(cardImage).scale(2).moveCenterTo(WIDTH / 2, HEIGHT / 2)
+        );
+        return;
+    }
+
+    const options = [startGameImage, instructionsImage];
+    const targets = [new Rectangle(options[0]).scale(2).moveCenterTo(WIDTH / 2, HEIGHT / 2 + 40)];
     for (let i = 1; i < options.length; i++) {
-        targets.push(new Rectangle(options[i]).scale(3).moveCenterTo(
+        targets.push(new Rectangle(options[i]).scale(2).moveCenterTo(
             WIDTH / 2,
             targets[i - 1].top + targets[i - 1].height + 20 + 3 * options[i].height / 2
         ));
@@ -309,10 +336,10 @@ function renderGameOver(context, state) {
     const frame = getFrame(gameOverAnimation, state.gameOverTime);
     const fallTime = 0.5 - Math.max(0, 500 - state.gameOverTime) / 1000;
     drawImage(context, frame.image, frame,
-        new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, HEIGHT - 500 + 300 * (fallTime * fallTime + fallTime)),
+        new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, HEIGHT - 490 + 300 * (fallTime * fallTime + fallTime)),
     );
     // Continue options are shown after the animation over the broken needle.
-    if (state.gameOverTime > 1500) {
+    if (state.gameOverTime > 1500 && !state.finished) {
         drawImage(context, continueImage.image, continueImage,
             new Rectangle(continueImage).scale(3).moveCenterTo(menuX, 2 * HEIGHT / 5));
         const targets = [

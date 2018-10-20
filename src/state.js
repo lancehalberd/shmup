@@ -50,13 +50,19 @@ const advanceState = (state) => {
     if (updatedState.players[0].actions.toggleDebug) {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
+    if (updatedState.instructions) {
+        if (updatedState.players[0].actions.confirm) {
+            return {...updatedState, instructions: (updatedState.instructions + 1) % 3};
+        }
+        return updatedState;
+    }
     if (updatedState.title) {
-        //return require('states/fieldBossDoor');
+        //return require('states/forestUpperBoss');
         //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'forestLowerStart'));
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
-        if (updatedState.players[0].actions.start && titleIndex === 0) {
+        if (updatedState.players[0].actions.confirm && titleIndex === 0) {
             let world = updatedState.world;
             if (stageSelectIndex >= 0) {
                 updatedState = {...updatedState, title: false};
@@ -65,6 +71,9 @@ const advanceState = (state) => {
                 return applyCheckpointToState(updatedState);
             }
             return {...updatedState, title: false, world, bgm: world.bgm};
+        }
+        if (updatedState.players[0].actions.confirm && titleIndex === 1) {
+            return {...updatedState, instructions: 1};
         }
         if (updatedState.players[0].actions.up) titleIndex = (titleIndex + 2 - 1) % 2;
         if (updatedState.players[0].actions.down) titleIndex = (titleIndex + 1) % 2;
@@ -81,7 +90,15 @@ const advanceState = (state) => {
     if (updatedState.gameover) {
         let continueIndex = updatedState.continueIndex;
         updatedState = {...updatedState, gameOverTime: updatedState.gameOverTime + FRAME_LENGTH};
-        if (updatedState.players[0].actions.start) {
+        if (updatedState.players[0].actions.confirm) {
+            if (updatedState.gameOverTime < 1000) {
+                return updatedState;
+            }
+            // This gets set when a player dies at the end of the demo, and is not given
+            // an option to continue.
+            if (updatedState.finished) {
+                return {...getNewState(), interacted: true, finished: false};
+            }
             if (continueIndex === 0) { // Continue
                 updatedState = updatePlayerOnContinue({...updatedState, gameover: false}, 0);
                 return applyCheckpointToState(updatedState);
@@ -300,6 +317,7 @@ const advanceState = (state) => {
 
 const applyPlayerActions = (state, playerIndex, actions) => {
     const players = [...state.players];
+    actions.confirm = actions.start || actions.melee || actions.special || actions.switch;
     players[playerIndex] = {...players[playerIndex], actions};
     if (!state.interacted) {
         for (var i in actions) {

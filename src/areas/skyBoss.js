@@ -54,6 +54,10 @@ allWorlds[WORLD_SKY_BOSS] = {
                 left: WIDTH + 1000,
                 top: -100,
             });
+            if (state.demo) {
+                newEnemy = createEnemy(state, ENEMY_DEMO_EMPRESS);
+                state = {...state, finished: true};
+            }
             lifebars[newEnemy.id] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
@@ -71,7 +75,10 @@ module.exports = {
     transitionToSkyBoss,
 };
 
-const { enemyData, createEnemy, addEnemyToState, updateEnemy, getEnemyDrawBox } = require('enemies');
+const {
+    enemyData, createEnemy, addEnemyToState, updateEnemy, getEnemyDrawBox,
+    ENEMY_DEMO_EMPRESS,
+} = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 
 
@@ -111,7 +118,7 @@ enemyData[ENEMY_SEAGULL] = {
                 const drawBox = getEnemyDrawBox(state, enemy);
                 vy = ((left + drawBox.width / 2 - WIDTH / 2) * vx < 0) ? 3 : -3;
                 if ((vx > 0 && left > WIDTH + 200) || (vx < 0 && left + drawBox.width < -200)) {
-                    console.log(enemy.left + drawBox.width, enemy.left - WIDTH);
+                    //console.log(enemy.left + drawBox.width, enemy.left - WIDTH);
                     mode = 'prepare';
                     modeTime = 0;
                     vx = 0;

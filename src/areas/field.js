@@ -4,6 +4,7 @@ const {
     ENEMY_FLY, ENEMY_MONK,
     ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
+    LOOT_LIFE,
 } = require('gameConstants');
 const random = require('random');
 const { PRIORITY_TITLE, PRIORITY_FIELD, createAnimation, r } = require('animations');
@@ -223,8 +224,11 @@ allWorlds[WORLD_FIELD] = {
                 return setEvent(state, random.element(['locust', 'flies', 'monks']));
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
+        bossPrep: (state, eventTime) => {
+            if (eventTime === 3000) {
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
+            }
+            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_FIELD_END);
                 return transitionToFieldBoss(state);
             }
@@ -253,7 +257,9 @@ allWorlds[WORLD_FIELD] = {
         if (world.time === 40000) state = setCheckpoint(state, CHECK_POINT_FIELD_MIDDLE);
         if (TEST_ENEMY) {
             if (!state.enemies.length) {
-                state = spawnEnemy(state, TEST_ENEMY, {left: WIDTH, top: random.range(100, 400)});
+                const left = enemyData[TEST_ENEMY].props.left || WIDTH;
+                const top = enemyData[TEST_ENEMY].props.top || random.range(100, 400);
+                state = spawnEnemy(state, TEST_ENEMY, {left, top});
             }
             return state;
         }
@@ -378,6 +384,6 @@ module.exports = {
     CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
 };
 
-const { createEnemy, addEnemyToState } = require('enemies');
+const { createEnemy, addEnemyToState, enemyData } = require('enemies');
 const { transitionToFieldBoss } = require('areas/fieldBoss');
 

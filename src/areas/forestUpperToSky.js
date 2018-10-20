@@ -4,21 +4,28 @@ const { getNewSpriteState } = require('sprites');
 const { addElementToLayer, applyCheckpointToState, setCheckpoint, allWorlds } = require('world');
 
 
-const transitionAnimation = createAnimation('gfx/scene/sky/sunsettransition.png', r(600, 700));
+const transitionAnimation = createAnimation('gfx/scene/sky/sunsettransition.png', r(600, 800));
 function transitionToSky(state) {
     const sprites = state.world.background.sprites;
     sprites[2] = getNewSpriteState({
-        top: -1436,
+        top: -1536,
         left: 0,
         width: transitionAnimation.frames[0].width * 2,
         height: transitionAnimation.frames[0].height * 2,
         animation: transitionAnimation,
     });
+    console.log([...sprites]);
+    sprites.splice.apply(sprites, [2, 0, ...state.world.trunks.sprites]);
+    const skyIndex = 2 + state.world.trunks.sprites.length;
+    console.log([...sprites]);
     const background = {...state.world.background, sprites};
+    const trunks = {...state.world.trunks, sprites: [], spriteData: null};
     const world = {
         ...state.world,
         type: FOREST_UPPER_TO_SKY1,
         background,
+        trunks,
+        skyIndex,
         suppressAttacks: true,
     };
     return {...state, world}
@@ -35,7 +42,7 @@ allWorlds[FOREST_UPPER_TO_SKY1] = {
             targetX: state.world.x,
             targetY: state.world.y + 1000,
         }
-        const sunset = {...state.world.background.sprites[2]};
+        const sunset = {...state.world.background.sprites[state.world.skyIndex]};
         if (sunset.top >= -750) {
             sunset.top = -750;
             state = setCheckpoint(state, CHECK_POINT_SKY_START);

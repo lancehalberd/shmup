@@ -1,7 +1,7 @@
 
 const Rectangle = require('Rectangle');
 const random = require('random');
-const { drawImage } = require('draw');
+const { drawImage, drawTintedImage } = require('draw');
 
 const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH, OFFSCREEN_PADDING,
@@ -17,7 +17,7 @@ const {
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const {
-    r, createAnimation,
+    r, requireImage, createAnimation,
     getFrame,
     getAnimationLength,
     getHitBox,
@@ -516,7 +516,8 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
             -hitBox.width / 2 - hitBox.left + enemy.left,
             -hitBox.height / 2 - hitBox.top + enemy.top,
         );
-        drawImage(context, frame.image, frame, target);
+        if (!enemy.tint || !enemy.tint.amount) drawImage(context, frame.image, frame, target);
+        else drawTintedImage(context, frame.image, enemy.tint.color, enemy.tint.amount, frame, target);
         context.restore();
     } else {
         context.save();
@@ -525,7 +526,8 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
             -hitBox.width / 2 - hitBox.left + enemy.left,
             -hitBox.height / 2 - hitBox.top + enemy.top,
         );
-        drawImage(context, frame.image, frame, target);
+        if (!enemy.tint || !enemy.tint.amount) drawImage(context, frame.image, frame, target);
+        else drawTintedImage(context, frame.image, enemy.tint.color, enemy.tint.amount, frame, target);
         context.restore();
     }
     context.restore();
@@ -723,6 +725,93 @@ const advanceEnemy = (state, enemy) => {
     return updateEnemy(state, enemy, {ttl, attackCooldownFramesLeft, pendingDamage: 0});
 };
 
+
+const ENEMY_DEMO_EMPRESS = 'demoEmpress';
+const demoEmpressGeometry = r(90, 93,
+    {hitBox: {left: 47, top: 3, width: 20, height: 71}, scaleX: 3, scaleY: 3},
+);
+const thanksImage = r(298, 88, {image: requireImage('gfx/thanksyouw.png')});
+
+enemyData[ENEMY_DEMO_EMPRESS] = {
+    swoopAnimation: createAnimation('gfx/enemies/empress.png', demoEmpressGeometry, {cols: 2}),
+    animation: createAnimation('gfx/enemies/empress.png', demoEmpressGeometry, {x: 2, cols: 2}),
+    getAnimation(state, enemy) {
+        if (enemy.mode === 'enter') {
+            return this.swoopAnimation;
+        }
+        return this.animation;
+    },
+    accelerate: (state, enemy) => {
+        let {vx, vy, mode, modeTime, top, left, tint} = enemy;
+        switch (mode) {
+            // Swoop onto the right side of the screen.
+            case 'enter':
+                if (top < 0) vy = 20;
+                else vy *= 0.9;
+                if (left > 4 * WIDTH / 5) vx = -40;
+                else vx *= 0.9;
+                if (top >= GAME_HEIGHT / 4 && left <=  3 * WIDTH / 4) {
+                    mode = 'float';
+                    modeTime = 0;
+                }
+                break;
+            // Float for a few seconds before summoning fatal lightning.
+            case 'float':
+                vx = Math.cos(modeTime / 300);
+                vy = Math.sin(modeTime / 300);
+                if (modeTime > 3000) {
+                    mode = 'lightning';
+                    modeTime = 0;
+                }
+                tint = null;
+                break;
+            case 'lightning':
+                vx = vy = 0;
+                tint = {color: modeTime % 400 < 200 ? 'white' : 'black', amount: 0.9};
+                if (modeTime > 3500) {
+                    mode = 'float';
+                    modeTime = 0;
+                }
+                break;
+        }
+        modeTime += FRAME_LENGTH;
+        return {...enemy, vx, vy, mode, modeTime, top, left, tint};
+    },
+    drawUnder(context, state, enemy) {
+        if (enemy.mode === 'enter') return;
+        drawImage(context, thanksImage.image, thanksImage,
+            new Rectangle(thanksImage).scale(2).moveCenterTo(WIDTH / 2, GAME_HEIGHT / 4)
+        );
+    },
+    shoot(state, enemy) {
+        // Rapidly summon lightning bolts until the player is defeated.
+        if (enemy.mode === 'lightning' && enemy.modeTime % 300 === 0 && enemy.modeTime < 3000) {
+            let left = (enemy.modeTime + Math.floor(Math.random() * 50)) % WIDTH - 40;
+            for (let i = 0; i < 3; i ++) {
+                const lightning = createAttack(ATTACK_LIGHTNING_BOLT, {
+                    left,
+                    top: 0,
+                    delay: 10,
+                    vy: 30,
+                });
+                left += 60
+                state = addEnemyAttackToState(state, lightning);
+            }
+        }
+        return state;
+    },
+    props: {
+        life: 100000,
+        speed: 20,
+        boss: true,
+        permanent: true,
+        mode: 'enter',
+        doNotFlip: true,
+        left: 1000,
+        top: -100,
+    },
+};
+
 module.exports = {
     enemyData,
     createEnemy,
@@ -740,6 +829,7 @@ module.exports = {
     getDefaultEnemyAnimation,
     enemyIsActive,
     ENEMY_SHIELD_MONK,
+    ENEMY_DEMO_EMPRESS,
     accelerate_followPlayer,
     onHitGroundEffect_spawnMonk,
     shoot_bulletAtPlayer,
@@ -748,6 +838,7 @@ module.exports = {
 // Move possible circular imports to after exports.
 const { getNewSpriteState, getTargetVector } = require('sprites');
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
+const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 
 const { createEffect, addEffectToState, } = require('effects');
 const { EFFECT_FINISHER, getFinisherPosition } = require('effects/finisher');

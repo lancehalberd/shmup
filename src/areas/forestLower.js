@@ -4,6 +4,7 @@ const {
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ATTACK_SLASH, ATTACK_STAB,
+    LOOT_LIFE,
 } = require('gameConstants');
 const { ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 const random = require('random');
@@ -189,8 +190,11 @@ allWorlds[WORLD_FOREST_LOWER] = {
                 return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'hornet']));
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
+        bossPrep: (state, eventTime) => {
+            if (eventTime === 3000) {
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
+            }
+            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_FOREST_LOWER_END);
                 return transitionToForestLowerBoss(state);
             }

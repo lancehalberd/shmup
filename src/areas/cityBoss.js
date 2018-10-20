@@ -45,6 +45,10 @@ allWorlds[WORLD_CITY_BOSS] = {
                 left: WIDTH + 1000,
                 top: -100,
             });
+            if (state.demo) {
+                newEnemy = createEnemy(state, ENEMY_DEMO_EMPRESS);
+                state = {...state, finished: true};
+            }
             lifebars[newEnemy.id] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
@@ -53,11 +57,13 @@ allWorlds[WORLD_CITY_BOSS] = {
             state = {...state, bgm: world.bgm};
         }
         const seagull = state.enemies.filter(enemy => enemy.type === ENEMY_SEAGULL)[0];
-        if (time > 500 && !seagull && random.chance(0.5)) {
-            return transitionToBeach(state);
-        }
-        if (time > 500 && !seagull) {
-            return transitionToZoo(state);
+        if (!state.demo) {
+            if (time > 500 && !seagull && random.chance(0.5)) {
+                return transitionToBeach(state);
+            }
+            if (time > 500 && !seagull) {
+                return transitionToZoo(state);
+            }
         }
 
         state = {...state, world};
@@ -71,7 +77,7 @@ module.exports = {
 const { transitionToBeach } = require('areas/cityToBeach');
 const { transitionToZoo } = require('areas/cityToZoo');
 
-const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
+const { enemyData, createEnemy, addEnemyToState, updateEnemy, ENEMY_DEMO_EMPRESS } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 /*
 Spider boss on window out of restaurant, guarding whole thing.

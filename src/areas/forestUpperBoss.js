@@ -7,7 +7,7 @@ const random = require('random');
 const { drawImage } = require('draw');
 const { createAnimation, r, getFrame } = require('animations');
 const { getNewSpriteState } = require('sprites');
-const { allWorlds, getHazardHeight } = require('world');
+const { allWorlds, getHazardHeight, updateLayerSprite } = require('world');
 
 const WORLD_FOREST_UPPER_BOSS = 'forestUpperBoss';
 const layerNamesToClear = ['largeTrunks', 'willows'];
@@ -28,6 +28,7 @@ const transitionToForestUpperBoss = (state) => {
 }
 
 const nestBaseAnimation = createAnimation('gfx/enemies/hornetnest/hornetbase.png', r(300, 600));
+const nestBaseDefeatedAnimation = createAnimation('gfx/enemies/hornetnest/hornetbasedead.png', r(300, 600));
 allWorlds[WORLD_FOREST_UPPER_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
@@ -79,7 +80,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             const connectedIds = [];
             let left = nestSprite.left - state.world.vx,
                 top = nestSprite.top - state.world.vy;
-            let newEnemy = createEnemy(state, ENEMY_HORNET_NEST_1, {
+            let newEnemy = createEnemy(state, ENEMY_HORNET_NEST_0, {
                 left, top, connectedIds,
             });
             connectedIds.push(newEnemy.id);
@@ -87,6 +88,11 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
             world = {...world, lifebars, spawnsDisabled: true};
+            state = addEnemyToState(state, newEnemy);
+            newEnemy = createEnemy(state, ENEMY_HORNET_NEST_1, {
+                left, top, connectedIds,
+            });
+            connectedIds.push(newEnemy.id);
             state = addEnemyToState(state, newEnemy);
             newEnemy = createEnemy(state, ENEMY_HORNET_NEST_2, {
                 left, top, connectedIds,
@@ -110,7 +116,7 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
             state = addEnemyToState(state, newEnemy);
             lastSpawnTime = 2500;
         }
-        const nest = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_NEST_1)[0];
+        const nest = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_NEST_0)[0];
         const queen = state.enemies.filter(enemy => enemy.type === ENEMY_HORNET_QUEEN)[0];
         // Spawn the hornet queen at 60% health of nest
         if (nest && nest.life > 0 && !queen && nest.life / NEST_LIFE < 0.6 ) {
@@ -140,6 +146,10 @@ allWorlds[WORLD_FOREST_UPPER_BOSS] = {
                 lastSpawnTime = time;
             }
         }
+        if (nest && nest.dead) {
+            state = updateLayerSprite({...state, world}, 'willows', 0, {animation: nestBaseDefeatedAnimation});
+            world = state.world;
+        }
         if (time > 2500 && !nest) {
             return transitionToSky(state);
         }
@@ -168,6 +178,7 @@ const {
 } = require('enemies/hornets');
 
 const NEST_LIFE = 500;
+const ENEMY_HORNET_NEST_0 = 'horentNest0';
 const ENEMY_HORNET_NEST_1 = 'horentNest1';
 const ENEMY_HORNET_NEST_2 = 'horentNest2';
 const ENEMY_HORNET_NEST_3 = 'horentNest3';
@@ -175,11 +186,11 @@ const ENEMY_HORNET_NEST_4 = 'horentNest4';
 const ENEMY_HORNET_NEST_5 = 'horentNest5';
 const EFFECT_NEST_DAMAGE_LOWER = 'nestDamageLower';
 const EFFECT_NEST_DAMAGE_UPPER = 'nestDamageUpper';
-enemyData[ENEMY_HORNET_NEST_1] = {
-    animation: createAnimation('gfx/enemies/hornetnest/nest5.png',
+enemyData[ENEMY_HORNET_NEST_0] = {
+    animation: createAnimation('gfx/enemies/hornetnest/nest6.png',
         r(300, 600, {hitBox: {left: 87, top: 33, width: 115, height: 105}})
     ),
-    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt5.png', r(300, 600)),
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt6.png', r(300, 600)),
     deathSound: 'sfx/explosion.mp3+0+0.5',
     // All nest pieces are damaged simultaneously.
     onDamageEffect(state, enemy, attack) {
@@ -242,8 +253,21 @@ enemyData[ENEMY_HORNET_NEST_1] = {
         damageEffectOffset: 0,
     },
 };
+enemyData[ENEMY_HORNET_NEST_1] = {
+    ...enemyData[ENEMY_HORNET_NEST_0],
+    animation: createAnimation('gfx/enemies/hornetnest/nest5.png',
+        r(300, 600, {hitBox: {left: 87, top: 33, width: 115, height: 105}})
+    ),
+    hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt5.png', r(300, 600)),
+    props: {
+        life: NEST_LIFE, hanging: true,
+        spawns: [ENEMY_HORNET, ENEMY_HORNET_DASHER, ENEMY_HORNET_DASHER, ENEMY_HORNET_CIRCLER],
+        damageEffectType: EFFECT_NEST_DAMAGE_UPPER,
+        damageEffectOffset: 100,
+    },
+};
 enemyData[ENEMY_HORNET_NEST_2] = {
-    ...enemyData[ENEMY_HORNET_NEST_1],
+    ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest4.png',
         r(300, 600, {hitBox: {left: 32, top: 134, width: 215, height:120}})
     ),
@@ -256,7 +280,7 @@ enemyData[ENEMY_HORNET_NEST_2] = {
     },
 };
 enemyData[ENEMY_HORNET_NEST_3] = {
-    ...enemyData[ENEMY_HORNET_NEST_1],
+    ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest3.png',
         r(300, 600, {hitBox: {left: 45, top: 195, width: 160, height:120}})
     ),
@@ -269,7 +293,7 @@ enemyData[ENEMY_HORNET_NEST_3] = {
     },
 };
 enemyData[ENEMY_HORNET_NEST_4] = {
-    ...enemyData[ENEMY_HORNET_NEST_1],
+    ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest2.png',
         r(300, 600, {hitBox: {left: 43, top: 204, width: 240, height:140}})
     ),
@@ -282,7 +306,7 @@ enemyData[ENEMY_HORNET_NEST_4] = {
     },
 };
 enemyData[ENEMY_HORNET_NEST_5] = {
-    ...enemyData[ENEMY_HORNET_NEST_1],
+    ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest1.png',
         r(300, 600, {hitBox: {left: 130, top: 302, width: 130, height:85}})
     ),

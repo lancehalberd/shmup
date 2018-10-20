@@ -3,6 +3,7 @@ const {
     ENEMY_FLY,
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
+    LOOT_LIFE,
     ATTACK_SLASH, ATTACK_STAB,
 } = require('gameConstants');
 const { ENEMY_BROWN_SPIDER } = require('enemies/spiders');
@@ -177,8 +178,11 @@ allWorlds[WORLD_FOREST_UPPER] = {
                 return setEvent(state, random.element(['brownSpider', 'flyingAnts', 'hornet']));
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
+        bossPrep: (state, eventTime) => {
+            if (eventTime === 3000) {
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
+            }
+            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_FOREST_UPPER_END);
                 return transitionToForestUpperBoss(state);
             }
@@ -237,7 +241,7 @@ const getForestUpperLayers = () => ({
         },
     }),
     trunks: getNewLayer({
-        xFactor: 0.5, yFactor: 1, yOffset: 0,
+        xFactor: 0.5, yFactor: 1, yOffset: -30,
         spriteData: {
             thickTrunk: {animation: thickTrunk, scale: 1.6, next: ['skinnyTrunk', 'thickTrunk'], offset: [200, 300, 350], yOffset: [0, 10, 20]},
             skinnyTrunk: {animation: skinnyTrunk, scale: 1.6, next: ['skinnyTrunk', 'thickTrunk'], offset: [70, 150, 250], yOffset: [0, 10, 20]},

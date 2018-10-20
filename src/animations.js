@@ -424,12 +424,6 @@ const getHitBox = (animation, animationTime) => {
         new Rectangle(frame).moveTo(0, 0)).stretch(scaleX, scaleY);
 };
 
-const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png', PRIORITY_TITLE)});
-const startGameImage = r(58, 13, {image: requireImage('gfx/startgame.png', PRIORITY_TITLE)});
-const optionsImage = r(43, 13, {image: requireImage('gfx/options.png', PRIORITY_TITLE)});
-
-const startImage = r(58, 30, {image: requireImage('gfx/start.png', PRIORITY_TITLE)});
-
 module.exports = {
     PRIORITY_PRELOADER,
     PRIORITY_TITLE,
@@ -474,8 +468,4 @@ module.exports = {
     flyingAntAnimation, flyingAntDeathAnimation,
     flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation,
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
-    selectNeedleImage,
-    startGameImage,
-    optionsImage,
-    startImage,
 };

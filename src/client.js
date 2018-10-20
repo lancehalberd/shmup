@@ -18,7 +18,7 @@ const render = require('render');
 
 const { isKeyDown,
     KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE,
-    KEY_ENTER, KEY_R, KEY_X, KEY_C, KEY_V,
+    KEY_ENTER, KEY_R, KEY_X, KEY_C,
     KEY_T,
 } = require('keyboard');
 
@@ -31,17 +31,23 @@ let stateQueue = [];
 let state = {};
 
 const update = () => {
-    if (!state.world) state = getNewState();
-    const singlePressOnly = state.title || state.gameover;
+    if (!state.world) {
+        state = getNewState();
+    }
+    // Set the game to demo mode.
+    state.demo = true;
+    const thresholdTime = 80;
+    // Button must be released for this many frames before being considered down again.
+    // This is used to prevent constantly activating actions on the menus or pausing+unpausing.
+    const releaseThreshold = (state.title || state.gameover) ? thresholdTime : 0;
     state = applyPlayerActions(state, playerIndex, {
-        // Make sure up/down only trigger once per press during the title sequence.
-        up: isKeyDown(KEY_UP, singlePressOnly), down: isKeyDown(KEY_DOWN, singlePressOnly),
-        left: isKeyDown(KEY_LEFT, singlePressOnly), right: isKeyDown(KEY_RIGHT, singlePressOnly),
-        melee: isKeyDown(KEY_SPACE),
-        special: isKeyDown(KEY_C),
-        switch: isKeyDown(KEY_X),
-        toggleDebug: isKeyDown(KEY_T, true),
-        start: isKeyDown(KEY_ENTER, true),
+        up: isKeyDown(KEY_UP, releaseThreshold), down: isKeyDown(KEY_DOWN, releaseThreshold),
+        left: isKeyDown(KEY_LEFT, releaseThreshold), right: isKeyDown(KEY_RIGHT, releaseThreshold),
+        melee: isKeyDown(KEY_SPACE, releaseThreshold),
+        special: isKeyDown(KEY_C, releaseThreshold),
+        switch: isKeyDown(KEY_X, releaseThreshold),
+        toggleDebug: isKeyDown(KEY_T, thresholdTime),
+        start: isKeyDown(KEY_ENTER, thresholdTime),
     });
 
     // Wait to load sounds until the graphics are loaded for the first few scenes.
@@ -75,7 +81,7 @@ setInterval(update, FRAME_LENGTH);
 
 const renderLoop = () => {
     try {
-        if (state.world) render(state);
+        if (state.world && preloadedSounds) render(state);
         window.requestAnimationFrame(renderLoop);
     } catch (e) {
         console.log(e);

@@ -73,7 +73,7 @@ heroesData[HERO_DRAGONFLY] = {
             );
         }
         state = updatePlayer(state, playerIndex, {usingSpecial: false, invulnerableFor: 500});
-        return {...state, slowTimeFor: 20000};
+        return {...state, slowTimeFor: 8000};
         /*
         // TODO: support multiple directions, add ghost trail behind her.
         const player = state.players[playerIndex];

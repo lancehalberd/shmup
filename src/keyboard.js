@@ -72,9 +72,9 @@ window.document.onkeyup = function (event) {
 const lastButtonsPressed = {};
 // Release can be set to true to pretend the key is released after reading it.
 // This only works for keyboard keys.
-export const isKeyDown = (keyCode, release = false) => {
+export const isKeyDown = (keyCode, releaseThreshold = false) => {
     if (keysDown[keyCode]) {
-        if (release) {
+        if (releaseThreshold) {
             keysDown[keyCode] = 0;
         }
         return true;
@@ -88,11 +88,10 @@ export const isKeyDown = (keyCode, release = false) => {
         for (var gamepad of gamepads) {
             if (!gamepad) continue;
             if (buttonIsPressed(gamepad.buttons[buttonIndex])) {
-                const wasPressed = lastButtonsPressed[buttonIndex];
-                lastButtonsPressed[buttonIndex] = true;
-                if (!release || !wasPressed) return true;
-            } else {
-                lastButtonsPressed[buttonIndex] = false;
+                const wasLastPressed = lastButtonsPressed[buttonIndex] || 0;
+                const now = Date.now();
+                lastButtonsPressed[buttonIndex] = now
+                if (!releaseThreshold || (now - wasLastPressed >= releaseThreshold)) return true;
             }
         }
     }

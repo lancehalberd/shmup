@@ -179,12 +179,13 @@ const lootData = {
     [LOOT_COIN]: {
         animation: coinAnimation,
         accelerate: (state, lootIndex) => {
-            if (!state.players[0].relics[LOOT_HELMET]) {
+            /*if (!state.players[0].relics[LOOT_HELMET]) {
                 return state;
-            }
+            }*/
+            const threshold = state.players[0].relics[LOOT_HELMET] ? 200 : 50;
             const {dx, dy} = getTargetVector(state.loot[lootIndex], state.players[0].sprite);
             const mag = Math.sqrt(dx*dx+dy*dy);
-            if (mag > 200) return state;
+            if (mag > threshold) return state;
             return updateLoot(state, lootIndex, {vx: 20 * dx / mag, vy: 20 * dy / mag});
         },
         collect(state, playerIndex, loot) {
@@ -204,11 +205,11 @@ const lootData = {
         accelerate: circleAcceleration,
         collect(state, playerIndex) {
             const player = state.players[playerIndex];
-            // Set all heroes to max energy. This revives them if they were defeated.
+            // Set all heroes to max energy. This revives them if they were defeated and resets their death count.
             return updatePlayer(state, playerIndex, {
-                [HERO_BEE]: {...player[HERO_BEE], energy: MAX_ENERGY},
-                [HERO_DRAGONFLY]: {...player[HERO_DRAGONFLY], energy: MAX_ENERGY},
-                [HERO_MOTH]: {...player[HERO_MOTH], energy: MAX_ENERGY},
+                [HERO_BEE]: {...player[HERO_BEE], energy: MAX_ENERGY, deaths: 0},
+                [HERO_DRAGONFLY]: {...player[HERO_DRAGONFLY], energy: MAX_ENERGY, deaths: 0},
+                [HERO_MOTH]: {...player[HERO_MOTH], energy: MAX_ENERGY, deaths: 0},
             });
         },
         draw: drawGlowing,

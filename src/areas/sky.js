@@ -1,5 +1,6 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
+    LOOT_LIFE,
     ATTACK_RED_LASER,
 } = require('gameConstants');
 const random = require('random');
@@ -171,8 +172,11 @@ allWorlds[WORLD_SKY] = {
                 return setEvent(state, random.element(['lightningBeetle', 'wrens']));
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
+        bossPrep: (state, eventTime) => {
+            if (eventTime === 3000) {
+                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
+            }
+            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
                 state = setCheckpoint(state, CHECK_POINT_SKY_END);
                 return transitionToSkyBoss(state);
             }
