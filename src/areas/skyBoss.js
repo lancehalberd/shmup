@@ -16,23 +16,12 @@ function transitionToSkyBoss(state) {
     const world = {
         ...state.world,
         type: WORLD_SKY_BOSS,
-        // Remove the moon layer.
+        // Replace the moon layer with the sunrise.
         mgLayerNames: ['background', 'sunrise', 'clouds', 'fastClouds'],
         background: {
             ...state.world.background,
             vy: 1,
         },
-        // Set the next background image to the sunrise graphics
-        /*background: getNewLayer({
-            xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
-            // Only keep the first two star graphics, which are the only ones that could currently be on
-            // screen since they are each a full screen width. The transition graphics will be added after
-            // them.
-            sprites: [...state.world.background.sprites].slice(0, 2),
-            spriteData: {
-                sky: {animation: createAnimation('gfx/scene/sky/sky.png', r(400, 400)), scale: 2},
-            },
-        }),*/
         sunrise: getNewLayer({
             xFactor: 0.01, yFactor: 0.5, unique: true,
             spriteData: {

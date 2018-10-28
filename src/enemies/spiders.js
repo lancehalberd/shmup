@@ -238,8 +238,8 @@ effects[EFFECT_SPIDER_BALLOON] = {
     },
     onHitPlayer(state, effectIndex, playerIndex) {
         state = updatePlayer(state, playerIndex, {cannotSwitchFrames: 10}, {
-            vx: state.players[playerIndex].sprite.vx * 0.5,
-            vy: state.players[playerIndex].sprite.vy * 0.5,
+            vx: state.players[playerIndex].sprite.vx * 0.7,
+            vy: state.players[playerIndex].sprite.vy * 0.5 + 2,
         });
         if (state.effects[effectIndex].attached) return state;
         return updateEffect(state, effectIndex, {attached: true, animationTime: 2000});

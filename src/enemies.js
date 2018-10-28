@@ -714,11 +714,12 @@ const advanceEnemy = (state, enemy) => {
     } else {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         let effectiveVx = enemy.vx;
-        if (enemy.grounded) {
+        if (enemy.grounded || enemy.hanging) {
             effectiveVx -= xFactor * state.world.vx;
         }
         const enemyIsBelowScreen = enemy.top > GAME_HEIGHT;
         const drawBox = getEnemyDrawBox(state, enemy);
+        // console.log(effectiveVx, drawBox.left, drawBox.width, -OFFSCREEN_PADDING);
         const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&
             (
                 (effectiveVx < 0 && drawBox.left + drawBox.width < -OFFSCREEN_PADDING) ||
