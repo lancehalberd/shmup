@@ -6,7 +6,7 @@ module.exports = {
 
     CHARGE_FRAMES_FIRST: 25,
     CHARGE_FRAMES_SECOND: 50,
-    //TEST_ENEMY: 'demoEmpress',
+    //TEST_ENEMY: 'brownSpider',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,
@@ -63,5 +63,4 @@ module.exports = {
     LOOT_COMBO: 'combo',
     LOOT_TRIPLE_COMBO: 'tripleCombo',
     LOOT_PORTAL: 'portal',
-    LOOT_HELMET: 'helmet',
 };

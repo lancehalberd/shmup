@@ -32,7 +32,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         if (!grounded) {
             const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
             for (const meleeAttack of meleeAttacks) {
-                if (meleeAttack.top + meleeAttack.height / 2 < enemy.top &&
+                if (meleeAttack.top < enemy.top - 10 &&
                     meleeAttack.left + meleeAttack.width > enemy.left + enemy.width / 2 &&
                     meleeAttack.left < enemy.left + enemy.width / 2
                 ) {
@@ -40,7 +40,6 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
                 }
             }
         }
-
         switch (mode) {
             case 'climbing':
                 // If the player is under the spider.
@@ -116,7 +115,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         return updateEnemy(state, enemy, {ttl: 600});
     },
     props: {
-        life: 10,
+        life: 8,
         score: 100,
         hanging: true,
         mode: 'climbing',
@@ -140,7 +139,7 @@ enemyData[ENEMY_BROWN_SPIDER] = {
 
         const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
         for (const meleeAttack of meleeAttacks) {
-            if (meleeAttack.top + meleeAttack.height / 2 < enemy.top &&
+            if (meleeAttack.top < enemy.top - 10 &&
                 meleeAttack.left + meleeAttack.width > enemy.left + enemy.width / 2 &&
                 meleeAttack.left < enemy.left + enemy.width / 2
             ) {
@@ -184,17 +183,89 @@ enemyData[ENEMY_BROWN_SPIDER] = {
             context.stroke();
         }
     },
+    onDeathEffect(state, enemy) {
+        for (let i = 0; i < 5; i++) {
+            const spiderBalloon = createEffect(EFFECT_SPIDER_BALLOON,
+                {vx: Math.random() * 10 - 5, vy : -10 + Math.random() * 5}
+            );
+            spiderBalloon.left = enemy.left + enemy.width / 2 - spiderBalloon.width / 2 + spiderBalloon.vx;
+            spiderBalloon.top = enemy.top + enemy.height - spiderBalloon.height / 2 + spiderBalloon.vy;
+            state = addEffectToState(state, spiderBalloon);
+        }
+        return state;
+    },
     props: {
-        life: 10,
+        life: 8,
         score: 100,
         hanging: true,
         mode: 'climbing',
         modeTime: 0,
         doNotFlip: true,
         vx: 0,
+        top: 400,
     }
 };
 module.exports = {
     ENEMY_BROWN_SPIDER,
     ENEMY_JUMPING_SPIDER,
 };
+
+const { effects, addEffectToState, createEffect, updateEffect } = require('effects');
+
+const EFFECT_SPIDER_BALLOON = 'spiderBalloon';
+effects[EFFECT_SPIDER_BALLOON] = {
+    animation: createAnimation('gfx/enemies/spiders/sspidersheet.png', r(26, 21), {cols: 3}),
+    advanceEffect(state, effectIndex, effect) {
+        if (effect.attached) {
+            return this.moveTowardPlayer(state, effectIndex, effect, 0);
+        }
+        return updateEffect(state, effectIndex, {
+            vy: effect.vy + 0.1 + 0.05 * Math.sin(effect.animationTime / 100),
+        });
+    },
+    moveTowardPlayer(state, effectIndex, effect, playerIndex) {
+        if (state.players[playerIndex].invulnerableFor > 0) {
+            return updateEffect(state, effectIndex, {attached: false});
+        }
+        const hitBox = getHeroHitBox(state.players[playerIndex]);
+        const dx = hitBox.left + hitBox.width / 2 - effect.left - effect.width / 2;
+        const dy = hitBox.top + hitBox.height / 2 - effect.top - effect.height / 2;
+        //console.log({hitBox, effect, dx, dy});
+        return updateEffect(state, effectIndex, {
+            vy: effect.vy * 0.9 + dy / 20,
+            vx: effect.vx * 0.9 + dx / 20,
+        });
+    },
+    onHitPlayer(state, effectIndex, playerIndex) {
+        state = updatePlayer(state, playerIndex, {cannotSwitchFrames: 10}, {
+            vx: state.players[playerIndex].sprite.vx * 0.5,
+            vy: state.players[playerIndex].sprite.vy * 0.5,
+        });
+        if (state.effects[effectIndex].attached) return state;
+        return updateEffect(state, effectIndex, {attached: true, animationTime: 2000});
+    },
+    onDone(state, effectIndex, effect) {
+        const doneEffect = createEffect(EFFECT_SPIDER_BALLOON_DONE,
+            {left: effect.left, top: effect.top, vx: effect.vx, vy: effect.vy}
+        );
+        return addEffectToState(state, doneEffect);
+    },
+    props: {
+        relativeToGround: true,
+        falling: true,
+        loops: 10,
+        vy: -10,
+        vx: 0,
+        xScale: 2,
+        yScale: 2,
+    },
+};
+const EFFECT_SPIDER_BALLOON_DONE = 'spiderBalloonDone';
+effects[EFFECT_SPIDER_BALLOON_DONE] = {
+    animation: createAnimation('gfx/enemies/spiders/sspidersheet.png', r(26, 21), {x: 3, duration: 20}),
+    props: {
+        relativeToGround: true,
+    },
+};
+
+const { getHeroHitBox, updatePlayer } = require('heroes');

@@ -26,6 +26,7 @@ const getNewState = () => (advanceWorld({
     enemyAttacks: [],
     sfx: {},
     title: true,
+    titleTime: 0,
     titleIndex: 0,
     stageSelectIndex: -1,
     paused: false,
@@ -57,8 +58,9 @@ const advanceState = (state) => {
         return updatedState;
     }
     if (updatedState.title) {
+        updatedState = {...updatedState, titleTime: updatedState.titleTime + FRAME_LENGTH}
         //return require('states/forestUpperBoss');
-        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'forestLowerStart'));
+        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'skyStart'));
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;

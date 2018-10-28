@@ -89,6 +89,12 @@ checkpoints[CHECK_POINT_FIELD_BOSS] = function (state) {
 // groud before boss ~100 seconds 'nothing' getFieldWorld
 allWorlds[WORLD_FIELD] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_HELMET];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_1, CHECK_POINT_FIELD_END);
+    },
     events: {
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
@@ -386,4 +392,7 @@ module.exports = {
 
 const { createEnemy, addEnemyToState, enemyData } = require('enemies');
 const { transitionToFieldBoss } = require('areas/fieldBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_1 } = require('areas/stars1');
+const { LOOT_HELMET } = require('loot');
 

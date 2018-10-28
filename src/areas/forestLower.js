@@ -75,7 +75,12 @@ const SAFE_HEIGHT = GAME_HEIGHT - THORN_HEIGHT;
 const WORLD_FOREST_LOWER = 'forestLower';
 allWorlds[WORLD_FOREST_LOWER] = {
     initialEvent: 'nothing',
-
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_GAUNTLET];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_2, CHECK_POINT_FOREST_LOWER_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: -100, targetTop: 300});
@@ -112,6 +117,39 @@ allWorlds[WORLD_FOREST_LOWER] = {
                 return setEvent(state, 'powerup');
             }
         },
+        flies: (state, eventTime) => {
+            const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
+            const baseNumber = 4 - numFormidable;
+            let spacing = state.world.time < FOREST_LOWER_EASY_DURATION ? 2000 : 1000;
+            if (eventTime === 0) {
+                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
+                for (let i = 0; i < baseNumber; i++) {
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
+                for (let i = 0; i < baseNumber; i++) {
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                const mode = random.range(0, 1);
+                for (let i = 0; i < 2 * baseNumber; i++) {
+                    let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'shield']));
+            }
+        },
         powerup: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnThorns(state);
@@ -119,13 +157,13 @@ allWorlds[WORLD_FOREST_LOWER] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['explodingBeetle', 'hornet']));
+                return setEvent(state, random.element(['jumpingSpider', 'shield']));
             }
         },
         flyingAnts: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 2 - numFormidable;
-            let spacing = state.world.time < FOREST_LOWER_EASY_DURATION ? 3000 : 1000;
+            let spacing = state.world.time < FOREST_LOWER_EASY_DURATION ? 3000 : 2000;
             if (eventTime === 0) {
                 for (let i = 0; i < baseNumber - 1; i++) {
                     state = spawnEnemy(state, ENEMY_FLYING_ANT_SOLDIER, {left: WIDTH + 10 + Math.random() * 30, top: THORN_HEIGHT + SAFE_HEIGHT / 4 + i * SAFE_HEIGHT / 2});
@@ -165,7 +203,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'flyingAnts');
+                return setEvent(state, 'flies');
             }
         },
         jumpingSpider: (state, eventTime) => {
@@ -176,7 +214,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
             let spacing = 1000;
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['shield', 'flyingAnts', 'hornet']));
+                return setEvent(state, random.element(['explodingBeetle', 'flies', 'hornet']));
             }
         },
         shield: (state, eventTime) => {
@@ -187,7 +225,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
             let spacing = 1000;
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'hornet']));
+                return setEvent(state, random.element(['explodingBeetle', 'flies', 'hornet']));
             }
         },
         bossPrep: (state, eventTime) => {
@@ -363,3 +401,6 @@ enemyData[ENEMY_FLOOR_THORNS] = {
 };
 
 const { transitionToForestLowerBoss } = require('areas/forestLowerBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_2 } = require('areas/stars2');
+const { LOOT_GAUNTLET } = require('loot');

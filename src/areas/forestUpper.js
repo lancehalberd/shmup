@@ -74,7 +74,12 @@ const SAFE_HEIGHT = GAME_HEIGHT - 90;
 const WORLD_FOREST_UPPER = 'forestUpper';
 allWorlds[WORLD_FOREST_UPPER] = {
     initialEvent: 'nothing',
-
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_GAUNTLET];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_2, CHECK_POINT_FOREST_UPPER_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: -100, targetTop: 300});
@@ -308,3 +313,6 @@ enemyData[ENEMY_FLOOR_THORNS] = {
 };
 
 const { transitionToForestUpperBoss } = require('areas/forestUpperBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_2 } = require('areas/stars2');
+const { LOOT_GAUNTLET } = require('loot');

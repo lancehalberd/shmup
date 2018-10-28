@@ -9,7 +9,7 @@ const {
     ENEMY_FLYING_ANT, ENEMY_FLYING_ANT_SOLDIER,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
-    ATTACK_SLASH, ATTACK_STAB,
+    ATTACK_SLASH, ATTACK_STAB, ATTACK_EXPLOSION,
     EFFECT_EXPLOSION, EFFECT_DUST,
     LOOT_COIN,
 } = require('gameConstants');
@@ -284,7 +284,10 @@ enemyData[ENEMY_SHIELD_MONK] = {
         weakness: {[ATTACK_SLASH]: 5, [ATTACK_STAB]: 5},
     },
     isInvulnerable(state, enemy, attack) {
-        return !(enemy.attackCooldownFramesLeft > 0) && !(attack && attack.melee);
+        // Can still be defeated by explosions and defeated enemies.
+        return attack.type !== ATTACK_DEFEATED_ENEMY
+            && attack.type !== ATTACK_EXPLOSION
+            && !(enemy.attackCooldownFramesLeft > 0) && !(attack && attack.melee);
     },
 };
 window.enemyData = enemyData;
@@ -455,7 +458,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             theta = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, theta));
             const defeatedEnemyAttack = createAttack(ATTACK_DEFEATED_ENEMY, {
                 animation: enemyData[enemy.type].deathAnimation || enemyData[enemy.type].animation,
-                damage: 1,
+                damage: 10,
                 top: enemy.top,
                 left: enemy.left,
                 vx: 10 * Math.cos(theta),
@@ -715,9 +718,14 @@ const advanceEnemy = (state, enemy) => {
             effectiveVx -= xFactor * state.world.vx;
         }
         const enemyIsBelowScreen = enemy.top > GAME_HEIGHT;
+        const drawBox = getEnemyDrawBox(state, enemy);
         const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&
-            (enemy.left + enemy.width < -OFFSCREEN_PADDING || (effectiveVx > 0 && enemy.left > WIDTH + OFFSCREEN_PADDING) ||
-            (enemy.vy < 0 && enemy.top + enemy.height < -OFFSCREEN_PADDING) || enemy.top > GAME_HEIGHT + OFFSCREEN_PADDING);
+            (
+                (effectiveVx < 0 && drawBox.left + drawBox.width < -OFFSCREEN_PADDING) ||
+                (effectiveVx > 0 && drawBox.left > WIDTH + OFFSCREEN_PADDING) ||
+                (enemy.vy < 0 && drawBox.top + drawBox.height < -OFFSCREEN_PADDING) ||
+                drawBox.top > GAME_HEIGHT + OFFSCREEN_PADDING
+            );
         if (done) {
             return removeEnemy(state, enemy);
         }

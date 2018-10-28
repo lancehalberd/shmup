@@ -293,7 +293,7 @@ const renderAttack = (context, state, attack) => {
 
 function getAttackTint(attack) {
     const damage = attack.damage;
-    if (attack.explosion || !damage || damage <= 1) return {};
+    if (attack.explosion || attack.type === ATTACK_DEFEATED_ENEMY || !damage || damage <= 1) return {};
     if (damage >= 6) return {color: 'white', amount: 0.9};
     if (damage >= 5) return {color: 'black', amount: 0.9};
     if (damage >= 4) return {color: 'blue', amount: 0.5};

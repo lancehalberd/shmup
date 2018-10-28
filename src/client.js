@@ -35,7 +35,7 @@ const update = () => {
         state = getNewState();
     }
     // Set the game to demo mode.
-    state.demo = true;
+    // state.demo = true;
     const thresholdTime = 80;
     // Button must be released for this many frames before being considered down again.
     // This is used to prevent constantly activating actions on the menus or pausing+unpausing.

@@ -66,16 +66,17 @@ const getNewPlayerState = () => ({
         spawnSpeed: 7,
     }),
     heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH, ],
-    [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
-    [HERO_BEE]: {energy: 0, deaths: 0, targets: []},
-    [HERO_MOTH]: {energy: 0, deaths: 0},
+    [HERO_DRAGONFLY]: {energy: MAX_ENERGY / 2, deaths: 0},
+    [HERO_BEE]: {energy: MAX_ENERGY / 2, deaths: 0, targets: []},
+    [HERO_MOTH]: {energy: MAX_ENERGY / 2, deaths: 0},
     time: 0,
     invulnerableFor: 0,
     spawning: true,
     shotCooldown: 0,
     chargeAttackFrames: 0,
     powerups: [],
-    relics: {},
+    relics: {
+    },
     ladybugs: [],
     actions: {
         up: false,
@@ -105,9 +106,9 @@ function updatePlayerOnContinue(state, playerIndex) {
         comboScore: 0,
         dead: false,
         done: false,
-        [HERO_DRAGONFLY]: {energy: 0, deaths: 0},
-        [HERO_BEE]: {energy: 0, deaths: 0, targets: []},
-        [HERO_MOTH]: {energy: 0, deaths: 0},
+        [HERO_DRAGONFLY]: {energy: MAX_ENERGY / 2, deaths: 0},
+        [HERO_BEE]: {energy: MAX_ENERGY / 2, deaths: 0, targets: []},
+        [HERO_MOTH]: {energy: MAX_ENERGY / 2, deaths: 0},
         time: 0,
         invulnerableFor: 0,
         spawning: true,
@@ -189,15 +190,24 @@ const advanceHero = (state, playerIndex) => {
                 // move or are invulnerable/slowing time.
                 (heroType !== player.heroes[0] || (!(player.invulnerableFor > 0) && !player.usingSpecial))
             ) {
+                const recoveryRate = player.relics[LOOT_GAUNTLET] ? 0.04 : 0.02;
                 state = updatePlayer(state, playerIndex,
-                    {[heroType]: {...player[heroType], energy: player[heroType].energy + 0.02}}
+                    {[heroType]: {...player[heroType], energy: player[heroType].energy + recoveryRate}}
                 );
                 // Add an effect to show that a hero has revived when they first hit 0 energy.
                 if (player[heroType].energy < 0 && state.players[playerIndex][heroType].energy >= 0) {
                     const sprite = player.sprite;
-                    const reviveEffect = createEffect(heroesData[heroType].reviveEffect);
-                    reviveEffect.left = sprite.left + sprite.width - reviveEffect.width / 2;
+                    let reviveEffect = createEffect(heroesData[heroType].reviveEffect, {xScale: 1, yScale: 1});
+                    reviveEffect.left = sprite.left + sprite.width - reviveEffect.width / 2 - 20;
                     reviveEffect.top = sprite.top + (sprite.height - reviveEffect.height ) / 2;
+                    state = addEffectToState(state, reviveEffect);
+                    reviveEffect = createEffect(heroesData[heroType].reviveEffect, {xScale: 1.5, yScale: 1.5, delay: 10});
+                    reviveEffect.left = sprite.left + sprite.width - reviveEffect.width / 2 - 10;
+                    reviveEffect.top = sprite.top + (sprite.height - reviveEffect.height ) / 2 + 10;
+                    state = addEffectToState(state, reviveEffect);
+                    reviveEffect = createEffect(heroesData[heroType].reviveEffect, {xScale: 2, yScale: 2, delay: 20});
+                    reviveEffect.left = sprite.left + sprite.width - reviveEffect.width / 2;
+                    reviveEffect.top = sprite.top + (sprite.height - reviveEffect.height ) / 2 - 10;
                     state = addEffectToState(state, reviveEffect);
                     state = {...state, sfx: {...state.sfx, [heroesData[heroType].reviveSfx]: true}};
                 }
@@ -240,8 +250,8 @@ const advanceHero = (state, playerIndex) => {
         // We add 1 to the invulnerableFor value to distinguish it from other types of
         // invulnerability.
         && !(player.invulnerableFor > 0 && player.invulnerableFor % FRAME_LENGTH === 1)
-        // You can use a special when you don't have enough energy *if* another hero is available.
-        && (player[heroType].energy >= heroData.specialCost || hasAnotherHero(state, playerIndex))
+        // Player cannot use a special if the hero doesn't have enough energy.
+        && (player[heroType].energy >= heroData.specialCost)
     ) {
         if (heroData.specialSfx) state = {...state, sfx: {...state.sfx, [heroData.specialSfx]: true}};
         return updatePlayer(state, playerIndex, {
@@ -294,7 +304,7 @@ const advanceHero = (state, playerIndex) => {
             shotCooldown: 1, meleeCooldown: 1, specialCooldownFrames,
         }, {left, top, animationTime, targetLeft, targetTop});
     }
-    if (player.actions.switch && hasAnotherHero(state, playerIndex) && !isHeroSwapping(player)) {
+    if (!(player.cannotSwitchFrames > 0) && player.actions.switch && hasAnotherHero(state, playerIndex) && !isHeroSwapping(player)) {
         return switchHeroes(state, playerIndex);
     }
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
@@ -338,13 +348,18 @@ const advanceHero = (state, playerIndex) => {
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
     let sfx = {...state.sfx};
-    let chasingNeedle = player.chasingNeedle, catchingNeedleFrames = player.catchingNeedleFrames;
+    let chasingNeedle = player.chasingNeedle,
+        catchingNeedleFrames = player.catchingNeedleFrames,
+        cannotSwitchFrames = player.cannotSwitchFrames;
     if (chasingNeedle) {
         chasingNeedle = false;
         catchingNeedleFrames = 6;
         sfx['sfx/needlegrab.mp3'] = true;
     } else if(catchingNeedleFrames > 0) {
         catchingNeedleFrames--;
+    }
+    if (cannotSwitchFrames > 0) {
+        cannotSwitchFrames--;
     }
     let meleeAttackTime = player.meleeAttackTime;
     if (meleeAttackTime >= 0) {
@@ -364,7 +379,7 @@ const advanceHero = (state, playerIndex) => {
         meleeAttackTime,
         specialCooldownFrames,
         invulnerableFor, sprite,
-        chasingNeedle, catchingNeedleFrames,
+        chasingNeedle, catchingNeedleFrames, cannotSwitchFrames,
         spawning: false,
     };
     return updatePlayer({...state, sfx}, playerIndex, updatedProps);
@@ -696,6 +711,7 @@ const {
 const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
 const { updateEnemy } = require('enemies');
 const { advanceFinisher, startFinisher, EFFECT_FINISHER } = require('effects/finisher');
+const { LOOT_GAUNTLET } = require('loot');
 
 require('heroes/bee');
 require('heroes/dragonfly');

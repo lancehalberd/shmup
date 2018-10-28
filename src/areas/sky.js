@@ -12,9 +12,10 @@ const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles'
 
 function spawnEnemy(state, enemyType, props) {
     const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
+    const hitbox = getEnemyHitBox(state, newEnemy);
+    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - hitbox.height : newEnemy.top - hitbox.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
+    newEnemy.left = newEnemy.vx <= 0 ? Math.max(newEnemy.left, WIDTH) : newEnemy.left;
     return addEnemyToState(state, newEnemy);
 }
 function spawnWrenPack(state, number) {
@@ -125,6 +126,22 @@ allWorlds[WORLD_SKY] = {
                 return setEvent(state, 'powerup');
             }
         },
+        duck: (state, eventTime) => {
+            if (eventTime === 0) {
+                const top = random.range(1, 4) * SAFE_HEIGHT / 5;
+                if (random.chance(0.25)) {
+                    console.log('right');
+                    return spawnEnemy(state, ENEMY_DUCK, {left: -500, top, vx: 8 });
+                } else {
+                    return spawnEnemy(state, ENEMY_DUCK, {left: WIDTH + 50, top, vx: -8 });
+                }
+            }
+            eventTime -= 2000;
+            if (eventTime >= 0) {
+                //return setEvent(state, 'duck');
+                return setEvent(state, random.element(['wrens', 'lightningBeetle']));
+            }
+        },
         powerup: (state, eventTime) => {
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: SAFE_HEIGHT / 2});
@@ -147,7 +164,7 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle', 'blueBird']));
+                return setEvent(state, random.element(['duck', 'lightningBeetle', 'blueBird']));
             }
         },
         lightningBeetle: (state, eventTime) => {
@@ -157,7 +174,7 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'blueBird');
+                return setEvent(state, random.element(['blueBird']));
             }
         },
         blueBird: (state, eventTime) => {
@@ -169,7 +186,7 @@ allWorlds[WORLD_SKY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle', 'wrens']));
+                return setEvent(state, random.element(['duck', 'lightningBeetle', 'wrens']));
             }
         },
         bossPrep: (state, eventTime) => {
@@ -308,7 +325,7 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy,
+const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy, getEnemyHitBox,
     accelerate_followPlayer, onHitGroundEffect_spawnMonk,
 } = require('enemies');
 // Bluebirds, slowly follow the Knight, when mounted can fire long lasers.
@@ -403,6 +420,7 @@ enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
 const ENEMY_DUCK = 'duck';
 const duckGeometry = {
     ...r(200, 102),
+    scaleX: 2, scaleY: 2,
     hitBoxes: [
         {left: 25, top: 28, width: 35, height: 20},
         {left: 56, top: 35, width: 50, height: 15},
@@ -453,8 +471,7 @@ const { createEffect, effects, addEffectToState, updateEffect } = require('effec
 const EFFECT_GUST = 'gust';
 effects[EFFECT_GUST] = {
     animation: createAnimation('gfx/effects/wind.png', r(150, 100), {duration: 1000}),
-    advanceEffect: (state, effectIndex) => {
-        const effect = state.effects[effectIndex];
+    advanceEffect: (state, effectIndex, effect) => {
         return updateEffect(state, effectIndex, {
             vy: 3 * Math.sin(effect.animationTime / 100),
         });

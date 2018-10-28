@@ -2,7 +2,6 @@ const {
     WIDTH,
     HEIGHT,
     GAME_HEIGHT,
-    LOOT_HELMET,
     MAX_ENERGY,
 } = require('gameConstants');
 
@@ -72,11 +71,11 @@ const render = (state) => {
         state.enemies.map(enemy => renderEnemy(context, state, enemy));
         state.playerAttacks.map(attack => renderAttack(context, state, attack));
         state.loot.map(loot => renderLoot(context, state, loot));
+        state.players.map(hero => renderHero(context, hero));
         state.effects.map(effect => renderEffect(context, effect));
         state.neutralAttacks.map(attack => renderAttack(context, state, attack));
         // Thinking an attack shuold display on top of other effects so it can be avoided.
         state.enemyAttacks.map(attack => renderAttack(context, state, attack));
-        state.players.map(hero => renderHero(context, hero));
         context.restore();
 
         renderForeground(context, state);
@@ -234,6 +233,18 @@ const renderHUD = (context, state) => {
         frame = getFrame(helmetAnimation, state.players[0].sprite.animationTime);
         drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 5, 8));
     }
+    if (state.players[0].relics[LOOT_GAUNTLET]) {
+        frame = getFrame(gauntletAnimation, state.players[0].sprite.animationTime);
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 6, 8));
+    }
+    if (state.players[0].relics[LOOT_NECKLACE]) {
+        frame = getFrame(necklaceAnimation, state.players[0].sprite.animationTime);
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 7, 8));
+    }
+    if (state.players[0].relics[LOOT_SHIELD]) {
+        frame = getFrame(shieldAnimation, state.players[0].sprite.animationTime);
+        drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 8, 8));
+    }
     if (state.flashHudUntil > state.world.time) {
         drawImage(context, requireImage('gfx/hud/hudflash.png', PRIORITY_FIELD), r(800, 36), r(800, 36));
     }
@@ -245,11 +256,43 @@ const startGameImage = r(116, 26, {image: requireImage('gfx/startgame.png', PRIO
 const optionsImage = r(90, 26, {image: requireImage('gfx/options.png', PRIORITY_TITLE)});
 const instructionsImage = r(120, 26, {image: requireImage('gfx/instructions.png', PRIORITY_TITLE)});
 // const startImage = r(58, 30, {image: requireImage('gfx/start.png', PRIORITY_TITLE)});
-const titleFrame = r(298, 88, {image: requireImage('gfx/logo.png', PRIORITY_TITLE)});
-
+const titleRectangle = r(298, 88);
+const titleAnimation = {
+    frames: [
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee1.png', PRIORITY_TITLE)},
+        {...titleRectangle, image: requireImage('gfx/titlee2.png', PRIORITY_TITLE)},
+    ],
+    frameDuration: 20,
+};
 const instructionsCard1 = r(360, 216, {image: requireImage('gfx/instructioncard.png', PRIORITY_TITLE)});
 const instructionsCard2 = r(360, 216, {image: requireImage('gfx/instructioncard2.png', PRIORITY_TITLE)});
 
+const orangeSparkleAnimation = createAnimation('gfx/sparkle.png', r(9, 9), {cols: 14, x: -7, priority: PRIORITY_TITLE});
+const redSparkleAnimation = createAnimation('gfx/sparkle.png', r(9, 9), {cols: 14, x: 7, priority: PRIORITY_TITLE});
+const sparkles = [];
+const redCoords = [{"x":111,"y":167},{"x":111,"y":193},{"x":130,"y":160},{"x":147,"y":199},{"x":158,"y":168},{"x":200,"y":203},{"x":223,"y":164},{"x":226,"y":195},{"x":251,"y":200},{"x":267,"y":168},{"x":305,"y":200}]
+for (const coords of redCoords) {
+    sparkles.push({animation: redSparkleAnimation, ...coords, animationTime: Math.floor(Math.random() * 2000)});
+}
+const orangeCoords = [{"x":688,"y":44},{"x":692,"y":70},{"x":673,"y":38},{"x":650,"y":73},{"x":648,"y":46},{"x":600,"y":75},{"x":577,"y":41},{"x":576,"y":70},{"x":548,"y":72},{"x":534,"y":41},{"x":497,"y":72}]
+for (const coords of orangeCoords) {
+    sparkles.push({animation: orangeSparkleAnimation, ...coords, animationTime: Math.floor(Math.random() * 2000)});
+}
+
+/*
+Helper for getting coords off the screen (for example, to create the sparkle coords above)
+const coords = [];
+canvas.onmousedown = function(event) {
+    coords.push({x:event.pageX - canvas.offsetLeft, y:event.pageY - canvas.offsetTop});
+    console.log(JSON.stringify(coords));
+};*/
 
 const renderTitle = (context, state) => {
     renderBackground(context, state);
@@ -263,11 +306,17 @@ const renderTitle = (context, state) => {
     context.fillStyle = gradient;
 
     context.fillRect(0, 0, WIDTH, HEIGHT);
-    const frame = dragonflyIdleAnimation.frames[0];
+    let frame = dragonflyIdleAnimation.frames[0];
     const sprite = state.players[0].sprite;
     drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(sprite.left, hudImage.height + sprite.top));
-    const titleRectangle = new Rectangle(titleFrame).scale(2).moveCenterTo(WIDTH / 2, 120);
-    drawImage(context, titleFrame.image, titleFrame, titleRectangle);
+    frame = getFrame(titleAnimation, state.titleTime);
+    const titleRectangle = new Rectangle(frame).scale(2).moveCenterTo(WIDTH / 2, 120);
+    drawImage(context, frame.image, frame, titleRectangle);
+
+    for (const sparkle of sparkles) {
+        frame = getFrame(sparkle.animation, sparkle.animationTime + state.titleTime);
+        drawImage(context, frame.image, frame, new Rectangle(frame).scale(2).moveCenterTo(sparkle.x, sparkle.y));
+    }
 
     // When instructions are displayed, we put them in place of the title screen options.
     if (state.instructions) {
@@ -374,11 +423,18 @@ const {
 } = require('heroes');
 
 const {
+    LOOT_HELMET,
+    LOOT_GAUNTLET,
+    LOOT_NECKLACE,
+    LOOT_SHIELD,
     lootData,
     renderLoot,
     getComboMultiplier,
     powerupGoals,
     helmetAnimation,
+    gauntletAnimation,
+    necklaceAnimation,
+    shieldAnimation,
 } = require('loot');
 
 const { renderEnemy } = require('enemies');

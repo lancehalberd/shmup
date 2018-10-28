@@ -30,7 +30,7 @@ const {
     sizeTextAnimation,
     speedTextAnimation,
     deflectAnimation,
-    r,
+    r, a,
 } = require('animations');
 
 const { getNewSpriteState } = require('sprites');
@@ -125,7 +125,11 @@ const effects = {
         animation: beeSwitchAnimation,
     },
     [EFFECT_REVIVE_BEE]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 0, duration: 12, priority: PRIORITY_HEROES}),
+        animation: createAnimation('gfx/heroes/revive.png', a(r(80, 79), 0.5, 0.5), {cols: 3, y: 0, duration: 12, priority: PRIORITY_HEROES}),
+        props: {
+            xScale: 2,
+            yScale: 2,
+        }
     },
     [EFFECT_DEAD_DRAGONFLY]: {
         animation: dragonflyDeathAnimation,
@@ -134,7 +138,11 @@ const effects = {
         animation: dragonflySwitchAnimation,
     },
     [EFFECT_REVIVE_DRAGONFLY]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 1, duration: 12, priority: PRIORITY_HEROES}),
+        animation: createAnimation('gfx/heroes/revive.png', a(r(80, 79), 0.5, 0.5), {cols: 3, y: 1, duration: 12, priority: PRIORITY_HEROES}),
+        props: {
+            xScale: 2,
+            yScale: 2,
+        }
     },
     [EFFECT_DEAD_MOTH]: {
         animation: mothDeathAnimation,
@@ -143,7 +151,11 @@ const effects = {
         animation: mothSwitchAnimation,
     },
     [EFFECT_REVIVE_MOTH]: {
-        animation: createAnimation('gfx/heroes/revive.png', r(80, 79), {cols: 3, y: 2, duration: 12, priority: PRIORITY_HEROES}),
+        animation: createAnimation('gfx/heroes/revive.png', a(r(80, 79), 0.5, 0.5), {cols: 3, y: 2, duration: 12, priority: PRIORITY_HEROES}),
+        props: {
+            xScale: 2,
+            yScale: 2,
+        }
     },
     [EFFECT_RATE_UP]: {
         animation: rateTextAnimation,
@@ -261,14 +273,16 @@ const renderEffect = (context, effect) => {
 const advanceEffect = (state, effectIndex) => {
     const effect = state.effects[effectIndex];
     const effectInfo = effects[effect.type];
-    if (effectInfo.advanceEffect) {
-        state = effectInfo.advanceEffect(state, effectIndex);
-    }
-    if (effectInfo.onHitPlayer) {
-        const effectHitBox = getEffectHitBox(effect);
-        for (let j = 0; j < state.players.length; j++) {
-            if (Rectangle.collision(getHeroHitBox(state.players[j]), effectHitBox)) {
-                state = effectInfo.onHitPlayer(state, effectIndex, j);
+    if (!(effect.delay > 0)) {
+        if (effectInfo.advanceEffect) {
+            state = effectInfo.advanceEffect(state, effectIndex, state.effects[effectIndex]);
+        }
+        if (effectInfo.onHitPlayer) {
+            const effectHitBox = getEffectHitBox(effect);
+            for (let j = 0; j < state.players.length; j++) {
+                if (Rectangle.collision(getHeroHitBox(state.players[j]), effectHitBox)) {
+                    state = effectInfo.onHitPlayer(state, effectIndex, j);
+                }
             }
         }
     }
@@ -297,13 +311,19 @@ const advanceEffect = (state, effectIndex) => {
     top += vy;
     animationTime += FRAME_LENGTH;
 
+    let justFinished = !done;
     if (!effect.permanent) {
         done = done || animationTime >= FRAME_LENGTH * animation.frames.length * animation.frameDuration * (loops || 1) ||
             (left + width < -OFFSCREEN_PADDING && vx < 0) || (left > WIDTH + OFFSCREEN_PADDING && vx > 0) ||
-            top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
+            (!effect.falling && top + height < -OFFSCREEN_PADDING) || top > GAME_HEIGHT + OFFSCREEN_PADDING;
+        justFinished = justFinished && done;
     }
 
-    return updateEffect(state, effectIndex, {left, top, animationTime, done});
+    state = updateEffect(state, effectIndex, {left, top, animationTime, done});
+    if (justFinished && effectInfo.onDone) {
+        state = effectInfo.onDone(state, effectIndex, state.effects[effectIndex]);
+    }
+    return state;
 };
 
 const advanceAllEffects = (state) => {

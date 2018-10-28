@@ -5,6 +5,7 @@ const {
     EFFECT_EXPLOSION,
     EFFECT_HUGE_EXPLOSION,
     ATTACK_BULLET, ATTACK_DEFEATED_ENEMY,
+    ATTACK_STAB, ATTACK_SLASH,
 } = require('gameConstants');
 const random = require('random');
 const { PRIORITY_FIELD_BOSS, requireImage, createAnimation, r, a } = require('animations');
@@ -133,41 +134,46 @@ allWorlds[WORLD_FIELD_BOSS] = {
                 state = addEnemyToState(state, newEnemy);
                 world = {...world, lastMonkTime: time};
             }
-            const minStickTime = 3000 + 1000 * turrets.length;
-            // Sticks fall from the top of the screen until either boss is killed by the finisher.
-            // We stop generation of sticks during the finisher because it looks bad to have
-            // them fall during the finisher and especially during transition to the second stage.
-            if (time - (world.lastStickTime || 0) >= minStickTime && Math.random() > 0.9
-                && door && !door.dead && largeTurret && !largeTurret.dead
-                && !state.players[0].usingFinisher
-            ) {
-                const treeSprite = world.nearground.sprites[0];
-                const spawnX = Math.random() * 400 + treeSprite.left + 50;
-
-                // Add a dust cloud to signify something happened when the enemy hit the ground.
-                let leaf = createEffect(EFFECT_LEAF, {top: Math.random() * -30, left: spawnX - 20 - Math.random() * 40, vy: -2 + Math.random() * 4});
-                leaf.left -= leaf.width / 2;
-                state = addEffectToState(state, leaf);
-                leaf = createEffect(EFFECT_LEAF, {top: Math.random() * -30, left: spawnX -20 + Math.random() * 40, animationTime: 500, vy: -2 + Math.random() * 4});
-                leaf.left -= leaf.width / 2;
-                state = addEffectToState(state, leaf);
-
-                let stick = createEnemy(state, random.element([ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3]), {
-                    left: spawnX,
-                    top: -100,
-                    vy: 0,
-                    delay: 15,
-                });
-                stick.left -= stick.width / 2;
-                state = addEnemyToState(state, stick);
-                world = {...world, lastStickTime: time};
-            }
         }
         world = {...world, time};
         state = {...state, world};
         return state;
     },
 };
+
+function spawnStick(state, {x, delay = 0}) {
+    // Add a dust cloud to signify something happened when the enemy hit the ground.
+    let leaf = createEffect(EFFECT_LEAF,
+        {
+            top: Math.random() * -30,
+            left: x - 20 - Math.random() * 40,
+            vy: -2 + Math.random() * 4,
+            delay,
+        }
+    );
+    leaf.left -= leaf.width / 2;
+    state = addEffectToState(state, leaf);
+    leaf = createEffect(EFFECT_LEAF,
+        {
+            top: Math.random() * -30,
+            left: x -20 + Math.random() * 40,
+            animationTime: 500,
+            vy: -2 + Math.random() * 4,
+            delay,
+        }
+    );
+    leaf.left -= leaf.width / 2;
+    state = addEffectToState(state, leaf);
+
+    let stick = createEnemy(state, random.element([ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3]), {
+        left: x,
+        top: -100,
+        vy: 0,
+        delay: 15 + delay,
+    });
+    stick.left -= stick.width / 2;
+    return addEnemyToState(state, stick);
+}
 
 function transitionToFieldBoss(state) {
     const updatedWorld = {
@@ -385,16 +391,31 @@ enemyData[ENEMY_DOOR] = {
         // This prevents onHitGroundEffect from being called again for this enemy.
         return updateEnemy(state, enemy, {hitGround: true});
     },
-    onDamageEffect(state, enemy) {
-        if (!enemy.life || enemy.life % 3) return state;
-        for (let i = 0; i < 2; i++) {
-            const effect = createEffect(EFFECT_DOOR_DAMAGE, {
-                top: enemy.top + 20 + 120 * i + Math.random() * 40,
-                left: enemy.left + 20 + Math.random() * 90,
-            });
-            effect.top -= effect.height / 2;
-            effect.left -= effect.width / 2;
-            state = addEffectToState(state, effect);
+    onDamageEffect(state, enemy, attack) {
+        if (!enemy.life) return state;
+        const treeSprite = state.world.nearground.sprites[0];
+        if (attack.type === ATTACK_DEFEATED_ENEMY) {
+            let x = 0;
+            let delay = 0;
+            let spacing = random.shuffle([150, 200, 250]);
+            while (spacing.length) {
+                x += spacing.pop();
+                state = spawnStick(state, {x: x + treeSprite.left, delay});
+                delay += 5;
+            }
+        } else if (Math.floor(enemy.life / 10) > Math.floor((enemy.life - attack.damage) / 10)) {
+            state = spawnStick(state, {x: treeSprite.left + random.range(50, 600)});
+        }
+        if (Math.floor(enemy.life / 5) > Math.floor((enemy.life - attack.damage) / 5)) {
+            for (let i = 0; i < 2; i++) {
+                const effect = createEffect(EFFECT_DOOR_DAMAGE, {
+                    top: enemy.top + 20 + 120 * i + Math.random() * 40,
+                    left: enemy.left + 20 + Math.random() * 90,
+                });
+                effect.top -= effect.height / 2;
+                effect.left -= effect.width / 2;
+                state = addEffectToState(state, effect);
+            }
         }
         return state;
     },
@@ -420,8 +441,9 @@ enemyData[ENEMY_STICK_1] = {
         return {...enemy, vy: enemy.vy + .3};
     },
     props: {
-        life: 1,
+        life: 10,
         score: 0,
+        weakness: {[ATTACK_SLASH]: 10, [ATTACK_STAB]: 10},
     },
 };
 enemyData[ENEMY_STICK_2] = {

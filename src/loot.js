@@ -14,7 +14,6 @@ const {
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE,
     LOOT_COMBO, LOOT_TRIPLE_COMBO,
     LOOT_PORTAL,
-    LOOT_HELMET,
     EFFECT_RATE_UP, EFFECT_SIZE_UP, EFFECT_SPEED_UP,
 } = require('gameConstants');
 
@@ -34,8 +33,6 @@ const {
 } = require('animations');
 
 const { getNewSpriteState, getTargetVector } = require('sprites');
-
-const helmetAnimation = createAnimation('gfx/items/helmet.png', r(17, 18));
 
 const circleAcceleration = (state, lootIndex) => {
     let {vx, vy, animationTime, radius} = state.loot[lootIndex];
@@ -81,11 +78,22 @@ const getCombinedType = (powerups) => {
     return null;
 };
 
+const powerupCycle = {
+    [LOOT_ATTACK_POWER]: LOOT_ATTACK_SPEED,
+    [LOOT_ATTACK_SPEED]: LOOT_SPEED,
+    [LOOT_SPEED]: LOOT_ATTACK_POWER,
+};
 const powerupLoot = (type, animation, effectType) => ({
     animation,
-    // accelerate: circleAcceleration,
+    // Cycle between powerup types every second.
+    accelerate: (state, lootIndex, loot) => {
+        if (loot.animationTime % 1000 === 0) {
+            state = updateLoot(state, lootIndex, {type: powerupCycle[loot.type]});
+        }
+        return state;
+    },
     collect(state, playerIndex, loot) {
-        let powerups = [...state.players[playerIndex].powerups, type];
+        let powerups = [...state.players[playerIndex].powerups, loot.type];
         if (powerups.length > 5) powerups.shift();
         let comboType = getCombinedType(powerups);
         if (comboType) {
@@ -111,7 +119,7 @@ const powerupLoot = (type, animation, effectType) => ({
         return updatePlayer(state, playerIndex, {powerups});
     },
     draw(context, state, loot) {
-        if (getCombinedType([...state.players[0].powerups, type])) {
+        if (getCombinedType([...state.players[0].powerups, loot.type])) {
             drawGlowing(context, state, loot);
         } else {
             drawNormal(context, state, loot);
@@ -221,21 +229,6 @@ const lootData = {
     [LOOT_NORMAL_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugicon.png', r(30, 15)), 'red'),
     [LOOT_LIGHTNING_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugblue.png', r(30, 15)), '#4860A0'),
     [LOOT_PENETRATING_LADYBUG]: ladybugPowerup(createAnimation('gfx/items/ladybugorange.png', r(30, 15)), '#FFB008'),
-    [LOOT_HELMET]: {
-        animation: helmetAnimation,
-        accelerate: circleAcceleration,
-        collect(state, playerIndex, loot) {
-            const props = {
-                relics: {...state.players[playerIndex].relics, [loot.type]: true},
-            };
-            return updatePlayer(state, playerIndex, props);
-        },
-        draw: drawGlowing,
-        collectSfx: 'sfx/powerup.mp3',
-        props: {
-            scale: 2,
-        },
-    },
     [LOOT_ATTACK_POWER]: powerupLoot(LOOT_ATTACK_POWER, powerupSquareAnimation, EFFECT_SIZE_UP),
     [LOOT_ATTACK_SPEED]: powerupLoot(LOOT_ATTACK_SPEED, powerupDiamondAnimation, EFFECT_RATE_UP),
     [LOOT_SPEED]: powerupLoot(LOOT_SPEED, powerupTriangleAnimation, EFFECT_SPEED_UP),
@@ -254,7 +247,9 @@ const lootData = {
             return state;
         },
         collect(state) {
-            return enterStarWorld(state);
+            const worldData = allWorlds[state.world.type];
+            if (worldData.enterStarWorld) return worldData.enterStarWorld(state);
+            return state;
         },
         collectSfx: 'sfx/portaltravel.mp3',
         props: {
@@ -263,6 +258,43 @@ const lootData = {
         },
     },
 };
+
+const LOOT_HELMET = 'helmet'; /* Pull coins */
+const LOOT_GAUNTLET = 'gauntlet'; /* Reduced cooldown */
+const LOOT_SHIELD = 'shield'; /* */
+const LOOT_NECKLACE = 'necklace'; /* */
+const helmetAnimation = createAnimation('gfx/items/special_helmet.png', r(17, 18));
+const gauntletAnimation = createAnimation('gfx/items/special_gauntlet.png', r(17, 18));
+const shieldAnimation = createAnimation('gfx/items/special_shield.png', r(17, 18));
+const necklaceAnimation = createAnimation('gfx/items/special_necklace.png', r(17, 18));
+lootData[LOOT_HELMET] = {
+    animation: helmetAnimation,
+    accelerate: circleAcceleration,
+    collect(state, playerIndex, loot) {
+        const props = {
+            relics: {...state.players[playerIndex].relics, [loot.type]: true},
+        };
+        return updatePlayer(state, playerIndex, props);
+    },
+    draw: drawGlowing,
+    collectSfx: 'sfx/powerup.mp3',
+    props: {
+        scale: 2,
+    },
+};
+lootData[LOOT_GAUNTLET] = {
+    ...lootData[LOOT_HELMET],
+    animation: gauntletAnimation,
+};
+lootData[LOOT_SHIELD] = {
+    ...lootData[LOOT_HELMET],
+    animation: shieldAnimation,
+};
+lootData[LOOT_NECKLACE] = {
+    ...lootData[LOOT_HELMET],
+    animation: necklaceAnimation,
+};
+
 const createLoot = (type, props) => {
     const lootInfo = lootData[type];
     const frame = lootInfo.animation.frames[0];
@@ -300,7 +332,7 @@ const advanceLoot = (state, lootIndex) => {
     const done = left + width < 0;
     state = updateLoot(state, lootIndex, {left, top, animationTime, done});
     if (data.accelerate) {
-        state = data.accelerate(state, lootIndex);
+        state = data.accelerate(state, lootIndex, state.loot[lootIndex]);
     }
     return state;
 };
@@ -333,8 +365,14 @@ const ladybugTypes = [LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRAT
 6: Drops a random of the main 3 powerups.*/
 const getAdaptivePowerupType = (state) => {
     if (TEST_ITEMS) return random.element(TEST_ITEMS);
-    //if (!state.players[0].relics[LOOT_HELMET]) return LOOT_HELMET;
-    if (getComboMultiplier(state, 0) === 5 && !state.players[0].relics[LOOT_HELMET]) return LOOT_PORTAL;
+    const worldData = allWorlds[state.world.type];
+    if (getComboMultiplier(state, 0) === 5 &&
+        worldData &&
+        worldData.isPortalAvailable &&
+        worldData.isPortalAvailable(state)
+    ) {
+        return LOOT_PORTAL;
+    }
     // return Math.random() < .5 ? LOOT_COMBO : LOOT_TRIPLE_COMBO;
     if (state.players[0].powerups.length < 1) return random.element(powerupTypes);
     if (state.players[0].ladybugs.length < 1) return LOOT_NORMAL_LADYBUG;
@@ -394,6 +432,10 @@ const collectLoot = (state, playerIndex, lootIndex) => {
 };
 
 module.exports = {
+    LOOT_GAUNTLET,
+    LOOT_HELMET,
+    LOOT_NECKLACE,
+    LOOT_SHIELD,
     lootData,
     createLoot,
     addLootToState,
@@ -405,16 +447,17 @@ module.exports = {
     collectLoot,
     powerupGoals,
     helmetAnimation,
+    gauntletAnimation,
+    necklaceAnimation,
+    shieldAnimation,
     ladybugTypes,
 };
 
 // Move possible circular imports to after exports.
-const { getHazardHeight, getHazardCeilingHeight } = require('world');
+const { allWorlds, getHazardHeight, getHazardCeilingHeight } = require('world');
 const { addEnemyToState, createEnemy } = require('enemies');
 const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
 
 const { updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
 
 const { createEffect, addEffectToState } = require('effects');
-
-const { enterStarWorld } = require('areas/stars');
