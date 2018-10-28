@@ -59,7 +59,7 @@ const advanceState = (state) => {
     }
     if (updatedState.title) {
         updatedState = {...updatedState, titleTime: updatedState.titleTime + FRAME_LENGTH}
-        //return require('states/forestUpperBoss');
+        //return require('states/skyBossTransition');
         //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'skyStart'));
 
         const checkpointKeys = Object.keys(checkpoints);

@@ -256,6 +256,7 @@ const renderLayer = (context, state, layerName) => {
         context.fillStyle = layer.backgroundColor;
         context.fillRect(0, 0, WIDTH, HEIGHT);
     }
+    const maxY = layer.maxY;
     if (layer.animation) {
         frame = getFrame(layer.animation, state.world.time);
         renderBackgroundLayer(context, {frame,
@@ -269,12 +270,16 @@ const renderLayer = (context, state, layerName) => {
         if (typeof(sprite.alpha) === 'number') context.globalAlpha = sprite.alpha;
         const yScale = (sprite.yScale || 1);
         const xScale = (sprite.xScale || 1);
+        const target = new Rectangle(sprite);
+        if (typeof maxY === 'number') {
+            target.top = Math.min(target.top, maxY);
+        }
         if (xScale !== 1 || yScale !==1) {
-            context.translate(sprite.left + sprite.width / 2, sprite.top + sprite.height / 2);
+            context.translate(target.left + target.width / 2, target.top + target.height / 2);
             context.scale(xScale, yScale);
-            drawImage(context, frame.image, frame, new Rectangle(sprite).moveCenterTo(0, 0));
+            drawImage(context, frame.image, frame, target.moveCenterTo(0, 0));
         } else {
-            drawImage(context, frame.image, frame, sprite);
+            drawImage(context, frame.image, frame, target);
         }
         context.restore();
     }

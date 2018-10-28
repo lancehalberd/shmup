@@ -6,7 +6,7 @@ const {
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
 const { getNewSpriteState } = require('sprites');
-const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
+const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, advanceWorld } = require('world');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
 
 
@@ -83,7 +83,7 @@ checkpoints[CHECK_POINT_SKY_BOSS] = function (state) {
     const world = getSkyWorld();
     world.y = 150;
     world.time = 120000;
-    return transitionToSkyBoss({...state, world});
+    return transitionToSkyBoss(advanceWorld({...state, world}));
 };
 
 const SKY_DURATION = 120000;

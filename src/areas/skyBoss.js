@@ -1,32 +1,58 @@
 
 const {
-    FRAME_LENGTH, HEIGHT, WIDTH,
+    FRAME_LENGTH, HEIGHT, WIDTH, GAME_HEIGHT,
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
 const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
-const { allWorlds, getNewLayer } = require('world');
+const { allWorlds, getNewLayer, updateLayerSprite, updateLayerSprites } = require('world');
 
 const WORLD_SKY_BOSS = 'skyBoss';
 const BOSS_DURATION = 80000;
+
+const sunriseAnimation = createAnimation('gfx/scene/beach/sunrisetransition.png', r(400, 800))
 
 function transitionToSkyBoss(state) {
     const world = {
         ...state.world,
         type: WORLD_SKY_BOSS,
         // Remove the moon layer.
-        mgLayerNames: ['background', 'clouds', 'fastClouds'],
+        mgLayerNames: ['background', 'sunrise', 'clouds', 'fastClouds'],
+        background: {
+            ...state.world.background,
+            vy: 1,
+        },
         // Set the next background image to the sunrise graphics
-        background: getNewLayer({
+        /*background: getNewLayer({
             xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
+            // Only keep the first two star graphics, which are the only ones that could currently be on
+            // screen since they are each a full screen width. The transition graphics will be added after
+            // them.
+            sprites: [...state.world.background.sprites].slice(0, 2),
             spriteData: {
                 sky: {animation: createAnimation('gfx/scene/sky/sky.png', r(400, 400)), scale: 2},
+            },
+        }),*/
+        sunrise: getNewLayer({
+            xFactor: 0.01, yFactor: 0.5, unique: true,
+            spriteData: {
+                sunrise: {
+                    animation: sunriseAnimation, scale: 2, next: ['sunrise'], offset: [0],
+                    accelerate(state, layerName, spriteIndex) {
+                        const sprite = state.world[layerName].sprites[spriteIndex];
+                        // Fade the sunrise graphic in from 0 to 1 as it moves towards the top of the screen.
+                        const top = Math.max(GAME_HEIGHT - sprite.height, GAME_HEIGHT + 400 - state.world.time / 50);
+                        const alpha = (GAME_HEIGHT - sprite.top) / GAME_HEIGHT;
+                        return updateLayerSprite(state, layerName, spriteIndex, {left: 0, top, alpha})
+                    },
+                },
             },
         }),
         time: 0,
         targetFrames: 50 * 5,
     };
-    return {...state, world};
+    state = {...state, world};
+    return updateLayerSprites(state, 'background', (state, sprite) => ({...sprite, vy: 1}));
 }
 allWorlds[WORLD_SKY_BOSS] = {
     advanceWorld: (state) => {
