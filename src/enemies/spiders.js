@@ -26,7 +26,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
     },
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {mode, targetY, vx, vy, jumps, grounded} = enemy;
         const playerSprite = state.players[0].sprite;
         if (!grounded) {
@@ -132,7 +132,7 @@ enemyData[ENEMY_BROWN_SPIDER] = {
 
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {mode, targetY, vy, grounded} = enemy;
         if (grounded) return enemy;
         const playerSprite = state.players[0].sprite;
@@ -186,7 +186,7 @@ enemyData[ENEMY_BROWN_SPIDER] = {
     onDeathEffect(state, enemy) {
         for (let i = 0; i < 5; i++) {
             const spiderBalloon = createEffect(EFFECT_SPIDER_BALLOON,
-                {vx: Math.random() * 10 - 5, vy : -10 + Math.random() * 5}
+                {vx: Math.random() * 10 - 5, vy : -8 + Math.random() * 5}
             );
             spiderBalloon.left = enemy.left + enemy.width / 2 - spiderBalloon.width / 2 + spiderBalloon.vx;
             spiderBalloon.top = enemy.top + enemy.height - spiderBalloon.height / 2 + spiderBalloon.vy;
@@ -214,13 +214,13 @@ const { effects, addEffectToState, createEffect, updateEffect } = require('effec
 
 const EFFECT_SPIDER_BALLOON = 'spiderBalloon';
 effects[EFFECT_SPIDER_BALLOON] = {
-    animation: createAnimation('gfx/enemies/spiders/sspidersheet.png', r(26, 21), {cols: 3}),
+    animation: createAnimation('gfx/enemies/spiders/sspidersheet.png', r(26, 21), {cols: 3, duration: 8, frameMap: [0, 0, 2, 1, 1, 2]}),
     advanceEffect(state, effectIndex, effect) {
         if (effect.attached) {
             return this.moveTowardPlayer(state, effectIndex, effect, 0);
         }
         return updateEffect(state, effectIndex, {
-            vy: effect.vy + 0.1 + 0.05 * Math.sin(effect.animationTime / 100),
+            vy: (effect.vy + 0.1 + 0.05 * Math.sin(effect.animationTime / 100)) * (effect.vy < 0 ? 1 : 0.95),
         });
     },
     moveTowardPlayer(state, effectIndex, effect, playerIndex) {
@@ -242,7 +242,7 @@ effects[EFFECT_SPIDER_BALLOON] = {
             vy: state.players[playerIndex].sprite.vy * 0.5 + 2,
         });
         if (state.effects[effectIndex].attached) return state;
-        return updateEffect(state, effectIndex, {attached: true, animationTime: 2000});
+        return updateEffect(state, effectIndex, {attached: true, animationTime: 7000});
     },
     onDone(state, effectIndex, effect) {
         const doneEffect = createEffect(EFFECT_SPIDER_BALLOON_DONE,

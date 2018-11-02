@@ -48,7 +48,7 @@ enemyData[ENEMY_HORNET] = {
     animation: hornetAnimation,
     deathAnimation: hornetDeathAnimation,
     deathSound: 'sfx/hornetdeath.mp3',
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {vx, vy, seed, targetX, targetY, mode, modeTime} = enemy;
         // Retreat if the player is using the finisher on the nest.
         if (state.players[0].usingFinisher) {
@@ -128,7 +128,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
     animation: hornetSoldierAnimation,
     deathAnimation: hornetSoldierDeathAnimation,
     deathSound: 'sfx/hit.mp3',
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {vx, vy, targetX, targetY, mode, modeTime} = enemy;
         // Retreat if the player is using the finisher on the nest.
         if (state.players[0].usingFinisher) {
@@ -234,7 +234,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
 const ENEMY_HORNET_CIRCLER = 'hornetCircler';
 enemyData[ENEMY_HORNET_CIRCLER] = {
     ...enemyData[ENEMY_HORNET],
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         const playerSprite = state.players[0].sprite;
         let {vx, vy, seed, animationTime} = enemy;
         // Retreat if the player is using the finisher on the nest.
@@ -268,7 +268,7 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
 const ENEMY_HORNET_DASHER = 'hornetDasher';
 enemyData[ENEMY_HORNET_DASHER] = {
     ...enemyData[ENEMY_HORNET],
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {vx, vy, animationTime, targetX, targetY, permanent} = enemy;
         // Retreat if the player is using the finisher on the nest.
         if (state.players[0].usingFinisher) {
@@ -322,7 +322,7 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         frameDuration: 3,
     },
     deathAnimation: createAnimation('gfx/enemies/hornets/hqueen4.png', queenRectangle),
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {vx, vy} = enemy;
         // Retreat if the player is using the finisher on the nest.
         if (state.players[0].usingFinisher) {

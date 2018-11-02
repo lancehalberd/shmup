@@ -281,7 +281,7 @@ const advanceEffect = (state, effectIndex) => {
             const effectHitBox = getEffectHitBox(effect);
             for (let j = 0; j < state.players.length; j++) {
                 if (Rectangle.collision(getHeroHitBox(state.players[j]), effectHitBox)) {
-                    state = effectInfo.onHitPlayer(state, effectIndex, j);
+                    state = effectInfo.onHitPlayer(state, effectIndex, j, effect);
                 }
             }
         }

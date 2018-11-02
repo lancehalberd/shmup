@@ -134,7 +134,7 @@ const enemyData = {
         animation: locustAnimation,
         deathAnimation: locustDeathAnimation,
         deathSound: 'sfx/hornetdeath.mp3',
-        accelerate: (state, enemy) => {
+        accelerate(state, enemy) {
             let {vx, vy, targetX, targetY, animationTime} = enemy;
             const theta = Math.PI / 2 + Math.PI * 2 * animationTime / 2000;
             vy = 2 * enemy.speed * Math.sin(theta);
@@ -155,7 +155,7 @@ const enemyData = {
         animation: locustSoldierAnimation,
         deathAnimation: locustSoldierDeathAnimation,
         deathSound: 'sfx/hit.mp3',
-        accelerate: (state, enemy) => {
+        accelerate(state, enemy) {
             let {vx, vy, targetX, targetY, animationTime} = enemy;
             const theta = Math.PI / 2 + Math.PI * 2 * animationTime / 2000;
             vy = 2 * enemy.speed * Math.sin(theta);
@@ -384,10 +384,17 @@ function getEnemyHitBoxes(state, enemy) {
     const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
     const hitBoxes = frame.hitBoxes || [geometryBox];
+    // Enemies with flipped flag are flipped by default. This happens when an enemy graphic
+    // is facing to the right, because we normally assume enemy graphics face left.
+    let isFlipped = !!enemy.flipped;
+    // Enemy graphics are flipped again if they are moving to the right (unless they are flagged doNotFlip).
+    if (enemy.vx > 0 && !enemy.doNotFlip) {
+        isFlipped = !isFlipped;
+    }
     for (let hitBox of hitBoxes) {
         const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
         const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
-        if (enemy.vx > 0 && !enemy.doNotFlip) {
+        if (isFlipped) {
             hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
         }
         hitBox = new Rectangle(hitBox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
@@ -698,6 +705,7 @@ const advanceEnemy = (state, enemy) => {
         state = enemyData[enemy.type].updateState(state, enemy);
         enemy = state.idMap[enemy.id];
     }
+    if (!enemy) return state;
     if (!enemy.dead && !enemy.snaredForFinisher && enemyData[enemy.type].accelerate) {
         state = updateEnemy(state, enemy, enemyData[enemy.type].accelerate(state, enemy));
         enemy = state.idMap[enemy.id];
@@ -750,7 +758,7 @@ enemyData[ENEMY_DEMO_EMPRESS] = {
         }
         return this.animation;
     },
-    accelerate: (state, enemy) => {
+    accelerate(state, enemy) {
         let {vx, vy, mode, modeTime, top, left, tint} = enemy;
         switch (mode) {
             // Swoop onto the right side of the screen.

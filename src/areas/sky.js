@@ -81,7 +81,7 @@ checkpoints[CHECK_POINT_SKY_END] = function (state) {
 };
 checkpoints[CHECK_POINT_SKY_BOSS] = function (state) {
     const world = getSkyWorld();
-    world.y = 150;
+    world.y = 500;
     world.time = 120000;
     return transitionToSkyBoss(advanceWorld({...state, world}));
 };
@@ -208,7 +208,7 @@ allWorlds[WORLD_SKY] = {
         let targetY = world.y;
         // 20s before the end of the level raise screen so we can transition to the sunrise graphics
         // during the boss fight.
-        if (world.time > SKY_DURATION - 20000) targetY = 150;
+        if (world.time > SKY_DURATION - 20000) targetY = 500;
 
 
         const time = world.time + FRAME_LENGTH;
@@ -318,8 +318,16 @@ const getSkyLayers = () => ({
     fgLayerNames: [],
 });
 
+
+const EFFECT_GUST = 'gust';
+const ENEMY_BLUE_BIRD = 'blueBird';
+const ENEMY_BLUE_BIRD_SOLDIER = 'blueBirdSoldier';
+
 module.exports = {
     CHECK_POINT_SKY_START,
+    EFFECT_GUST,
+    ENEMY_BLUE_BIRD,
+    ENEMY_BLUE_BIRD_SOLDIER,
     WORLD_SKY,
     getSkyWorld,
 };
@@ -329,7 +337,6 @@ const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy, getEn
     accelerate_followPlayer, onHitGroundEffect_spawnMonk,
 } = require('enemies');
 // Bluebirds, slowly follow the Knight, when mounted can fire long lasers.
-const ENEMY_BLUE_BIRD = 'blueBird';
 const blueBirdGeometry = {
     ...r(130, 130),
     hitBox: {left: 27, top: 25, width: 65, height: 80},
@@ -357,7 +364,6 @@ enemyData[ENEMY_BLUE_BIRD] = {
         speed: 4,
     },
 };
-const ENEMY_BLUE_BIRD_SOLDIER = 'blueBirdSoldier';
 enemyData[ENEMY_BLUE_BIRD_SOLDIER] = {
     animation: createAnimation('gfx/enemies/birds/mountbluebird.png', mountedBlueBirdGeometry, {cols: 4}),
     deathAnimation: createAnimation('gfx/enemies/birds/mountbluebird.png', mountedBlueBirdGeometry, {x: 4}),
@@ -468,16 +474,15 @@ const { createAttack, addEnemyAttackToState, } = require('attacks');
 
 const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
 
-const EFFECT_GUST = 'gust';
 effects[EFFECT_GUST] = {
-    animation: createAnimation('gfx/effects/wind.png', r(150, 100), {duration: 1000}),
+    animation: createAnimation('gfx/effects/wind.png', a(r(150, 100), 0.5, 0.5), {duration: 1000}),
     advanceEffect: (state, effectIndex, effect) => {
         return updateEffect(state, effectIndex, {
             vy: 3 * Math.sin(effect.animationTime / 100),
         });
     },
-    onHitPlayer(state, effectIndex, playerIndex) {
-        return updatePlayer(state, playerIndex, {}, {vx: state.players[playerIndex].sprite.vx - 1.5});
+    onHitPlayer(state, effectIndex, playerIndex, effect) {
+        return updatePlayer(state, playerIndex, {}, {vx: state.players[playerIndex].sprite.vx + effect.vx / 5});
     },
     props: {
         relativeToGround: true,

@@ -161,19 +161,19 @@ const shell1Animation = createAnimation('gfx/scene/beach/shell1.png', r(100, 100
 const shell2Animation = createAnimation('gfx/scene/beach/shell2.png', r(100, 100));
 const getBeachLayers = () => ({
     background: getNewLayer({
-        xFactor: 0, yFactor: 0, yOffset: -100, maxY: 0, xOffset: 400,
+        xFactor: 0, yFactor: 1, yOffset: -100, xOffset: 400,
         spriteData: {
             sky: {animation: skyLoop, scale: 2},
         },
     }),
     ocean: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -50, maxY: 0, syncAnimations: true,
+        xFactor: 1, yFactor: 1, yOffset: -50, syncAnimations: true,
         spriteData: {
             ocean: {animation: oceanLoop, scale: 2},
         },
     }),
     ground: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: 0, maxY: 0,
+        xFactor: 1, yFactor: 1, yOffset: 0,
         spriteData: {
             beach: {animation: beachLoop, scale: 2},
         },

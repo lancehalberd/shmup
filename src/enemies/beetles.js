@@ -110,7 +110,7 @@ const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
 
 
 attacks[ATTACK_LIGHTNING_BOLT] = {
-    animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 36}),
+    animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 72}),
     advance(state, attack) {
         return default_advanceAttack(state, {
             ...attack,

@@ -86,7 +86,7 @@ const powerupCycle = {
 const powerupLoot = (type, animation, effectType) => ({
     animation,
     // Cycle between powerup types every second.
-    accelerate: (state, lootIndex, loot) => {
+    accelerate(state, lootIndex, loot) {
         if (loot.animationTime % 1000 === 0) {
             state = updateLoot(state, lootIndex, {type: powerupCycle[loot.type]});
         }
@@ -186,7 +186,7 @@ const portalAnimation = createAnimation('gfx/scene/portal/portal.png', r(50, 80)
 const lootData = {
     [LOOT_COIN]: {
         animation: coinAnimation,
-        accelerate: (state, lootIndex) => {
+        accelerate(state, lootIndex) {
             /*if (!state.players[0].relics[LOOT_HELMET]) {
                 return state;
             }*/
@@ -239,7 +239,7 @@ const lootData = {
     [LOOT_TRIPLE_COMBO]: triplePowerupLoot(LOOT_TRIPLE_COMBO, powerupTripleComboAnimation),
     [LOOT_PORTAL]: {
         animation: portalAnimation,
-        accelerate: (state, lootIndex) => {
+        accelerate(state, lootIndex) {
             // play the portal sfx periodically while it is on the screen.
             if (state.loot[lootIndex].animationTime % 2000 === 0) {
                 return {...state, sfx: {...state.sfx, 'sfx/portal.mp3+0+5': true}};

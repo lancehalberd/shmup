@@ -289,9 +289,10 @@ function setCheckpoint(state, checkpoint) {
     return {...state, checkpoint};
 }
 
-function applyCheckpointToState(state, checkpoint) {
+function applyCheckpointToState(state, checkpoint, clearAllSprites = true) {
     if (!checkpoint) checkpoint = state.checkpoint || CHECK_POINT_FIELD_START;
     state = checkpoints[checkpoint](state);
+    if (!clearAllSprites) return {...state, bgm: state.world.bgm};
     return clearSprites({...state, bgm: state.world.bgm});
 }
 
