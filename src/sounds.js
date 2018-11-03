@@ -167,6 +167,7 @@ const preloadSounds = () => {
         {key: 'beeRevive', source: 'sfx/revive2.mp3', volume: 5},
         {key: 'mothRevive', source: 'sfx/revive3.mp3', volume: 5},
         {key: 'seagullScreech', source: 'sfx/birds/seagullscreech.mp3', offset: 50, volume: 5},
+        {key: 'meow', source: 'sfx/meow.mp3', offset: 200, volume: 5},
         // See credits.html for: mobbrobb.
         'bgm/title.mp3+0+2',
         'bgm/field.mp3+0+1',

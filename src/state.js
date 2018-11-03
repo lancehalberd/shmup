@@ -204,7 +204,7 @@ const advanceState = (state) => {
         }
         for (let j = 0; j < updatedState.players.length; j++) {
             if (enemyIsActive(updatedState, enemy) && !enemy.noCollisionDamage &&
-                isIntersectingEnemyHitBoxes(updatedState, enemy, getHeroHitBox(updatedState.players[j]))
+                isIntersectingEnemyHitBoxes(updatedState, enemy, getHeroHitBox(updatedState.players[j]), true)
             ) {
                 updatedState = damageHero(updatedState, j);
             }

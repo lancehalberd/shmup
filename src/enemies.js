@@ -352,7 +352,7 @@ function getEnemyHitBox(state, enemy) {
 function getEnemyCenter(state, enemy) {
     return getEnemyHitBox(state, enemy).getCenter();
 }
-function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
+function isIntersectingEnemyHitBoxes(state, enemy, rectangle, getDamageBoxes = false) {
     /*const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
     const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
@@ -369,7 +369,7 @@ function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
         }
     }
     return false;*/
-    for (const hitBox of getEnemyHitBoxes(state, enemy)) {
+    for (const hitBox of getEnemyHitBoxes(state, enemy, getDamageBoxes)) {
         if (Rectangle.collision(hitBox, rectangle)) {
             return hitBox;
         }
@@ -378,12 +378,17 @@ function isIntersectingEnemyHitBoxes(state, enemy, rectangle) {
 }
 // It would be good to make this into an iterator so we don't have to produce all of them for each
 // call.
-function getEnemyHitBoxes(state, enemy) {
+function getEnemyHitBoxes(state, enemy, getDamageBoxes) {
     const globalHitBoxes = [];
     const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
     const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
-    const hitBoxes = frame.hitBoxes || [geometryBox];
+    let hitBoxes = frame.hitBoxes || [geometryBox];
+    // Damage boxes hurt the player but are not vulnerable on the enemy.
+    if (getDamageBoxes && frame.damageBoxes) {
+        hitBoxes = [...hitBoxes, ...frame.damageBoxes];
+        // console.log(JSON.stringify(hitBoxes));
+    }
     // Enemies with flipped flag are flipped by default. This happens when an enemy graphic
     // is facing to the right, because we normally assume enemy graphics face left.
     let isFlipped = !!enemy.flipped;
@@ -576,7 +581,7 @@ const renderEnemy = (context, state, enemy) => {
         context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'red';
-        for (const hitBox of getEnemyHitBoxes(state, enemy)) {
+        for (const hitBox of getEnemyHitBoxes(state, enemy, true)) {
             context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         }
         context.restore();
@@ -829,9 +834,20 @@ enemyData[ENEMY_DEMO_EMPRESS] = {
     },
 };
 
+const spawnEnemy = (state, enemyType, props) => {
+    const newEnemy = createEnemy(state, enemyType, props);
+    newEnemy.left = Math.max(newEnemy.left, WIDTH);
+    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
+    if (typeof newEnemy.vx !== 'number') {
+        newEnemy.vx = (newEnemy.stationary || newEnemy.hanging) ? 0 : -5;
+    }
+    return addEnemyToState(state, newEnemy);
+};
+
 module.exports = {
     enemyData,
     createEnemy,
+    spawnEnemy,
     addEnemyToState,
     damageEnemy,
     removeEnemy,

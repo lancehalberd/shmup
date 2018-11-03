@@ -38,15 +38,6 @@ const darkGrass = createAnimation('gfx/scene/field/plainsmg2.png', r(300, 300), 
 
 const WORLD_FIELD = 'field';
 
-const spawnEnemy = (state, enemyType, props) => {
-    const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-    newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -5);
-    return addEnemyToState(state, newEnemy);
-};
-
-
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
 
 const setEvent = (state, event) => {
@@ -390,7 +381,7 @@ module.exports = {
     CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
 };
 
-const { createEnemy, addEnemyToState, enemyData } = require('enemies');
+const { spawnEnemy, enemyData } = require('enemies');
 const { transitionToFieldBoss } = require('areas/fieldBoss');
 const { enterStarWorld } = require('areas/stars');
 const { CHECK_POINT_STARS_1 } = require('areas/stars1');

@@ -25,14 +25,6 @@ the forest merely ends and the Knight is flying above the city skyline.
 
 */
 
-function spawnEnemy(state, enemyType, props) {
-    const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-    newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
-    return addEnemyToState(state, newEnemy);
-}
-
 const setEvent = (state, event) => {
     // FRAME_LENGTH will be added to eventTime before the event is processed next, so we
     // set it to -FRAME_LENGTH so it will be 0 on the first frame.
@@ -105,6 +97,18 @@ allWorlds[WORLD_CITY] = {
                 return setEvent(state, random.element(['lightningBeetle']));
             }
         },
+        cat: (state, eventTime) => {
+            if (state.world.y > 300) {
+                return setEvent(state, random.element(['lightningBeetle']));
+            }
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_TRASH_CAT, {left: WIDTH});
+            }
+            eventTime -= 3000;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['lightningBeetle']));
+            }
+        },
         lightningBeetle: (state, eventTime) => {
             if (eventTime === 0) {
                 let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
@@ -112,7 +116,7 @@ allWorlds[WORLD_CITY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, 'wrens');
+                return setEvent(state, random.element(['cat', 'lightningBeetle']));
             }
         },
         bossPrep: (state, eventTime) => {
@@ -279,8 +283,8 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy,
-    accelerate_followPlayer, onHitGroundEffect_spawnMonk,
+const { spawnEnemy, updateEnemy, enemyData, removeEnemy,
+    accelerate_followPlayer, onHitGroundEffect_spawnMonk, getEnemyDrawBox,
 } = require('enemies');
 /*
 Here are the new enemies for 3B.
@@ -298,19 +302,66 @@ Lastly is the trash cat (drawn at 1/2 scale, or even 1/3 scale, if it doesn't lo
 The trash cat is immune to any attacks, and only appears in the alley ground.
 I don't imagine there will be too many of these cats, and they will pop out and slash when the knight gets close.
 */
-const ENEMY_WREN = 'wren';
-const wrenGeometry = {
-    ...r(80, 74),
-    hitBox: {left: 15, top: 15, width: 45, height: 35},
+const ENEMY_TRASH_CAT = 'trashCat';
+const trashCatGeometry = {
+    ...r(80, 100),
+    hitBoxes: [],
+    scaleX: 2, scaleY: 2,
 };
-enemyData[ENEMY_WREN] = {
-    animation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {cols: 4}),
-    deathAnimation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {x: 4}),
-    deathSound: 'sfx/birds/bird.mp3',
+const swipeAnimation = createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+    {cols: 3, x: 3, frameMap: [0, 1, 2, 2, 2, 0]}
+);
+swipeAnimation.frames[1].damageBoxes = [{left: 10, top: 10, width: 60, height: 60}];
+enemyData[ENEMY_TRASH_CAT] = {
+    animation: createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+        {cols: 2, frameMap: [0, 0, 0, 0, 1, 1, 1], duration: 12}
+    ),
+    peekAnimation: createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+        {cols: 1, x: 2}
+    ),
+    swipeAnimation,
+    getAnimation(state, enemy) {
+        if (enemy.mode === 'swipe') return this.swipeAnimation;
+        if (enemy.mode === 'peek') return this.peekAnimation;
+        return this.animation;
+    },
+    updateState(state, enemy) {
+        let { mode, modeTime, animationTime } = enemy;
+        if (mode === 'normal') {
+            if (modeTime + Math.random() * 3000 > 4000) {
+                mode = 'peek';
+                modeTime = animationTime = 0;
+                state = {...state, sfx: {...state.sfx, meow: true}};
+            }
+        } else if (mode === 'peek') {
+            if (modeTime >= 500) {
+                const target = state.players[0].sprite;
+                const drawBox = getEnemyDrawBox(state, enemy);
+                if (target.left + target.width > drawBox.left - 20 &&
+                    target.left < drawBox.left + drawBox.width + 20) {
+                    mode = 'swipe';
+                    modeTime = animationTime = 0;
+                } else if (modeTime > 4000) {
+                    mode = 'normal';
+                    modeTime = animationTime = 0;
+                }
+            }
+        } else if (mode === 'swipe') {
+            const attackDuration = this.swipeAnimation.frames.length * this.swipeAnimation.frameDuration * FRAME_LENGTH;
+            if (modeTime >= attackDuration) {
+                mode = 'recover';
+                modeTime = animationTime = 0;
+            }
+        }
+        modeTime += FRAME_LENGTH;
+        return updateEnemy(state, enemy, {mode, modeTime, animationTime});
+    },
     props: {
         life: 3,
-        score: 50,
-        vx: -4,
+        mode: 'normal',
+        modeTime: 0,
+        grounded: true,
+        vx: 0,
     },
 };
 
