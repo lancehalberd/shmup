@@ -127,7 +127,7 @@ const advanceState = (state) => {
         paused = !paused;
         if (!paused) {
             let world = updatedState.world;
-            updatedState = {...updatedState, world, bgm: world.bgm};
+            updatedState = {...updatedState, world, bgm: world.bgm, paused: false};
         }
     }
     if (paused) {
@@ -314,7 +314,7 @@ const advanceState = (state) => {
     updatedState.effects = [...updatedState.effects, ...updatedState.newEffects];
     updatedState.loot = [...updatedState.loot, ...updatedState.newLoot];
 
-    return {...updatedState, idMap, paused: false};
+    return {...updatedState, idMap};
 };
 
 const applyPlayerActions = (state, playerIndex, actions) => {

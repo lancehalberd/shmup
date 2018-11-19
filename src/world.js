@@ -2,6 +2,7 @@ const { FRAME_LENGTH, GAME_HEIGHT, WIDTH, HEIGHT, HUD_HEIGHT } = require('gameCo
 const Rectangle = require('Rectangle');
 const random = require('random');
 const { drawImage } = require('draw');
+const { isKeyDown, KEY_SHIFT } = require('keyboard');
 const { getFrame } = require('animations');
 const { getNewSpriteState } = require('sprites');
 
@@ -35,8 +36,13 @@ const addElementToLayer = (state, layerName) => {
     let safety = 0;
     const populating = !lastSprite;
     while ((!lastSprite || lastSprite.left < WIDTH) && !(lastSprite && layer.unique) && safety++ < 20) {
-        let spriteData = (lastSprite && lastSprite.next)
-            ? elementsData[random.element(lastSprite.next)]
+        // Do not add a new element if the current element is explicitly marked as the last.
+        if (lastSprite && lastSprite.next === false) return state;
+        // Do not add a first element if the layer is explicitly marked with no first elements.
+        if (!lastSprite && layer.firstElements === false) return state;
+        const elementsKeys = (lastSprite && lastSprite.next) || layer.firstElements;
+        let spriteData = elementsKeys
+            ? elementsData[random.element(elementsKeys)]
             : random.element(elementsData);
         // This will often happen when transitioning between area types.
         if (!spriteData) {
@@ -70,20 +76,21 @@ const addElementToLayer = (state, layerName) => {
             left: offset,
             ...spriteData,
             animation,
-            animationTime: layer.syncAnimations ? ((lastSprite && lastSprite.animationTime) || 0) : offset,
+            animationTime: layer.syncAnimations ? ((lastSprite && lastSprite.animationTime) || 0) : Math.max(0, offset),
         });
         newSprite.height *= (scale || 1);
         newSprite.width *= (scale || 1);
         //console.log(getBaseHeight(state), layer.yOffset, yOffset, -newSprite.height);
         newSprite.top -= newSprite.height;
-        if (!lastSprite) newSprite.left -= newSprite.width / 2; // Start with the first sprite half off of the screen.
+        if (!lastSprite && !layer.unique && !layer.xOffset) newSprite.left -= newSprite.width / 2; // Start with the first sprite half off of the screen.
         layer.sprites = [...layer.sprites, newSprite];
+        world = {...world, [layerName]: layer};
+        state = {...state, world};
         //if (layerName === 'ground') console.log(layer.sprites);
         //console.log(newSprite.left, newSprite.top, newSprite.width, newSprite.height);
         lastSprite = newSprite;
     }
-    world = {...world, [layerName]: layer};
-    return {...state, world};
+    return state;
 };
 
 function updateLayerSprite(state, layerName, spriteIndex, newProperties) {
@@ -121,8 +128,8 @@ const advanceLayer = (state, layerName) => {
         let sprite = state.world[layerName].sprites[i];
         state = updateLayerSprite(state, layerName, i, {
             ...sprite,
-            left: sprite.left + (sprite.vx - state.world.vx) * layer.xFactor,
-            top: sprite.top + (sprite.vy + state.world.vy) * layer.yFactor,
+            left: sprite.left + ((sprite.vx || 0) - state.world.vx) * layer.xFactor,
+            top: sprite.top + ((sprite.vy || 0) + state.world.vy) * layer.yFactor,
             animationTime: sprite.animationTime + FRAME_LENGTH,
         });
         sprite = state.world[layerName].sprites[i];
@@ -131,10 +138,10 @@ const advanceLayer = (state, layerName) => {
         }
         if (sprite.onHit) {
             const frame = getFrame(sprite.animation, sprite.animationTime);
-            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
+            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
             for (const attack of state.playerAttacks) {
-                if (Rectangle.collision(hitBox, attack)) {
-                    state = sprite.onHit(state, layerName, i);
+                if (Rectangle.collision(hitBox, getAttackHitBox(state, attack))) {
+                    state = sprite.onHit(state, layerName, i, attack);
                     sprite = state.world[layerName].sprites[i];
                     break;
                 }
@@ -175,6 +182,11 @@ const advanceWorld = (state) => {
         vx = (targetVx + vx) / 2;
         const targetVy = (targetY - y) / Math.ceil(targetFrames);
         vy = Math.max((targetVy + vy) / 2, -y);
+        // Don't move the screen less than 1px/frame in the y direction.
+        if (targetY !== y) {
+            if (vy < 0) vy = Math.max(targetY - y, Math.min(vy, -1));
+            else vy = Math.min(targetY - y, Math.max(vy, 1));
+        }
     } else {
         vx = (targetX - x);
         vy = Math.max((targetY - y), -y);
@@ -282,6 +294,14 @@ const renderLayer = (context, state, layerName) => {
             drawImage(context, frame.image, frame, target);
         }
         context.restore();
+        if (isKeyDown(KEY_SHIFT) && sprite.onHit) {
+            context.save();
+            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
+            context.globalAlpha = 0.5;
+            context.fillStyle = 'green';
+            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.restore();
+        }
     }
 };
 
@@ -321,3 +341,5 @@ const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
 // require('areas/forestUpper');
 const { getEnemyHitBox } = require('enemies');
 const { getHeroHitBox } = require('heroes');
+
+const { getAttackHitBox } = require('attacks');

@@ -112,9 +112,11 @@ const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
 attacks[ATTACK_LIGHTNING_BOLT] = {
     animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 72}),
     advance(state, attack) {
+        const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
         return default_advanceAttack(state, {
             ...attack,
             top: (attack.top + 50) % 50 - 50,
+            left: attack.left - state.world[neargroundKey].xFactor * state.world.vx
         });
     },
     props: {

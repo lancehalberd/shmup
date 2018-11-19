@@ -16,17 +16,17 @@ const FOREST_LOWER_TO_SEWER = 'forestLowerToSewer';
 allWorlds[FOREST_LOWER_TO_SEWER] = {
     advanceWorld: (state) => {
         state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
-        let world = {
+        state = {...state,
+            world: {
             ...state.world,
             targetFrames: 50 * 5 / 2,
             targetX: state.world.x + 1000,
             targetY: state.world.y,
-        }
+        }};
         state = setCheckpoint(state, CHECK_POINT_SEWER_START);
         state = applyCheckpointToState(state, CHECK_POINT_SEWER_START);
         // Use fade transition for now.
-        state = {...state, world: {...state.world, transitionFrames: 100}};
-        return {...state, world};
+        return {...state, world: {...state.world, transitionFrames: 100}};
     },
 };
 

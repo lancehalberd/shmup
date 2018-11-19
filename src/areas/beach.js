@@ -161,7 +161,7 @@ const shell1Animation = createAnimation('gfx/scene/beach/shell1.png', r(100, 100
 const shell2Animation = createAnimation('gfx/scene/beach/shell2.png', r(100, 100));
 const getBeachLayers = () => ({
     background: getNewLayer({
-        xFactor: 0, yFactor: 1, yOffset: -100, xOffset: 400,
+        xFactor: 0, yFactor: 1, yOffset: -100, xOffset: 0, unique: true,
         spriteData: {
             sky: {animation: skyLoop, scale: 2},
         },

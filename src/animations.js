@@ -76,12 +76,12 @@ const a = (rectangle, h, v) => {
     }};
 };
 
-const createAnimation = (
+function createAnimation(
     source,
     rectangle,
-    {x = 0, y = 0, rows = 1, cols = 1, top = 0, left = 0, duration = 8, priority = 10, frameMap} = {},
+    {x = 0, y = 0, rows = 1, cols = 1, top = 0, left = 0, bottom = 0, right = 0, duration = 8, priority = 10, frameMap} = {},
     props,
-) => {
+) {
     let frames = [];
     const image = requireImage(source, priority);
     for (let row = 0; row < rows; row++) {
@@ -92,6 +92,8 @@ const createAnimation = (
                 top: top + rectangle.height * (y + row),
                 image
             };
+            if (right) frames[row * cols + col].width -= right;
+            if (bottom) frames[row * cols + col].height -= bottom;
         }
     }
     // Say an animation has 3 frames, but you want to order them 0, 1, 2, 1,
@@ -100,7 +102,7 @@ const createAnimation = (
        frames = frameMap.map(originalIndex => frames[originalIndex]);
     }
     return {frames, frameDuration: duration, ...props};
-};
+}
 
 const needleFlipRectangle = r(88, 56);
 const needleFlipAnimation = {
@@ -469,3 +471,4 @@ module.exports = {
     flyingAntSoldierAnimation, flyingAntSoldierDeathAnimation,
     monkAnimation, monkDeathAnimation, monkAttackAnimation,
 };
+for (let key in module.exports) window[key] = module.exports[key];

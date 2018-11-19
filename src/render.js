@@ -286,13 +286,13 @@ for (const coords of orangeCoords) {
     sparkles.push({animation: orangeSparkleAnimation, ...coords, animationTime: Math.floor(Math.random() * 2000)});
 }
 
-/*
-Helper for getting coords off the screen (for example, to create the sparkle coords above)
+
+//Helper for getting coords off the screen (for example, to create the sparkle coords above)
 const coords = [];
 canvas.onmousedown = function(event) {
     coords.push({x:event.pageX - canvas.offsetLeft, y:event.pageY - canvas.offsetTop});
     console.log(JSON.stringify(coords));
-};*/
+};
 
 const renderTitle = (context, state) => {
     renderBackground(context, state);

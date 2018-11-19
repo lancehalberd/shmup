@@ -125,7 +125,7 @@ allWorlds[WORLD_SKY_BOSS] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
             state = addEnemyToState(state, newEnemy);
-            world = {...world, lifebars, bgm: 'bgm/boss.mp3'};
+            world = {...world, lifebars, bgm: 'bgm/boss.mp3', spawnsDisabled: true};
             state = {...state, bgm: world.bgm};
         }
         if (!world.transitionedToBeachAt && time % 8000 === 0) {

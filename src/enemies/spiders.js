@@ -7,6 +7,7 @@ const {
 
 const { enemyData, updateEnemy, getDefaultEnemyAnimation } = require('enemies');
 const { getGroundHeight, getHazardCeilingHeight } = require('world');
+const { getAttackHitBox } = require('attacks');
 
 function getMinHeight(state) {
     return Math.max(-10, getHazardCeilingHeight(state) + 5);
@@ -32,9 +33,10 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         if (!grounded) {
             const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
             for (const meleeAttack of meleeAttacks) {
-                if (meleeAttack.top < enemy.top - 10 &&
-                    meleeAttack.left + meleeAttack.width > enemy.left + enemy.width / 2 &&
-                    meleeAttack.left < enemy.left + enemy.width / 2
+                const attackHitBox = getAttackHitBox(state, meleeAttack);
+                if (attackHitBox.top < enemy.top - 10 &&
+                    attackHitBox.left + attackHitBox.width > enemy.left + enemy.width / 2 &&
+                    attackHitBox.left < enemy.left + enemy.width / 2
                 ) {
                     return {...enemy, grounded: true, hanging: false, mode: 'jumping'};
                 }
@@ -139,15 +141,24 @@ enemyData[ENEMY_BROWN_SPIDER] = {
 
         const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
         for (const meleeAttack of meleeAttacks) {
-            if (meleeAttack.top < enemy.top - 10 &&
-                meleeAttack.left + meleeAttack.width > enemy.left + enemy.width / 2 &&
-                meleeAttack.left < enemy.left + enemy.width / 2
+            const attackHitBox = getAttackHitBox(state, meleeAttack);
+            if (attackHitBox.top < enemy.top - 10 &&
+                attackHitBox.left + attackHitBox.width > enemy.left + enemy.width / 2 &&
+                attackHitBox.left < enemy.left + enemy.width / 2
             ) {
                 return {...enemy, grounded: true};
             }
         }
 
         switch (mode) {
+            case 'enter':
+                if (enemy.top < getMinHeight(state)) {
+                    vy = Math.min(2, vy + 1);
+                } else {
+                    vy = Math.max(0, vy - 1);
+                    mode = 'plunging';
+                }
+                break;
             case 'climbing':
                 // If the player is under the spider.
                 if (enemy.top + enemy.height < playerSprite.top &&

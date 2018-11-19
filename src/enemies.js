@@ -730,7 +730,6 @@ const advanceEnemy = (state, enemy) => {
         if (enemy.grounded || enemy.hanging) {
             effectiveVx -= xFactor * state.world.vx;
         }
-        const enemyIsBelowScreen = enemy.top > GAME_HEIGHT;
         const drawBox = getEnemyDrawBox(state, enemy);
         // console.log(effectiveVx, drawBox.left, drawBox.width, -OFFSCREEN_PADDING);
         const done = ((enemy.dead && !enemy.persist) || !enemy.permanent) &&

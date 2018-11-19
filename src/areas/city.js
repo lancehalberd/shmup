@@ -35,8 +35,7 @@ const setEvent = (state, event) => {
 const CHECK_POINT_CITY_START = 'cityStart';
 const CHECK_POINT_CITY_MIDDLE = 'cityMiddle';
 const CHECK_POINT_CITY_MIDDLE_TIME = 40000;
-const CHECK_POINT_CITY_END = 'cityEnd'
-const CHECK_POINT_CITY_BOSS = 'cityBoss'
+const CHECK_POINT_CITY_TRANSITION = 'cityTransition'
 checkpoints[CHECK_POINT_CITY_START] = function (state) {
     const world = getCityWorld();
     return {...state, world};
@@ -47,19 +46,14 @@ checkpoints[CHECK_POINT_CITY_MIDDLE] = function (state) {
     world.time = CHECK_POINT_CITY_MIDDLE_TIME;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_CITY_END] = function (state) {
+checkpoints[CHECK_POINT_CITY_TRANSITION] = function (state) {
     const world = getCityWorld();
-    // This is just enough time for a few powerups + large enemies before the boss fight.
-    world.time = 100000;
+    world.time = CITY_DURATION - 5000;
+    world.y = 0;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_CITY_BOSS] = function (state) {
-    const world = getCityWorld();
-    world.time = 120000;
-    return transitionToCityBoss({...state, world});
-};
 
-const CITY_DURATION = 120000;
+const CITY_DURATION = 90000;
 const CITY_EASY_DURATION = 30000;
 
 const SAFE_HEIGHT = GAME_HEIGHT;
@@ -70,10 +64,15 @@ allWorlds[WORLD_CITY] = {
     events: {
         nothing: (state, eventTime) => {
             if (eventTime === 1000) {
-                return setEvent(state, 'easyWrens');
+                return setEvent(state, 'easyRoaches');
             }
         },
-        easyWrens: (state, eventTime) => {
+        easyRoaches: (state, eventTime) => {
+            if (eventTime === 0) {
+                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: 100});
+                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 100, top: 300});
+                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 500});
+            }
             eventTime -= 2000;
             if (eventTime >= 0) {
                 return setEvent(state, 'powerup');
@@ -85,28 +84,40 @@ allWorlds[WORLD_CITY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['wrens']));
+                return setEvent(state, random.element(['cockroaches']));
             }
         },
-        wrens: (state, eventTime) => {
+        cockroaches: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 5 - numFormidable;
-            let spacing = state.world.time < CITY_EASY_DURATION ? 3000 : 2000;
+            let spacing = state.world.time < CITY_EASY_DURATION ? 1500 : 500;
+            const tops = [100, 200, 300];
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: random.element(tops)});
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: random.element(tops)});
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_COCKROACH_SOLDIER, {left: WIDTH, top: random.element(tops)});
+            }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle']));
+                return setEvent(state, random.element(['cat', 'lightningBeetle']));
             }
         },
         cat: (state, eventTime) => {
             if (state.world.y > 300) {
-                return setEvent(state, random.element(['lightningBeetle']));
+                return setEvent(state, random.element(['lightningBeetle', 'cockroaches']));
             }
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_TRASH_CAT, {left: WIDTH});
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle']));
+                return setEvent(state, random.element(['lightningBeetle', 'cockroaches']));
             }
         },
         lightningBeetle: (state, eventTime) => {
@@ -116,16 +127,12 @@ allWorlds[WORLD_CITY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['cat', 'lightningBeetle']));
+                return setEvent(state, random.element(['cockroaches', 'cat', 'lightningBeetle']));
             }
         },
-        bossPrep: (state, eventTime) => {
-            if (eventTime === 3000) {
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
-            }
+        transitionPrep: (state, eventTime) => {
             if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_CITY_END);
-                return transitionToCityBoss(state);
+                return transitionToRestaurant(state);
             }
         },
     },
@@ -133,28 +140,22 @@ allWorlds[WORLD_CITY] = {
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
-        const targetFrames = 70 * 5;
+        const targetFrames = 100 * 5;
         const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
-        if (world.time < 10000) {
+        if (world.time < 35000) {
             targetY = world.y;
-        } else if (world.time % 20000 < 5000) {
-            targetY = -500;//world.y;
-        } else if (world.time % 20000 < 10000) {
-            targetY = -500;
-        } else if (world.time % 20000 > 15000) {
-            targetY = -500; //800;
+        } else if (world.time < CITY_DURATION - 5000) {
+            targetY = 0;//world.y;
+        } else {
+            targetY = 200;
         }
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        if (state.demo && world.type === WORLD_CITY && world.time >= 15000 && world.event !== 'bossPrep') {
-            return setEvent(state, 'bossPrep');
-        }
-
-        if (world.type === WORLD_CITY && world.time >= CITY_DURATION && world.event !== 'bossPrep') {
-            return setEvent(state, 'bossPrep');
+        if (world.type === WORLD_CITY && world.time >= CITY_DURATION && world.event !== 'transitionPrep') {
+            return setEvent(state, 'transitionPrep');
         }
         if (world.time === CHECK_POINT_CITY_MIDDLE_TIME) {
             state = setCheckpoint(state, CHECK_POINT_CITY_MIDDLE);
@@ -276,15 +277,87 @@ const getCityLayers = () => ({
     fgLayerNames: [],
 });
 
+
+const getRestaurantLayers = () => ({
+    background: getNewLayer({
+        xFactor: 0, yFactor: 0, yOffset: 0, maxY: 0, unique: true,
+        spriteData: {
+            background: {animation: createAnimation('gfx/scene/city/restaurant.png', r(400, 300)), scale: 2},
+        },
+    }),
+    sunset: getNewLayer({
+        xFactor: 0.05, yFactor: 0.01, yOffset: 0, maxY: 0, unique: true,
+        spriteData: {
+            sunset: {
+                animation: sunset, scale: 2, vy: -0.5,
+                accelerate(state, layerName, spriteIndex) {
+                    let world = state.world;
+                    let layer = world[layerName];
+                    let sprites = [...layer.sprites];
+                    const sprite = sprites[spriteIndex];
+                    const left = 0;//-state.world.time / 200;
+                    const top = state.world.time / 100;
+                    sprites[spriteIndex] = {...sprite, left, top};
+                    layer = {...layer, sprites};
+                    world = {...world, [layerName]: layer};
+                    return {...state, world};
+                },
+            },
+        },
+    }),
+    cityScape: getNewLayer({
+        xFactor: 0.2, yFactor: 0.5, yOffset: -300,
+        spriteData: {
+            cityScape: { animation: cityScapeLoop, scale: 2, next: ['cityScape'], offset: 0 },
+        },
+    }),
+    ground: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: 0,
+        spriteData: {
+            pavement: { animation: groundLoop, next: ['pavement'], offset: 0},
+        },
+    }),
+    wall: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -54,
+        spriteData: {
+            wall: { animation: alleyLoop, next: ['wall'], offset: 0},
+        },
+    }),
+    dumpster: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -48,
+        spriteData: {
+            dumpster: { animation: dumpsterAnimation, scale: 2, next: ['trash'], offset: [-200, -50, 100] },
+            trash: { animation: [trashbagAnimation, litterAnimation], scale: 2, next: ['trash', 'trash', 'lastTrash'], offset: [20, 80, 120], yOffset: [3, 5] },
+            lastTrash: { animation: [trashbagAnimation, litterAnimation], scale: 2, next: ['dumpster'], offset: [150, 200], yOffset: [3, 5] },
+        },
+    }),
+    forestEdge: getNewLayer({
+        xFactor: 1, yFactor: 1, maxY: 0,
+        spriteData: {},
+    }),
+    // Background layers start at the top left corner of the screen.
+    bgLayerNames: [],
+    // Midground layers use the bottom of the HUD as the top of the screen,
+    // which is consistent with all non background sprites, making hit detection simple.
+    mgLayerNames: ['background', 'sunset', 'cityScape', 'ground', 'wall', 'dumpster', 'forestEdge'],
+    // Foreground works the same as Midground but is drawn on top of game sprites.
+    fgLayerNames: [],
+});
+
+const ENEMY_COCKROACH = 'cockroach';
+const ENEMY_COCKROACH_SOLDIER = 'cockroachSoldier';
+
 module.exports = {
     CHECK_POINT_CITY_START,
     WORLD_CITY,
+    ENEMY_COCKROACH, ENEMY_COCKROACH_SOLDIER,
     getCityWorld,
 };
 
 const { updatePlayer } = require('heroes');
-const { spawnEnemy, updateEnemy, enemyData, removeEnemy,
+const { spawnEnemy, createEnemy, addEnemyToState, updateEnemy, enemyData, removeEnemy,
     accelerate_followPlayer, onHitGroundEffect_spawnMonk, getEnemyDrawBox,
+    shoot_bulletAtPlayer,
 } = require('enemies');
 /*
 Here are the new enemies for 3B.
@@ -365,9 +438,85 @@ enemyData[ENEMY_TRASH_CAT] = {
     },
 };
 
+const cockroachGeometry = {
+    ...r(65, 60),
+    hitBox: {left: 10, top: 20, width: 50, height: 30},
+};
+const cockroachSoldierGeometry = {
+    ...r(65, 60),
+    hitBox: {left: 10, top: 5, width: 50, height: 65},
+};
+enemyData[ENEMY_COCKROACH] = {
+    animation: createAnimation('gfx/enemies/flies/cockroachsheet.png', cockroachGeometry,
+        {cols: 3, x: 5, frameMap: [0, 2, 1]}
+    ),
+    deathAnimation: createAnimation('gfx/enemies/flies/cockroachsheet.png', cockroachGeometry,
+        {cols: 1, x: 4}
+    ),
+    // Falls and can only move up in bursts.
+    accelerate(state, enemy) {
+        let { mode, vy } = enemy;
+        const target = state.players[0].sprite;
+        const drawBox = getEnemyDrawBox(state, enemy);
+        vy = Math.min(vy + enemy.fallAcceleration, 8);
+        if (vy > enemy.bounceSpeed && drawBox.top > target.top) {
+            vy = -enemy.verticalSpeed;
+        }
+        return {...enemy, vy};
+    },
+    props: {
+        life: 3,
+        vx: -5,
+        verticalSpeed: 6,
+        fallAcceleration: 0.2,
+        bounceSpeed: 4,
+    },
+};
+
+enemyData[ENEMY_COCKROACH_SOLDIER] = {
+    ...enemyData[ENEMY_COCKROACH],
+    animation: createAnimation('gfx/enemies/flies/cockroachsheet.png', cockroachSoldierGeometry,
+        {cols: 3}
+    ),
+    deathAnimation: createAnimation('gfx/enemies/flies/cockroachsheet.png', cockroachSoldierGeometry,
+        {cols: 1, x: 3}
+    ),
+    onDeathEffect(state, enemy) {
+        const cockroach = createEnemy(state, ENEMY_COCKROACH, {
+            left: enemy.left,
+            top: enemy.top,
+            animationTime: 20,
+            verticalSpeed: 8,
+        });
+        // Only add the old enemy back to the state if it hasn't already been removed.
+        if (state.idMap[enemy.id]) {
+            // Delete the current enemy from the state so it can be
+            // added on top of the mount enemy.
+            state = removeEnemy(state, enemy);
+            state = addEnemyToState(state, cockroach);
+            return addEnemyToState(state, enemy);
+        }
+        return addEnemyToState(state, cockroach);
+    },
+    onHitGroundEffect: onHitGroundEffect_spawnMonk,
+    shoot: shoot_bulletAtPlayer,
+    props: {
+        life: 5,
+        vx: -3,
+        verticalSpeed: 4,
+        fallAcceleration: 0.1,
+        bounceSpeed: 2,
+        bulletSpeed: 6,
+        shotCooldownFrames: [16, 16, 125],
+        bulletX: 1,
+        bulletY: 0.25,
+    },
+};
+
+
 const formidableEnemies = [];
 
-const { transitionToCityBoss } = require('areas/cityBoss');
+const { transitionToRestaurant } = require('areas/cityToRestaurant');
 const { createAttack, addEnemyAttackToState, } = require('attacks');
 
 const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
