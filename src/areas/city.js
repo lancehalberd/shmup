@@ -2,6 +2,8 @@ const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ATTACK_RED_LASER,
     LOOT_LIFE,
+    ENEMY_FLYING_ANT,
+    ENEMY_LOCUST_SOLDIER,
 } = require('gameConstants');
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
@@ -67,13 +69,13 @@ allWorlds[WORLD_CITY] = {
                 return setEvent(state, 'easyRoaches');
             }
         },
-        easyRoaches: (state, eventTime) => {
+        easyRoaches(state, eventTime) {
             if (eventTime === 0) {
                 state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: 100});
-                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 100, top: 300});
-                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 500});
+                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 300});
+                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 400, top: 500});
             }
-            eventTime -= 2000;
+            eventTime -= 4000;
             if (eventTime >= 0) {
                 return setEvent(state, 'powerup');
             }
@@ -105,12 +107,54 @@ allWorlds[WORLD_CITY] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['cat', 'lightningBeetle']));
+                return setEvent(state, random.element(['fleas', 'lightningBeetle']));
+            }
+        },
+        locust: (state, eventTime) => {
+            if (eventTime === 0) {
+                state = spawnEnemy(state, ENEMY_LOCUST_SOLDIER, {left: WIDTH, top: random.range(GAME_HEIGHT / 3, 2 * GAME_HEIGHT / 3) });
+                return state;
+            }
+            eventTime -= 3000;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['cockroaches', 'lightningBeetle']));
+            }
+        },
+        flyingAnts(state, eventTime) {
+            if (eventTime === 0) {
+                const top = random.range(0, GAME_HEIGHT);
+                state = spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH, top});
+                state = spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH, top, delay: 50});
+                return spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH, top, delay: 100});
+            }
+            eventTime -= 5000;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['locust', 'lightningBeetle']));
+            }
+        },
+        fleas(state, eventTime) {
+            if (state.world.y > 300) {
+                return setEvent(state, 'flyingAnts');
+            }
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
+            }
+            eventTime -= 500;
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
+            }
+            eventTime -= 500;
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
+            }
+            eventTime -= 1000;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['cat', 'locust']));
             }
         },
         cat: (state, eventTime) => {
             if (state.world.y > 300) {
-                return setEvent(state, random.element(['lightningBeetle', 'cockroaches']));
+                return setEvent(state, random.element(['flyingAnts']));
             }
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_TRASH_CAT, {left: WIDTH});
@@ -127,7 +171,7 @@ allWorlds[WORLD_CITY] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['cockroaches', 'cat', 'lightningBeetle']));
+                return setEvent(state, random.element(['cockroaches', 'fleas']));
             }
         },
         transitionPrep: (state, eventTime) => {
@@ -219,7 +263,7 @@ const getCityLayers = () => ({
         },
     }),
     sunset: getNewLayer({
-        xFactor: 0.05, yFactor: 0.01, yOffset: 0, maxY: 0, unique: true,
+        xFactor: 0.05, yFactor: 0.01, yOffset: 0, unique: true,
         spriteData: {
             sunset: {
                 animation: sunset, scale: 2, vy: -0.5,
@@ -358,6 +402,7 @@ const { updatePlayer } = require('heroes');
 const { spawnEnemy, createEnemy, addEnemyToState, updateEnemy, enemyData, removeEnemy,
     accelerate_followPlayer, onHitGroundEffect_spawnMonk, getEnemyDrawBox,
     shoot_bulletAtPlayer,
+    ENEMY_FLEA,
 } = require('enemies');
 /*
 Here are the new enemies for 3B.
@@ -466,7 +511,7 @@ enemyData[ENEMY_COCKROACH] = {
     },
     props: {
         life: 3,
-        vx: -5,
+        vx: -4,
         verticalSpeed: 6,
         fallAcceleration: 0.2,
         bounceSpeed: 4,

@@ -341,7 +341,7 @@ const {
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
 const {
     enemyData, damageEnemy, advanceEnemy,
-    isIntersectingEnemyHitBoxes, enemyIsActive
+    isIntersectingEnemyHitBoxes, enemyIsActive,
 } = require('enemies');
 const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');

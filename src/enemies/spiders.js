@@ -117,7 +117,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         return updateEnemy(state, enemy, {ttl: 600});
     },
     props: {
-        life: 8,
+        life: 5,
         score: 100,
         hanging: true,
         mode: 'climbing',

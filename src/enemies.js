@@ -294,6 +294,11 @@ window.enemyData = enemyData;
 
 function createEnemy(state, type, props) {
     const frame = enemyData[type].animation.frames[0];
+    const combinedProps = {...enemyData[type].props, ...props};
+    let vx = (combinedProps.stationary || combinedProps.hanging) ? 0 : -5;
+    if (typeof combinedProps.vx === 'number') {
+        vx = combinedProps.vx;
+    }
     return getNewSpriteState({
         ...frame,
         // Do not inherit scaleX/scaleY from the frame, otherwise it will
@@ -305,6 +310,7 @@ function createEnemy(state, type, props) {
         seed: Math.random(),
         maxLife: props && props.life || enemyData[type].props.life,
         ...props,
+        vx,
         id: `enemy${state.uniqueEnemyIdCounter++}`,
     });
 }
@@ -379,16 +385,18 @@ function isIntersectingEnemyHitBoxes(state, enemy, rectangle, getDamageBoxes = f
 // It would be good to make this into an iterator so we don't have to produce all of them for each
 // call.
 function getEnemyHitBoxes(state, enemy, getDamageBoxes) {
-    const globalHitBoxes = [];
     const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
-    const reflectX = geometryBox.left + geometryBox.width / 2;
-    let hitBoxes = frame.hitBoxes || [geometryBox];
+    let hitBoxes = frame.hitBoxes || [frame.hitBox || new Rectangle(frame).moveTo(0, 0)];
     // Damage boxes hurt the player but are not vulnerable on the enemy.
     if (getDamageBoxes && frame.damageBoxes) {
         hitBoxes = [...hitBoxes, ...frame.damageBoxes];
-        // console.log(JSON.stringify(hitBoxes));
     }
+    return enemyHitBoxesToGlobalHitBoxes(state, enemy, hitBoxes);
+}
+function enemyHitBoxesToGlobalHitBoxes(state, enemy, hitBoxes) {
+    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+    const reflectX = geometryBox.left + geometryBox.width / 2;
     // Enemies with flipped flag are flipped by default. This happens when an enemy graphic
     // is facing to the right, because we normally assume enemy graphics face left.
     let isFlipped = !!enemy.flipped;
@@ -396,6 +404,7 @@ function getEnemyHitBoxes(state, enemy, getDamageBoxes) {
     if (enemy.vx > 0 && !enemy.doNotFlip) {
         isFlipped = !isFlipped;
     }
+    const globalHitBoxes = [];
     for (let hitBox of hitBoxes) {
         const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
         const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
@@ -833,13 +842,93 @@ enemyData[ENEMY_DEMO_EMPRESS] = {
     },
 };
 
+const ENEMY_FLEA = 'flea';
+const fleaGeometry = r(15, 15);
+
+enemyData[ENEMY_FLEA] = {
+    animation: createAnimation('gfx/enemies/fleasheet.png', fleaGeometry, {x: 3}),
+    jumpingAnimation: createAnimation('gfx/enemies/fleasheet.png', fleaGeometry, {x: 1, cols: 2, frameMap: [1, 0], loop: false}),
+    deathAnimation: createAnimation('gfx/enemies/fleasheet.png', r(15, 15)),
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.deathAnimation;
+        return enemy.vy < 0 ? this.jumpingAnimation : this.animation;
+    },
+    moveTowardPlayer(state, enemy) {
+        const player = state.players[0];
+        if (player.invulnerableFor > 0) return updateEnemy(state, enemy, {attached: 0});
+        state = updatePlayer(state, 0, {cannotSwitchFrames: 10}, {
+            vx: player.sprite.vx * 0.7,
+            vy: player.sprite.vy * 0.5 + 1,
+        });
+        const enemyHitBox = getEnemyHitBox(state, enemy);
+        const hitBox = getHeroHitBox(player);
+        const dx = hitBox.left + hitBox.width / 2 - (enemyHitBox.left + enemyHitBox.width / 2);
+        const dy = hitBox.top + hitBox.height / 2 - (enemyHitBox.top + enemyHitBox.height / 2);
+        return updateEnemy(state, enemy, {
+            vy: enemy.vy * 0.8 + dy / 20,
+            vx: enemy.vx * 0.8 + dx / 20,
+            attached: enemy.attached - 1,
+        });
+    },
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        if (enemy.attached > 0) {
+            return this.moveTowardPlayer(state, enemy);
+        }
+        const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+        const heroHitBox = getHeroHitBox(state.players[0]);
+        if (enemy.attached < -10 && isIntersectingEnemyHitBoxes(state, enemy, heroHitBox)) {
+            return updateEnemy(state, enemy, {attached: 80});
+        }
+        let { vx, vy, jumps, attached } = enemy;
+        attached--;
+        // The flea cannot act while in the air.
+        if (enemy.top + enemy.height < getGroundHeight(state)) {
+            //console.log('falling');
+            return updateEnemy(state, enemy, {attached});
+        }
+        if (enemy.jumps >= 5) {
+            return updateEnemy(state, enemy, {vx: enemy.vx * 1.3, vy: -10, attached});
+        }
+        //set base speed to world velocity
+        const baseSpeed = state.world.vx * state.world.ground.xFactor;
+        //if on ground, move toward player if player is not above
+        //otherwise jump at player
+        if (heroHitBox.left + heroHitBox.width < enemy.left - 100) {
+            //console.log('left');
+            vx = baseSpeed - 5;
+            vy = -8;
+        } else if (heroHitBox.left > enemy.left + enemy.width + 100) {
+            //console.log('right');
+            vx = baseSpeed + 2;
+            vy = -8;
+        } else {
+            const targetY = heroHitBox.top + heroHitBox.height / 2;
+            vx = (heroHitBox.left + heroHitBox.width / 2 < enemy.left + enemy.width / 2) ? baseSpeed - 5 : baseSpeed + 2;
+            if (targetY > 2 * GAME_HEIGHT / 3) vy = -15;
+            else vy = -25;
+            jumps++;
+        }
+        return updateEnemy(state, enemy, {vx, vy, jumps, attached});
+    },
+    onDeathEffect(state, enemy) {
+        return updateEnemy(state, enemy, {ttl: 600});
+    },
+    props: {
+        life: 1,
+        score: 10,
+        grounded: true,
+        jumps: 0,
+        vx: 0,
+        noCollisionDamage: true,
+        attached: 0,
+    }
+}
+
 const spawnEnemy = (state, enemyType, props) => {
     const newEnemy = createEnemy(state, enemyType, props);
     newEnemy.left = Math.max(newEnemy.left, WIDTH);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-    if (typeof newEnemy.vx !== 'number') {
-        newEnemy.vx = (newEnemy.stationary || newEnemy.hanging) ? 0 : -5;
-    }
     return addEnemyToState(state, newEnemy);
 };
 
@@ -854,14 +943,16 @@ module.exports = {
     renderEnemy,
     renderEnemyFrame,
     getEnemyHitBox,
+    enemyHitBoxesToGlobalHitBoxes,
     getEnemyDrawBox,
     getEnemyCenter,
     isIntersectingEnemyHitBoxes,
     updateEnemy,
     getDefaultEnemyAnimation,
     enemyIsActive,
-    ENEMY_SHIELD_MONK,
     ENEMY_DEMO_EMPRESS,
+    ENEMY_FLEA,
+    ENEMY_SHIELD_MONK,
     accelerate_followPlayer,
     onHitGroundEffect_spawnMonk,
     shoot_bulletAtPlayer,

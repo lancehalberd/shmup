@@ -195,11 +195,9 @@ function checkToSpawnSpiders(state) {
     let spider = spiders.some(spider => spider.left >= slot[0] && spider.left <= slot[1]);
     if (spider) return state;
     spider = createEnemy(state, ENEMY_BROWN_SPIDER, {
-        // This is chosen to line up with the window graphic above
         left: random.range(slot[0], slot[1]),
         top: -55,
         mode: 'enter',
-        enterTime: 500,
         targetY: slot[2],
     });
     return addEnemyToState(state, spider);

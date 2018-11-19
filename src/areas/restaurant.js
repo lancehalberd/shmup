@@ -2,11 +2,13 @@ const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ATTACK_RED_LASER,
     LOOT_LIFE,
+    ENEMY_FLY,
 } = require('gameConstants');
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
 const { advanceWorld, getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
+const { ENEMY_BROWN_SPIDER, ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 /*
 
 Add in interactive candles that light when shot/go out when slashed
@@ -37,7 +39,7 @@ const CHECK_POINT_RESTAURANT_END = 'restaurantEnd';
 const CHECK_POINT_RESTAURANT_BOSS = 'restaurantBoss';
 checkpoints[CHECK_POINT_RESTAURANT_START] = function (state) {
     const world = getRestaurantWorld();
-    world.time = 95000;
+    world.time = RESTAURANT_START_TIME;
     return {...state, world};
 };
 checkpoints[CHECK_POINT_RESTAURANT_END] = function (state) {
@@ -81,26 +83,57 @@ function bossPrepTransition(state) {
     };
 }
 
+const RESTAURANT_START_TIME = 95000;
 const RESTAURANT_DURATION = 150000;
 
 const SAFE_HEIGHT = GAME_HEIGHT;
+
+function checkToSpawnSpiders(state, eventTime) {
+    if (eventTime !== 0) return state;
+    if (Math.random() > (state.world.time - RESTAURANT_START_TIME) / (RESTAURANT_DURATION - RESTAURANT_START_TIME)) {
+        return state;
+    }
+    let spider;
+    if (random.chance(0.5)) {
+        spider = createEnemy(state, ENEMY_BROWN_SPIDER, {
+            left: random.range(500, WIDTH),
+            top: -55,
+            mode: 'enter',
+            targetY: 400,
+        });
+    } else {
+        spider = createEnemy(state, ENEMY_JUMPING_SPIDER, {
+            left: random.range(600, 750),
+            top: -55,
+            grounded: true, hanging: false, mode: 'jumping',
+        });
+        state = addEnemyToState(state, spider);
+        spider = createEnemy(state, ENEMY_JUMPING_SPIDER, {
+            left: random.range(600, 750),
+            top: -55,
+            grounded: true, hanging: false, mode: 'jumping',
+            delay: 100,
+        });
+    }
+    return addEnemyToState(state, spider);
+}
 
 const WORLD_RESTAURANT = 'restaurant';
 allWorlds[WORLD_RESTAURANT] = {
     initialEvent: 'nothing',
     events: {
         nothing: (state, eventTime) => {
-            if (eventTime === 1000) {
+            if (eventTime === 2000) {
                 return setEvent(state, 'easyRoaches');
             }
         },
         easyRoaches: (state, eventTime) => {
             if (eventTime === 0) {
                 state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: 100});
-                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 100, top: 300});
-                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 500});
+                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 300});
+                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 400, top: 500});
             }
-            eventTime -= 2000;
+            eventTime -= 4000;
             if (eventTime >= 0) {
                 return setEvent(state, 'powerup');
             }
@@ -117,7 +150,7 @@ allWorlds[WORLD_RESTAURANT] = {
         cockroaches: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 5 - numFormidable;
-            const spacing = 500;
+            const spacing = 800;
             const tops = [100, 200, 300];
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: random.element(tops)});
@@ -132,7 +165,52 @@ allWorlds[WORLD_RESTAURANT] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['lightningBeetle']));
+                return setEvent(state, random.element(['fleas', 'flies']));
+            }
+        },
+        fleas(state, eventTime) {
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
+            }
+            eventTime -= 1000;
+            if (eventTime === 0) {
+                return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
+            }
+            eventTime -= 2000;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['flies', 'lightningBeetle']));
+            }
+        },
+        flies: (state, eventTime) => {
+            const baseNumber = 4;
+            let spacing = 1500;
+            if (eventTime === 0) {
+                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
+                for (let i = 0; i < baseNumber; i++) {
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
+                for (let i = 0; i < baseNumber; i++) {
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime === 0) {
+                const mode = random.range(0, 1);
+                for (let i = 0; i < 2 * baseNumber; i++) {
+                    let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
+                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
+                }
+                return state;
+            }
+            eventTime -= spacing;
+            if (eventTime >= 0) {
+                return setEvent(state, random.element(['fleas', 'lightningBeetle']));
             }
         },
         lightningBeetle: (state, eventTime) => {
@@ -142,7 +220,7 @@ allWorlds[WORLD_RESTAURANT] = {
             }
             eventTime -= 3000;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['cockroaches', 'lightningBeetle']));
+                return setEvent(state, random.element(['cockroaches', 'flies']));
             }
         },
         bossPrep: (state, eventTime) => {
@@ -160,6 +238,7 @@ allWorlds[WORLD_RESTAURANT] = {
     },
     advanceWorld: (state) => {
         let world = state.world;
+        if (world.event !== 'bossPrep' && world.event !== 'nothing') state = checkToSpawnSpiders(state, state.world.eventTime || 0);
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
         const targetFrames = 90 * 5;
@@ -274,7 +353,7 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { spawnEnemy } = require('enemies');
+const { spawnEnemy, addEnemyToState, createEnemy, ENEMY_FLEA } = require('enemies');
 const { ENEMY_COCKROACH, ENEMY_COCKROACH_SOLDIER } = require('areas/city');
 
 const formidableEnemies = [];

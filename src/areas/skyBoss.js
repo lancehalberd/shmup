@@ -106,7 +106,7 @@ allWorlds[WORLD_SKY_BOSS] = {
         } else {
             targetFrames = 70 * 5;
             targetX = Math.max(world.targetX, world.x + 1000);
-            targetY = -100;
+            targetY = 0;
         }
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};

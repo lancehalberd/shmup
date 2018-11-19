@@ -241,7 +241,7 @@ allWorlds[WORLD_FIELD] = {
         let targetY = world.y;
         // 30-45s raise into the sky, stay until 60s, then lower back to the ground.
         if (world.time > 30000 && world.time < 45000) targetY = 400
-        else if (world.time > 60000 && world.time < 80000) targetY = -100;
+        else if (world.time > 60000 && world.time < 80000) targetY = 0;
         const time = world.time + FRAME_LENGTH;
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
