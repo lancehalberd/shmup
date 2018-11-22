@@ -426,7 +426,7 @@ enemyData[ENEMY_FROG] = {
                     if (poolPhase) vx = 10;
 
                     if (targetY > 2*GAME_HEIGHT/3 && Math.abs(vx) < 13 && !poolPhase) {
-                        vy = -10;
+                        vy = -16;
                     } else if (targetY > GAME_HEIGHT/3 && Math.abs(vx) < 18) {
                         vy = -18;
                     } else {
@@ -612,6 +612,7 @@ enemyData[ENEMY_FROG] = {
         permanent: true,
         modeTime: 0,
         tongues: [],
+        vx: 0,
     },
 };
 const ENEMY_GRATE = 'grate';

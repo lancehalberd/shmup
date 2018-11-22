@@ -69,7 +69,29 @@ const { transitionToZoo } = require('areas/sewerToZoo');
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
+/*
+Here is the snake boss! There are some lines I'll probably fix up in the future, but the shape is all
+the same. I put the whole snake in a sheet, but the sizes of each part is different.
+There also is a new sewer background - to switch between the two. The only difference is the lack of
+ the hole on the first one, and the second is sort of an interlude to stick between them here and
+ there. I think I'll make more sewer background assets once we get there and see the water in effect,
+ as I am not sure what can be put in the background (or foreground) without getting in the way just yet.
 
+The snake boss has multiple attacks:
+1. Rats. Rats climb up and down and slightly to the right on the screen. Unlike how they act in the
+rest of the sewer, these rats rarely (or never) attack the Knight, but still deal contact damage,
+making it harder to hug the left side of the screen where they are spawning in.
+
+2. Biting. The snake can bite high and low, and when doing so, attacks nearly half the upper or lower
+art of the screen. If the snake hits a rat this way, I figure the rat can die and the snake gets some
+ife back.
+
+3. Tail. The tail is really long, but I figure it actually stays pretty flush with the snake's face
+usually, but can extend out toward the knight now and again. Eventually, it returns back to being
+flush with the snake's head and hits the water, which erupts in a sort of wave across the screen,
+overlaying a new top water sprite and making the bottom half of the boss arena deadly.
+
+*/
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,
     {hitBox: {left: 39, top: 63, width: 117, height: 40}},

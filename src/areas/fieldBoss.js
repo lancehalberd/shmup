@@ -181,7 +181,7 @@ function transitionToFieldBoss(state) {
         type: WORLD_FIELD_BOSS,
         time: 0,
         targetFrames: 50 * 5,
-        targetY: -100,
+        targetY: 0,
     };
     for (const layerName of layerNamesToClear) {
         const sprites = updatedWorld[layerName].sprites.filter(sprite => sprite.left < WIDTH);
@@ -444,6 +444,7 @@ enemyData[ENEMY_STICK_1] = {
         life: 10,
         score: 0,
         weakness: {[ATTACK_SLASH]: 10, [ATTACK_STAB]: 10},
+        vx: 0,
     },
 };
 enemyData[ENEMY_STICK_2] = {

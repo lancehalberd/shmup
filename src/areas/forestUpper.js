@@ -9,19 +9,11 @@ const {
 const { ENEMY_BROWN_SPIDER } = require('enemies/spiders');
 const random = require('random');
 const { createAnimation, r } = require('animations');
-const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint } = require('world');
+const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, setEvent } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
 
 const willowAnimation = createAnimation('gfx/scene/forest/willowsheet.png', r(200, 200), {cols: 6, duration: 30});
-
-const spawnEnemy = (state, enemyType, props) => {
-    const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-    newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
-    return addEnemyToState(state, newEnemy);
-};
 
 const spawnThorns = (state) => {
     if (random.chance(0.6)) {
@@ -31,18 +23,23 @@ const spawnThorns = (state) => {
     }
 };
 
-const setEvent = (state, event) => {
-    // FRAME_LENGTH will be added to eventTime before the event is processed next, so we
-    // set it to -FRAME_LENGTH so it will be 0 on the first frame.
-    return {...state, world: {...state.world, eventTime: -FRAME_LENGTH, event}};
-};
-
 // Add check points for:
 const CHECK_POINT_FOREST_UPPER_START = 'forestUpperStart';
 const CHECK_POINT_FOREST_UPPER_MIDDLE = 'forestUpperMiddle';
 const CHECK_POINT_FOREST_UPPER_MIDDLE_TIME = 40000;
 const CHECK_POINT_FOREST_UPPER_END = 'forestUpperEnd'
 const CHECK_POINT_FOREST_UPPER_BOSS = 'forestUpperBoss'
+const FOREST_UPPER_DURATION = 120000;
+const FOREST_UPPER_EASY_DURATION = 30000;
+
+const SAFE_HEIGHT = GAME_HEIGHT - 90;
+
+const WORLD_FOREST_UPPER = 'forestUpper';
+module.exports = {
+    CHECK_POINT_FOREST_UPPER_START,
+    getForestUpperWorld,
+};
+
 checkpoints[CHECK_POINT_FOREST_UPPER_START] = function (state) {
     const world = getForestUpperWorld();
     return {...state, world};
@@ -66,12 +63,12 @@ checkpoints[CHECK_POINT_FOREST_UPPER_BOSS] = function (state) {
 };
 const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
 
-const FOREST_UPPER_DURATION = 120000;
-const FOREST_UPPER_EASY_DURATION = 30000;
-
-const SAFE_HEIGHT = GAME_HEIGHT - 90;
-
-const WORLD_FOREST_UPPER = 'forestUpper';
+const {
+    nothing,
+    easyFlies,
+    powerup,
+    explodingBeetle,
+} = require('enemyPatterns');
 allWorlds[WORLD_FOREST_UPPER] = {
     initialEvent: 'nothing',
     isPortalAvailable(state) {
@@ -89,43 +86,9 @@ allWorlds[WORLD_FOREST_UPPER] = {
             }
             return state;
         },
-        nothing: (state, eventTime) => {
-            if (eventTime === 1000) {
-                return setEvent(state, 'easyFlies');
-            }
-        },
-        easyFlies: (state, eventTime) => {
-            if (eventTime === 0) {
-                state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000;
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000;
-            if (eventTime === 0) {
-                state = spawnThorns(state);
-                let top = random.element([1,2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000;
-            if (eventTime >= 0) {
-                return setEvent(state, 'powerup');
-            }
-        },
-        powerup: (state, eventTime) => {
-            if (eventTime === 0) {
-                state = spawnThorns(state);
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: SAFE_HEIGHT / 2});
-            }
-            eventTime -= 3000;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['explodingBeetle', 'hornet']));
-            }
-        },
+        nothing: nothing(1000, 'easyFlies'),
+        easyFlies: easyFlies('powerup'),
+        powerup: powerup(['explodingBeetle', 'hornet']),
         flyingAnts: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 2 - numFormidable;
@@ -149,17 +112,7 @@ allWorlds[WORLD_FOREST_UPPER] = {
                 return setEvent(state, random.element(['brownSpider']));
             }
         },
-        explodingBeetle: (state, eventTime) => {
-            if (eventTime === 0) {
-                state = spawnThorns(state);
-                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_EXPLOSIVE_BEETLE, {left: WIDTH, top});
-            }
-            eventTime -= 3000;
-            if (eventTime >= 0) {
-                return setEvent(state, 'brownSpider');
-            }
-        },
+        explodingBeetle: explodingBeetle('brownSpider'),
         hornet: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             if (eventTime === 0 && numFormidable < 2) {
@@ -280,14 +233,8 @@ const getForestUpperLayers = () => ({
     fgLayerNames: ['largeTrunks'],
 });
 
-
-module.exports = {
-    CHECK_POINT_FOREST_UPPER_START,
-    getForestUpperWorld,
-};
-
 const { updatePlayer } = require('heroes');
-const { createEnemy, addEnemyToState, enemyData, updateEnemy } = require('enemies');
+const { createEnemy, addEnemyToState, enemyData, updateEnemy, spawnEnemy } = require('enemies');
 
 const ENEMY_CEILING_THORNS = 'ceilingThorns';
 const ceilingThornRectangle = r(200, 200, {hitBox: {left: 41, top: 0, width: 130, height: 150}});

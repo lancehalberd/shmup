@@ -282,9 +282,9 @@ const advanceHero = (state, playerIndex) => {
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
-    } else if (playerHitBox.top + playerHitBox.height > getHazardHeight(state)) {
+    } else if (targetLeft === false && playerHitBox.top + playerHitBox.height > getHazardHeight(state)) {
         return damageHero(state, playerIndex);
-    } else if (playerHitBox.top < getHazardCeilingHeight(state)) {
+    } else if (targetLeft === false && playerHitBox.top < getHazardCeilingHeight(state)) {
         return damageHero(state, playerIndex);
     }
     if (targetLeft !== false) {

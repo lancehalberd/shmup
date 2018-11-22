@@ -12,6 +12,7 @@ const { getNewSpriteState } = require('sprites');
 const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
 const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
+const { easyFlies, powerup } = require('enemyPatterns');
 
 const plainsBg = createAnimation('gfx/scene/field/plainsbg.png', r(800, 800), {priority: PRIORITY_TITLE});
 const groundAnimation = createAnimation('gfx/scene/field/groundloop.png', r(200, 60), {priority: PRIORITY_TITLE});
@@ -95,35 +96,8 @@ allWorlds[WORLD_FIELD] = {
                 return setEvent(state, 'easyFlies');
             }
         },
-        easyFlies: (state, eventTime) => {
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_FLY, {left: WIDTH, top});
-            }
-            eventTime -= 2000;
-            if (eventTime >= 0) {
-                return setEvent(state, 'powerup');
-            }
-        },
-        powerup: (state, eventTime) => {
-            if (eventTime === 0) {
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2});
-            }
-            eventTime -= 3000;
-            if (eventTime >= 0) {
-                return setEvent(state, 'flies');
-            }
-        },
+        easyFlies: easyFlies('powerup'),
+        powerup: powerup('flies'),
         flies: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 4 - numFormidable;

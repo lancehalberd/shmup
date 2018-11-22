@@ -36,4 +36,4 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { CHECK_POINT_SEWER_START } = require('areas/city');
+const { CHECK_POINT_SEWER_START } = require('areas/sewer');

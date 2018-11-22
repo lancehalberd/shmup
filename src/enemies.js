@@ -493,7 +493,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         }
 
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
-        if (updatedState.idMap[enemyId] && enemy.grounded && attack.type !== 'fall') {
+        if (updatedState.idMap[enemyId] && enemy.grounded && attack.type !== 'fall' && attack.type !== 'hazard') {
             updatedState = updateEnemy(updatedState, enemy, {vx: 6, vy: -6});
             enemy = updatedState.idMap[enemyId];
         }
@@ -504,7 +504,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             updatedState = addLootToState(updatedState, loot);
         }
         if (enemyData[enemy.type].onDeathEffect) {
-            // This actuall changes the enemy index, so we do it last. In the long term it is probably
+            // This actually changes the enemy index, so we do it last. In the long term it is probably
             // better to use the unique enemy id instead of the index.
             updatedState = enemyData[enemy.type].onDeathEffect(updatedState, enemy);
         }
@@ -669,12 +669,12 @@ const advanceEnemy = (state, enemy) => {
             top = Math.min(top, getGroundHeight(state) + groundOffset - (hitBox.top + hitBox.height));
         }
         if (!enemy.boss && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
-            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
+            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
         if (!enemy.boss && top + hitBox.top < getHazardCeilingHeight(state)) {
-            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100});
+            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             if (!state.idMap) debugger;
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;

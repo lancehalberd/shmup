@@ -11,6 +11,12 @@ function transitionToCity(state) {
     };
     return {...state, world}
 }
+/*
+
+From 2B to 3B, it is the same transition from 1 to 2B where the screen moves faster than the Knight,
+and the Knight appears at the other side of the tunnel.
+
+*/
 
 const FOREST_LOWER_TO_CITY = 'forestLowerToCity';
 allWorlds[FOREST_LOWER_TO_CITY] = {

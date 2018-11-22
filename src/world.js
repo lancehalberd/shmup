@@ -172,7 +172,10 @@ const advanceWorld = (state) => {
     let world = state.world;
     world = {...world, x: world.x + world.vx, y: Math.max(0, world.y + world.vy)};
     state = {...state, world};
-    let {x, y, vx, vy, targetX, targetY, targetFrames, transitionFrames} = world
+    let {x, y, vx, vy, targetX, targetY, targetFrames, transitionFrames} = world;
+    // If targetY is negative, it causes serious issues. We shouldn't do this any more.
+    // but just in case, I'm setting it to at least 0 here.
+    targetY = Math.max(0, targetY);
     if (transitionFrames > 0) {
         transitionFrames--;
     }
@@ -181,7 +184,8 @@ const advanceWorld = (state) => {
         const targetVx = (targetX - x) / Math.ceil(targetFrames);
         vx = (targetVx + vx) / 2;
         const targetVy = (targetY - y) / Math.ceil(targetFrames);
-        vy = Math.max((targetVy + vy) / 2, -y);
+        if (targetVy === 0) vy = 0;
+        else vy = Math.max((targetVy + vy) / 2, -y);
         // Don't move the screen less than 1px/frame in the y direction.
         if (targetY !== y) {
             if (vy < 0) vy = Math.max(targetY - y, Math.min(vy, -1));
@@ -316,6 +320,15 @@ function applyCheckpointToState(state, checkpoint, clearAllSprites = true) {
     return clearSprites({...state, bgm: state.world.bgm});
 }
 
+
+function setEvent(state, event) {
+    // Assume event is array of string if it is not a string and randomly choose an element.
+    if (typeof event !== 'string') event = random.element(event);
+    // FRAME_LENGTH will be added to eventTime before the event is processed next, so we
+    // set it to -FRAME_LENGTH so it will be 0 on the first frame.
+    return {...state, world: {...state.world, eventTime: -FRAME_LENGTH, event}};
+}
+
 module.exports = {
     allWorlds,
     checkpoints,
@@ -334,6 +347,7 @@ module.exports = {
     clearLayers,
     setCheckpoint,
     applyCheckpointToState,
+    setEvent,
 };
 
 const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');

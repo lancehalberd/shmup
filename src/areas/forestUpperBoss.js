@@ -18,7 +18,7 @@ const transitionToForestUpperBoss = (state) => {
         type: WORLD_FOREST_UPPER_BOSS,
         time: 0,
         targetFrames: 50 * 5,
-        targetY: -100,
+        targetY: 0,
     };
     for (const layerName of layerNamesToClear) {
         const sprites = updatedWorld[layerName].sprites.filter(sprite => sprite.left < WIDTH);

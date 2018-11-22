@@ -91,6 +91,9 @@ const attacks = {
     },
     [ATTACK_BULLET]: {
         animation: bulletAnimation,
+        props: {
+            deflectable: true,
+        }
     },
     [ATTACK_ORB]: {
         animation: orbAnimation,
@@ -217,6 +220,17 @@ attacks[ATTACK_RED_LASER] = {
         frameDelay: 20,
     },
 };
+const ATTACK_GAS = 'gas';
+attacks[ATTACK_GAS] = {
+    animation: createAnimation('gfx/enemies/stinkbugsheet.png', r(30, 30), {cols: 2, x: 4}),
+    props: {
+        // The animation is quite short, so just set an explicit ttl of 3 seconds.
+        ttl: 3000 / FRAME_LENGTH,
+        relativeToGround: true,
+        // This will prevent the cloud from being removed on hitting a player
+        piercing: true,
+    },
+};
 
 const createAttack = (type, props) => {
     const frame = (props.animation || attacks[type].animation || {frames: [{}]}).frames[0];
@@ -317,6 +331,11 @@ function default_advanceAttack(state, attack) {
     if (!(delay > 0)) {
         left += vx;
         top += vy;
+        if (attack.relativeToGround) {
+            const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
+            left -= state.world[neargroundKey].xFactor * state.world.vx;
+            top += state.world[neargroundKey].yFactor * state.world.vy;
+        }
     } else {
         return {...attack, delay, left, top, animationTime, done, ttl};
     }
@@ -352,6 +371,7 @@ module.exports = {
     default_advanceAttack,
     renderAttack,
     getAttackTint,
+    ATTACK_GAS,
 };
 
 const { enemyIsActive, getEnemyHitBox } = require('enemies');

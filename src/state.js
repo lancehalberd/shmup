@@ -248,6 +248,7 @@ const advanceState = (state) => {
         const attackHitBox = getAttackHitBox(state, attack);
         for (let j = 0; j < currentEnemyAttacks.length; j++) {
             const enemyAttack = currentEnemyAttacks[j];
+            if (!currentEnemyAttacks[j].deflectable) continue;
             if (Rectangle.collision(attackHitBox, getAttackHitBox(state, enemyAttack))) {
                 currentEnemyAttacks[j] = {...enemyAttack, done: true};
                 const deflectEffect = createEffect(EFFECT_DEFLECT_BULLET);
