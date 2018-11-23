@@ -225,8 +225,13 @@ const advanceState = (state) => {
             const attack = currentEnemyAttacks[j];
             const attackHitBox = getAttackHitBox(state, attack);
             if (Rectangle.collision(playerHitBox, attackHitBox)) {
-                updatedState = damageHero(updatedState, i);
-                currentEnemyAttacks[j] = {...attack, done: !attack.piercing};
+                // Explicit onHitEffect overrides the default attack behavior
+                if (attacks[attack.type] && attacks[attack.type].onHitHero) {
+                    updatedState = attacks[attack.type].onHitHero(updatedState, j, i);
+                } else {
+                    updatedState = damageHero(updatedState, i);
+                    currentEnemyAttacks[j] = {...attack, done: !attack.piercing};
+                }
             }
         }
     }
@@ -337,7 +342,7 @@ module.exports = {
 };
 
 const {
-    advanceAttack, getAttackHitBox,
+    attacks, advanceAttack, getAttackHitBox,
 } = require('attacks');
 const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
 const {

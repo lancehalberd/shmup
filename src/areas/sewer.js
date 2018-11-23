@@ -17,6 +17,8 @@ const CHECK_POINT_SEWER_END = 'sewerEnd'
 const CHECK_POINT_SEWER_BOSS = 'sewerBoss'
 const ENEMY_RAT = 'rat';
 const ENEMY_STINK_BUG = 'stinkBug';
+const ENEMY_ARCHER_FISH = 'archerFish';
+const ENEMY_ARCHER_FISH_SOLDIER = 'archerFishSoldier';
 
 const SEWER_DURATION = 120000;
 const SEWER_EASY_DURATION = 30000;
@@ -29,6 +31,8 @@ module.exports = {
     getSewerWorld,
     ENEMY_RAT,
     ENEMY_STINK_BUG,
+    ENEMY_ARCHER_FISH,
+    ENEMY_ARCHER_FISH_SOLDIER,
 };
 
 checkpoints[CHECK_POINT_SEWER_START] = function (state) {
@@ -67,8 +71,8 @@ allWorlds[WORLD_SEWER] = {
         },
         nothing: nothing(1000, 'easyRoaches'),
         easyRoaches: easyRoaches('powerup'),
-        powerup: powerup(['rats', 'bugs']),
-        cockroaches: normalRoaches(SEWER_EASY_DURATION, ['rats', 'bugs']),
+        powerup: powerup(['rats', 'bugs', 'fish']),
+        cockroaches: normalRoaches(SEWER_EASY_DURATION, ['fish', 'bugs']),
         bugs(state, eventTime) {
             return setEvent(state, ['randomBugs', 'wallOfBugs']);
         },
@@ -80,7 +84,7 @@ allWorlds[WORLD_SEWER] = {
             }
             eventTime -= 4000;
             if (eventTime >= 0) {
-                return setEvent(state, ['cockroaches', 'rats']);
+                return setEvent(state, ['cockroaches', 'fish']);
             }
         },
         wallOfBugs(state, eventTime) {
@@ -96,14 +100,28 @@ allWorlds[WORLD_SEWER] = {
             }
             eventTime -= 4000;
             if (eventTime >= 0) {
-                return setEvent(state, ['cockroaches', 'rats']);
+                return setEvent(state, ['cockroaches', 'fish']);
+            }
+        },
+        fish: (state, eventTime) => {
+            if (eventTime === 0) {
+                if (state.world.time > SEWER_EASY_DURATION ) {
+                    return spawnEnemy(state, ENEMY_ARCHER_FISH, {left: WIDTH + 100, top: GAME_HEIGHT + 50});
+                } else {
+                    return spawnEnemy(state, ENEMY_ARCHER_FISH_SOLDIER, {left: WIDTH + 100, top: getHazardHeight(state) + 50});
+                }
+
+            }
+            eventTime -= 1000;
+            if (eventTime >= 0) {
+                return setEvent(state, ['rats', 'bugs']);
             }
         },
         rats: (state, eventTime) => {
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_RAT, {left: WIDTH, top: random.range(SAFE_HEIGHT / 4, SAFE_HEIGHT / 2)});
             }
-            eventTime -= 4000;
+            eventTime -= 1000;
             if (eventTime >= 0) {
                 return setEvent(state, ['cockroaches', 'bugs']);
             }
@@ -144,7 +162,7 @@ function floatEnemies(state) {
     for (const enemy of state.enemies) {
         if (!enemy.dead) continue;
         const enemyHitBox = getEnemyHitBox(state, enemy);
-        if (enemyHitBox.top + enemyHitBox.height >= getHazardHeight(state)) {
+        if (enemyHitBox.top + enemyHitBox.height / 2 >= getHazardHeight(state)) {
             state = updateEnemy(state, enemy, {vx: (enemy.vx - 1.5) * 0.9, vy: enemy.vy * 0.85 - 1.2 });
         }
     }
@@ -153,13 +171,23 @@ function floatEnemies(state) {
 
 const sewerLoop = createAnimation('gfx/scene/sewer/sewer.png', r(400, 500));
 const waterAnimation = createAnimation('gfx/scene/sewer/50water.png', r(200, 100));
-const waterTopRectangle = r(200, 30);
+const waterTopRectangle = r(200, 15);
 const waterTopAnimation = {
     frames: [
         {...waterTopRectangle, image: requireImage('gfx/scene/sewer/water1.png')},
         {...waterTopRectangle, image: requireImage('gfx/scene/sewer/water2.png')},
         {...waterTopRectangle, image: requireImage('gfx/scene/sewer/water3.png')},
         {...waterTopRectangle, image: requireImage('gfx/scene/sewer/water2.png')},
+    ],
+    frameDuration: 20,
+}
+const waterTopForegroundRectangle = {left: 0, top: 15, width: 200, height:15};
+const waterTopForegroundAnimation = {
+    frames: [
+        {...waterTopForegroundRectangle, image: requireImage('gfx/scene/sewer/water1.png')},
+        {...waterTopForegroundRectangle, image: requireImage('gfx/scene/sewer/water2.png')},
+        {...waterTopForegroundRectangle, image: requireImage('gfx/scene/sewer/water3.png')},
+        {...waterTopForegroundRectangle, image: requireImage('gfx/scene/sewer/water2.png')},
     ],
     frameDuration: 20,
 }
@@ -172,24 +200,30 @@ function getSewerLayers () {
             },
         }),
         water: getNewLayer({
-            xFactor: 1, yFactor: 1, yOffset: 0,
+            xFactor: 1, yFactor: 1, yOffset: 60,
             spriteData: {
                 water: {animation: waterAnimation, scale: 2, next: ['water']},
             },
         }),
         ground: getNewLayer({
-            xFactor: 1, yFactor: 1, yOffset: -140,
+            xFactor: 1, yFactor: 1, yOffset: -170,
             spriteData: {
                 water: {animation: waterTopAnimation, scale: 2, vx: -3, next: ['water']},
+            },
+        }),
+        foreground: getNewLayer({
+            xFactor: 1, yFactor: 1, yOffset: -140,
+            spriteData: {
+                water: {animation: waterTopForegroundAnimation, scale: 2, vx: -4, next: ['water']},
             },
         }),
         // Background layers start at the top left corner of the screen.
         bgLayerNames: [],
         // Midground layers use the bottom of the HUD as the top of the screen,
         // which is consistent with all non background sprites, making hit detection simple.
-        mgLayerNames: ['background', 'water', 'ground'],
+        mgLayerNames: ['background', 'ground'],
         // Foreground works the same as Midground but is drawn on top of game sprites.
-        fgLayerNames: [],
+        fgLayerNames: ['water', 'foreground'],
     };
 }
 
@@ -206,7 +240,7 @@ function getSewerWorld() {
         time: 0,
         bgm: 'bgm/alley.mp3',
         hazardHeight: 170,
-        groundHeight: 0,
+        groundHeight: -1000,
         ...getSewerLayers(),
     };
 }
@@ -214,7 +248,7 @@ function getSewerWorld() {
 const { updatePlayer, getHeroHitBox } = require('heroes');
 const { spawnEnemy, enemyData, getEnemyHitBox, updateEnemy } = require('enemies');
 const { transitionToSewerBoss } = require('areas/sewerBoss');
-const { createAttack, addEnemyAttackToState, ATTACK_GAS } = require('attacks');
+const { createAttack, addEnemyAttackToState, ATTACK_GAS, ATTACK_WATER } = require('attacks');
 
 const ratGeometry = r(120, 120, {
     hitBox: {left: 50, top: 2, width: 25, height: 85}
@@ -311,13 +345,95 @@ enemyData[ENEMY_STINK_BUG] = {
     },
 };
 
-/*
+const archerFishGeometry = r(80, 80, {
+    hitBox: {left: 7, top: 20, width: 70, height: 50},
+});
 
-I moved the mounted enemy to the Archerfish.
-The Archerfish alone has an attack, and can attack even when mounted,
-shooting globs of water or a stream of water that when hitting the knight pushes them downward.
-The water can move in an arc, perhaps, but if that is impossible, can be like a laser.
-I can make any attack related effect needed on my end, but I was not sure how it needed to be done.
+enemyData[ENEMY_ARCHER_FISH] = {
+    animation: createAnimation('gfx/enemies/archersheet.png', archerFishGeometry, {cols: 2}),
+    attackAnimation: createAnimation('gfx/enemies/archersheet.png', archerFishGeometry, {x: 2}),
+    deathAnimation: createAnimation('gfx/enemies/archersheet.png', archerFishGeometry, {y: 1}),
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.deathAnimation;
+        if (enemy.mode === 'attack') return this.attackAnimation;
+        return this.animation;
+    },
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        if (enemy.mode === 'rising') {
+            const hitBox = getEnemyHitBox(state, enemy);
+            const offset = (enemy.type === ENEMY_ARCHER_FISH_SOLDIER) ? 20 : 30;
+            if (hitBox.top + offset > getHazardHeight(state)) {
+                return updateEnemy(state, enemy, {vy: enemy.vy * .85 - 0.4});
+            }
+            return this.changeMode(state, enemy, 'pause');
+        }
+        if (enemy.mode === 'attack') {
+            if (enemy.modeTime >= 400 && !(enemy.modeTime % 10) && (enemy.modeTime % 100 < 50)) {
+                const hitBox = getEnemyHitBox(state, enemy);
+                const water = createAttack(ATTACK_WATER, {
+                    left: hitBox.left + hitBox.width / 2 + 36 * (enemy.flipped ? 1 : -1),
+                    top: hitBox.top + 4,
+                    vx: (enemy.flipped ? 1 : -2) * 5,
+                    vy: -8,
+                });
+                water.left -= water.width / 2;
+                water.top -= water.height / 2;
+                state = updateEnemy(state, enemy, {left: enemy.left + (enemy.flipped ? -1 : 1), top: enemy.top + 1});
+                state = addEnemyAttackToState(state, water);
+                enemy = state.idMap[enemy.id];
+            }
+            if (enemy.modeTime === 800) {
+                return this.changeMode(state, enemy, 'rising');
+            }
+            return updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH, vy: 0, vx: enemy.vx * 0.1});
+        }
+        if (enemy.mode === 'pause') {
+            if (enemy.modeTime === 800) {
+                return this.changeMode(state, enemy, 'attack');
+            }
+            const playerHitBox = getHeroHitBox(state.players[0]);
+            const hitBox = getEnemyHitBox(state, enemy);
+            const dx = (playerHitBox.left + playerHitBox.width / 2) - (hitBox.left + hitBox.width / 2);
+            return updateEnemy(state, enemy, {
+                modeTime: enemy.modeTime + FRAME_LENGTH,
+                flipped: dx > 0,
+                vy: 0,
+                vx: (enemy.type === ENEMY_ARCHER_FISH_SOLDIER) ? (dx > 0 ? 1 : -2) : 0,
+            });
+        }
+        return state;
+    },
+    changeMode(state, enemy, mode) {
+        return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0});
+    },
+    props: {
+        life: 5,
+        score: 40,
+        mode: 'rising',
+        hanging: true,
+        // Water doesn't kill the fish.
+        hazardProof: true,
+        doNotFlip: true,
+    },
+};
 
-*/
+
+const archerFishSoldierGeometry = {
+    ...archerFishGeometry,
+    hitBoxes: [
+        archerFishGeometry.hitBox,
+        {left: 23, top: 0, width: 20, height: 34},
+    ]
+}
+
+// This just gives different animations for the fish soldier, the regular fish itself
+// checks the type and has slightly different behavior for the soldier.
+enemyData[ENEMY_ARCHER_FISH_SOLDIER] = {
+    ...enemyData[ENEMY_ARCHER_FISH],
+    animation: createAnimation('gfx/enemies/archersheet.png', archerFishSoldierGeometry, {y: 1, rows: 2, cols: 3, frameMap: [2, 3]}),
+    attackAnimation: createAnimation('gfx/enemies/archersheet.png', archerFishSoldierGeometry, {y: 1, x: 1}),
+    deathAnimation: createAnimation('gfx/enemies/archersheet.png', archerFishSoldierGeometry, {y: 1}),
+};
+
 

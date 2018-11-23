@@ -528,9 +528,11 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
     if (enemy.dead && !enemy.persist) {
         context.globalAlpha = .6;
     }
+    let flipped = enemy.flipped;
+    if (!enemy.doNotFlip && enemy.vx > 0) flipped = !flipped;
     let hitBox = getEnemyHitBox(state, enemy);
     drawBox = drawBox || getEnemyDrawBox(state, enemy);
-    if ((enemy.vx > 0 && !enemy.flipped && !enemy.doNotFlip) || (enemy.vx <= 0 && enemy.flipped)) {
+    if (flipped) {
         // This moves the origin to where we want the center of the enemies hitBox to be.
         context.save();
         context.translate(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2);
@@ -668,12 +670,12 @@ const advanceEnemy = (state, enemy) => {
         if (!enemy.stationary) {
             top = Math.min(top, getGroundHeight(state) + groundOffset - (hitBox.top + hitBox.height));
         }
-        if (!enemy.boss && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
+        if (!enemy.boss && !enemy.hazardProof && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
-        if (!enemy.boss && top + hitBox.top < getHazardCeilingHeight(state)) {
+        if (!enemy.boss && !enemy.hazardProof && top + hitBox.top < getHazardCeilingHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             if (!state.idMap) debugger;
             enemy = state.idMap[enemy.id];
@@ -746,7 +748,7 @@ const advanceEnemy = (state, enemy) => {
                 (effectiveVx < 0 && drawBox.left + drawBox.width < -OFFSCREEN_PADDING) ||
                 (effectiveVx > 0 && drawBox.left > WIDTH + OFFSCREEN_PADDING) ||
                 (enemy.vy < 0 && drawBox.top + drawBox.height < -OFFSCREEN_PADDING) ||
-                drawBox.top > GAME_HEIGHT + OFFSCREEN_PADDING
+                (enemy.vy > 0 && drawBox.top > GAME_HEIGHT + OFFSCREEN_PADDING)
             );
         if (done) {
             return removeEnemy(state, enemy);

@@ -88,14 +88,14 @@ const getNewPlayerState = () => ({
     },
 });
 
-const updatePlayer = (state, playerIndex, props, spriteProps = null) => {
+function updatePlayer(state, playerIndex, props, spriteProps = null) {
     const players = [...state.players];
     if (spriteProps) {
         props.sprite = {...players[playerIndex].sprite, ...spriteProps};
     }
     players[playerIndex] = {...players[playerIndex], ...props};
     return {...state, players};
-};
+}
 
 function updatePlayerOnContinue(state, playerIndex) {
     return updatePlayer(state, playerIndex, {

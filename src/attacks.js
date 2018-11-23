@@ -224,11 +224,21 @@ const ATTACK_GAS = 'gas';
 attacks[ATTACK_GAS] = {
     animation: createAnimation('gfx/enemies/stinkbugsheet.png', r(30, 30), {cols: 2, x: 4}),
     props: {
-        // The animation is quite short, so just set an explicit ttl of 3 seconds.
+        // This attack only lasts 3 seconds.
         ttl: 3000 / FRAME_LENGTH,
         relativeToGround: true,
         // This will prevent the cloud from being removed on hitting a player
         piercing: true,
+    },
+};
+const ATTACK_WATER = 'water';
+attacks[ATTACK_WATER] = {
+    animation: createAnimation('gfx/attacks/archer_fish_water2.png', r(10, 10)),
+    onHitHero(state, enemyAttackIndex, playerIndex) {
+        return updatePlayer(state, playerIndex, {}, {vy: state.players[playerIndex].sprite.vy * 0.8 + 4});
+    },
+    props: {
+        ay: 0.1
     },
 };
 
@@ -329,6 +339,8 @@ function default_advanceAttack(state, attack) {
         }
     }
     if (!(delay > 0)) {
+        if (attack.ax) vx += attack.ax;
+        if (attack.ay) vy += attack.ay;
         left += vx;
         top += vy;
         if (attack.relativeToGround) {
@@ -351,7 +363,7 @@ function default_advanceAttack(state, attack) {
         done = left + width  < -OFFSCREEN_PADDING || left > WIDTH + OFFSCREEN_PADDING ||
                 top + height < -OFFSCREEN_PADDING || top > GAME_HEIGHT + OFFSCREEN_PADDING;
     }
-    return {...attack, delay, left, top, animationTime, done, ttl};
+    return {...attack, delay, left, top, animationTime, done, vx, vy, ttl};
 }
 
 function advanceAttack(state, attack) {
@@ -372,6 +384,8 @@ module.exports = {
     renderAttack,
     getAttackTint,
     ATTACK_GAS,
+    ATTACK_WATER,
 };
 
 const { enemyIsActive, getEnemyHitBox } = require('enemies');
+const { updatePlayer } = require('heroes');

@@ -1,15 +1,24 @@
 
 const { PRIORITY_FIELD, requireImage, createAnimation, r } = require('animations');
-
 const { ATTACK_EXPLOSION } = require('gameConstants');
-const { enemyData } = require('enemies');
-const { attacks, createAttack, addNeutralAttackToState, default_advanceAttack } = require('attacks');
-
-const beetleRectangle = r(100, 100, {hitBox: {left: 0, top: 16, width: 100, height: 84}});
 
 const ENEMY_CARGO_BEETLE = 'cargoBeetle';
 const ENEMY_EXPLOSIVE_BEETLE = 'explosiveBeetle';
 const ENEMY_LIGHTNING_BEETLE = 'lightningBeetle';
+const ATTACK_LIGHTNING_BOLT = 'lightningBolt';
+
+module.exports = {
+    ENEMY_CARGO_BEETLE,
+    ENEMY_EXPLOSIVE_BEETLE,
+    ENEMY_LIGHTNING_BEETLE,
+    ATTACK_LIGHTNING_BOLT,
+};
+
+const { attacks, createAttack, addNeutralAttackToState, default_advanceAttack } = require('attacks');
+const { enemyData } = require('enemies');
+const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
+
+const beetleRectangle = r(100, 100, {hitBox: {left: 0, top: 16, width: 100, height: 84}});
 enemyData[ENEMY_CARGO_BEETLE] = {
     animation: {
         frames: [
@@ -96,18 +105,6 @@ enemyData[ENEMY_LIGHTNING_BEETLE] = {
         return addNeutralAttackToState(state, lightning);
     },
 };
-
-const ATTACK_LIGHTNING_BOLT = 'lightningBolt';
-
-module.exports = {
-    ENEMY_CARGO_BEETLE,
-    ENEMY_EXPLOSIVE_BEETLE,
-    ENEMY_LIGHTNING_BEETLE,
-    ATTACK_LIGHTNING_BOLT,
-};
-
-const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
-
 
 attacks[ATTACK_LIGHTNING_BOLT] = {
     animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 72}),
