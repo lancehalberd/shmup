@@ -6,6 +6,7 @@ const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
 const { getGroundHeight, getNewLayer, allWorlds,
     checkpoints, setCheckpoint, getHazardCeilingHeight, getHazardHeight, setEvent,
+    advanceWorld,
 } = require('world');
 const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
 
@@ -54,7 +55,9 @@ checkpoints[CHECK_POINT_SEWER_END] = function (state) {
 checkpoints[CHECK_POINT_SEWER_BOSS] = function (state) {
     const world = getSewerWorld();
     world.time = 120000;
-    return transitionToSewerBoss({...state, world});
+    // Need to call advanceWorld once so that sprites from the sewer are present which
+    // the transition requires.
+    return transitionToSewerBoss(advanceWorld({...state, world}));
 };
 
 const { nothing, powerup, easyRoaches, normalRoaches, } = require('enemyPatterns');
@@ -62,9 +65,9 @@ allWorlds[WORLD_SEWER] = {
     initialEvent: 'nothing',
     events: {
         transition: (state, eventTime) => {
-            state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
+            state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 150});
             if (eventTime === 1000) {
-                state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 400});
+                state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 200});
                 return setEvent(state, 'nothing');
             }
             return state;
@@ -105,7 +108,7 @@ allWorlds[WORLD_SEWER] = {
         },
         fish: (state, eventTime) => {
             if (eventTime === 0) {
-                if (state.world.time > SEWER_EASY_DURATION ) {
+                if (state.world.time < SEWER_EASY_DURATION ) {
                     return spawnEnemy(state, ENEMY_ARCHER_FISH, {left: WIDTH + 100, top: GAME_HEIGHT + 50});
                 } else {
                     return spawnEnemy(state, ENEMY_ARCHER_FISH_SOLDIER, {left: WIDTH + 100, top: getHazardHeight(state) + 50});
@@ -169,7 +172,8 @@ function floatEnemies(state) {
     return state;
 }
 
-const sewerLoop = createAnimation('gfx/scene/sewer/sewer.png', r(400, 500));
+const sewerBackground1 = createAnimation('gfx/scene/sewer/sewer1.png', r(400, 500));
+const sewerBackground2 = createAnimation('gfx/scene/sewer/sewer2.png', r(400, 500));
 const waterAnimation = createAnimation('gfx/scene/sewer/50water.png', r(200, 100));
 const waterTopRectangle = r(200, 15);
 const waterTopAnimation = {
@@ -196,7 +200,8 @@ function getSewerLayers () {
         background: getNewLayer({
             xFactor: 1, yFactor: 1, maxY: 0,
             spriteData: {
-                sewer: {animation: sewerLoop, scale: 2, next: ['sewer']},
+                sewer1: {animation: sewerBackground1, scale: 2, next: ['sewer1', 'sewer2']},
+                sewer2: {animation: sewerBackground2, scale: 2, next: ['sewer1', 'sewer2']},
             },
         }),
         water: getNewLayer({
@@ -223,7 +228,7 @@ function getSewerLayers () {
         // which is consistent with all non background sprites, making hit detection simple.
         mgLayerNames: ['background', 'ground'],
         // Foreground works the same as Midground but is drawn on top of game sprites.
-        fgLayerNames: ['water', 'foreground'],
+        fgLayerNames: ['water', 'foreground', 'heroShadow'],
     };
 }
 
@@ -417,7 +422,6 @@ enemyData[ENEMY_ARCHER_FISH] = {
         doNotFlip: true,
     },
 };
-
 
 const archerFishSoldierGeometry = {
     ...archerFishGeometry,

@@ -10,65 +10,76 @@ const { allWorlds, getNewLayer } = require('world');
 const WORLD_SEWER_BOSS = 'sewerBoss';
 const BOSS_DURATION = 80000;
 
+const bossBackground = createAnimation('gfx/scene/sewer/snekback.png', r(400, 500));
 function transitionToSewerBoss(state) {
     const world = {
         ...state.world,
         type: WORLD_SEWER_BOSS,
         time: 0,
         targetFrames: 50 * 5,
+        bgm: 'bgm/boss.mp3',
+        background: {
+            ...state.world.background,
+            sprites: state.world.background.sprites.filter(s => s.left <= WIDTH),
+            firstElements: false,
+            spriteData: {
+                sewerSnake: {animation: bossBackground, scale: 2, next: false},
+            },
+        },
     };
+    // The snake background will shortly be added right after the current last background sprite.
+    // Since the snake background is the width of the screen, the new target x is the right edge
+    // of this last sprite.
+    const lastBackgroundSprite = world.background.sprites.slice(-1)[0];
+    // It is safe to edit world in place here since we just created the object above.
+    world.targetX = lastBackgroundSprite.left + lastBackgroundSprite.width;
+    world.targetY = 150;
     return {...state, world};
 }
 allWorlds[WORLD_SEWER_BOSS] = {
     advanceWorld: (state) => {
-        let world = state.world;
-        // For now just set the targetFrame and destination constantly ahead.
-        // Later we can change this depending on the scenario.
-        let {targetFrames, targetX, targetY} = world;
-        // 20s before the end of the level raise screen so we can transition to the sunrise graphics
-        // during the boss fight.
-        if (world.time < BOSS_DURATION - 20000) {
-            targetFrames = 70 * 5;
-            targetX = Math.max(world.targetX, world.x + 1000);
-            targetY = world.y;
-        } else if (world.time === BOSS_DURATION - 20000) {
-            targetFrames = 20000 / FRAME_LENGTH;
-            targetY = 0;
-            targetX = world.x + 3000;
+        if (state.world.time === 500) {
+            state = spawnBoss(state);
         }
-        const time = world.time + FRAME_LENGTH;
-        world = {...world, targetX, targetY, targetFrames, time};
-
-        if (time === 500) {
-            const lifebars = {};
-            let newEnemy = createEnemy(state, ENEMY_SEAGULL, {
-                left: WIDTH + 1000,
-                top: -100,
-            });
-            lifebars[newEnemy.id] = {
-                left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
-            };
-            state = addEnemyToState(state, newEnemy);
-            world = {...world, lifebars, bgm: 'bgm/boss.mp3'};
-            state = {...state, bgm: world.bgm};
-        }
-        const seagull = state.enemies.filter(enemy => enemy.type === ENEMY_SEAGULL)[0];
-        if (time > 500 && !seagull) {
-            return transitionToZoo(state);
-        }
-
-        state = {...state, world};
+        state = checkIfBossDefeated(state);
+        state = {
+            ...state,
+            world: {
+                ...state.world,
+                targetFrames: state.world.targetFrames + 0.5,
+                time: state.world.time + FRAME_LENGTH,
+            }
+        };
         return state;
     },
 };
+function spawnBoss(state) {
+    const snakeBackground = state.world.background.sprites.slice(-1)[0];
+    const snake = createEnemy(state, ENEMY_SNAKE, {top: snakeBackground.top + 322, left: snakeBackground.left + 360});
+    state = addEnemyToState(state, snake);
+    const lifebars = {};
+    lifebars[snake.id] = {
+        left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: state.world.time,
+    };
+    return {...state,
+        bgm: 'bgm/boss.mp3',
+        world: {...state.world, lifebars, bgm: 'bgm/boss.mp3'}
+    };
+}
+function checkIfBossDefeated(state) {
+    const snake = state.enemies.filter(enemy => enemy.type === ENEMY_SNAKE)[0];
+    if (state.world.time > 500 && !snake) {
+        return transitionToCircus(state);
+    }
+    return state
+}
 
 module.exports = {
     transitionToSewerBoss,
 };
-const { transitionToZoo } = require('areas/sewerToZoo');
+const { transitionToCircus } = require('areas/sewerToCircus');
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
-const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 /*
 Here is the snake boss! There are some lines I'll probably fix up in the future, but the shape is all
 the same. I put the whole snake in a sheet, but the sizes of each part is different.
@@ -91,48 +102,94 @@ usually, but can extend out toward the knight now and again. Eventually, it retu
 flush with the snake's head and hits the water, which erupts in a sort of wave across the screen,
 overlaying a new top water sprite and making the bottom half of the boss arena deadly.
 
+
+Add Snake Boss
+The snake has the ability to eat rats that are moving from left to right on the screen to regain health
+The snake can also hit the ground with their tail, causing a wave of water to go across the bottom half of the screen
+The snake can bite both high and low, as well as stab forward with their tail
+
 */
-const ENEMY_SEAGULL = 'seagull';
-const seagullGeometry = r(200, 102,
-    {hitBox: {left: 39, top: 63, width: 117, height: 40}},
-);
-enemyData[ENEMY_SEAGULL] = {
-    animation: createAnimation('gfx/enemies/birds/seagull.png', seagullGeometry, {rows: 4}),
-    accelerate: (state, enemy) => {
-        let {vx, vy, targetX, targetY, mode, modeTime, top, left} = enemy;
-        switch (mode) {
-            case 'prepare':
-                if (modeTime === 1000) {
-                    mode = 'attack';
-                    modeTime = 0;
-                }
-                break;
-            case 'attack': {
-                vx = (left > WIDTH) ? -enemy.speed : enemy.speed;
-                top = state.players[0].sprite.top - 150;
-                mode = 'glide';
-                modeTime = 0;
-                break;
+function snakeAnimation(frames, hitBoxes) {
+    return {
+        frames: frames.map(frame => {
+            const bodyBox = new Rectangle(snakeHitBox).moveTo(
+                frame.width - snakeHitBox.width,
+                frame.height - snakeHitBox.height,
+            );
+            return {
+                ...frame,
+                hitBoxes: [
+                    ...hitBoxes,
+                    ...snakeBodyHitBoxes.map(hitBox => new Rectangle(hitBox).translate(bodyBox.left, bodyBox.top))
+                ],
+                hitBox: bodyBox,
             }
-            case 'glide':
-                vy = ((left + enemy.width / 2 - WIDTH / 2) * vx < 0) ? 3 : -3;
-                if ((vx > 0 && left > WIDTH + 200) || (vx < 0 && left + enemy.width < -200)) {
-                    mode = 'prepare';
-                    modeTime = 0;
-                    vx = 0;
-                }
-                break;
-        }
-        modeTime += FRAME_LENGTH;
-        return {...enemy, targetX, targetY, vx, vy, mode, modeTime, top, left};
+        }),
+        frameDuration: 12,
+    }
+}
+const ENEMY_SNAKE = 'snake';
+// Sheet with all snake graphics in it.
+const snakeSheet = {image: requireImage('gfx/enemies/snake/snakesheet.png'), scaleX: 2, scaleY: 2};
+// HitBox shared by all snake body frames to align them correctly. The left/top need to be set
+// so that this box is always touching the bottom right edges of the snake body.
+const snakeHitBox = {width: 100, height: 150};
+// These should be set to be relative to the snakeHitBox for each frame.
+const snakeBodyHitBoxes = [
+    {left: 49, top: 24, width: 20, height: 55},
+    {left: 11, top: 70, width: 30, height: 55},
+    {left: 40, top: 118, width: 60, height: 30},
+];
+const snakeDeathFrame = {...snakeSheet, left: 0, top: 0, width: 123, height: 150};
+const snakeHurtFrame = {...snakeSheet, left: 266, top: 0, width: 174, height: 213};
+
+const snakeOpenMouthFrame1 = {...snakeSheet, left: 0, top: 291, width: 191, height: 181};
+const snakeOpenMouthFrame2 = {...snakeSheet, left: 191, top: 291, width: 191, height: 181};
+
+const snakeNormalFrame = {...snakeSheet, left: 0, top: 472, width: 198, height: 167};
+const snakeTongueFrame1 = {...snakeSheet, left: 198, top: 472, width: 207, height: 167};
+const snakeTongueFrame2 = {...snakeSheet, left: 0, top: 639, width: 222, height: 167};
+const snakeTongueFrame3 = {...snakeSheet, left: 222, top: 639, width: 224, height: 167};
+const snakeNormalHitBoxes = [
+    {left: 0, top: 62, width: 70, height: 10},
+    {left: 31, top: 42, width: 60, height: 20},
+    {left: 86, top: 25, width: 35, height: 15},
+    {left: 112, top: 4, width: 40, height: 20},
+];
+
+const snakeBiteLowFrame1 = {...snakeSheet, left: 0, top: 806, width: 354, height: 165};
+const snakeBiteLowFrame2 = {...snakeSheet, left: 0, top: 971, width: 357, height: 153};
+const snakeBiteLowFrame3 = {...snakeSheet, left: 0, top: 1124, width: 357, height: 153};
+const snakeBiteLowFrame4 = {...snakeSheet, left: 0, top: 1277, width: 357, height: 153};
+const snakeBiteLowHitBoxes = [
+    {left: 12, top: 85, width: 30, height: 15},
+    {left: 28, top: 67, width: 45, height: 15},
+    {left: 69, top: 51, width: 60, height: 15},
+    {left: 131, top: 34, width: 60, height: 15},
+    {left: 195, top: 18, width: 60, height: 15},
+    {left: 231, top: 11, width: 75, height: 10},
+    {left: 307, top: 2, width: 20, height: 20},
+];
+
+const snakeBiteHighFrame1 = {...snakeSheet, left: 0, top: 1430, width: 363, height: 177};
+const snakeBiteHighFrame2 = {...snakeSheet, left: 0, top: 1607, width: 363, height: 177};
+const snakeBiteHighFrame3 = {...snakeSheet, left: 0, top: 1784, width: 364, height: 178};
+
+enemyData[ENEMY_SNAKE] = {
+    animation: snakeAnimation(
+        [snakeNormalFrame, snakeTongueFrame1, snakeTongueFrame2, snakeTongueFrame3, snakeTongueFrame2, snakeTongueFrame1],
+        snakeNormalHitBoxes,
+    ),
+    accelerate: (state, enemy) => {
+        return enemy;
     },
     props: {
         life: 10000,
-        speed: 15,
-        weakness: {[ATTACK_LIGHTNING_BOLT]: 1000},
+        hanging: true,
+        vx: 0, vy: 0,
         boss: true,
         permanent: true,
         mode: 'attack',
-        flipped: true,
+        doNotFlip: true,
     },
 };

@@ -6,14 +6,14 @@ const { addElementToLayer, applyCheckpointToState, setCheckpoint, allWorlds } = 
 function transitionToOcean(state) {
     const world = {
         ...state.world,
-        type: ZOO_TO_OCEAN,
+        type: CIRCUS_TO_OCEAN,
         suppressAttacks: true,
     };
     return {...state, world}
 }
 
-const ZOO_TO_OCEAN = 'zooToOcean';
-allWorlds[ZOO_TO_OCEAN] = {
+const CIRCUS_TO_OCEAN = 'circusToOcean';
+allWorlds[CIRCUS_TO_OCEAN] = {
     advanceWorld: (state) => {
         state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
         let world = {

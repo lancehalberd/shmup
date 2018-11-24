@@ -161,7 +161,7 @@ function checkIfBossDefeated(state) {
         return transitionToBeach(state);
     }
     if (state.world.time > 500 && !spider) {
-        return transitionToZoo(state);
+        return transitionToCircus(state);
     }
     return state
 }
@@ -207,7 +207,7 @@ module.exports = {
     transitionToRestaurantBoss,
 };
 const { transitionToBeach } = require('areas/restaurantToBeach');
-const { transitionToZoo } = require('areas/restaurantToZoo');
+const { transitionToCircus } = require('areas/restaurantToCircus');
 
 const { damageHero, getHeroHitBox } = require('heroes');
 const {

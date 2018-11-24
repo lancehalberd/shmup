@@ -595,6 +595,9 @@ const renderEnemy = (context, state, enemy) => {
         for (const hitBox of getEnemyHitBoxes(state, enemy, true)) {
             context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         }
+        context.fillStyle = 'yellow';
+        const hitBox = getEnemyHitBox(state, enemy);
+        context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
         context.restore();
     }
     if (enemyData[enemy.type].drawOver) {

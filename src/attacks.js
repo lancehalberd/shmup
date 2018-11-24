@@ -19,7 +19,6 @@ const {
     blastLoopAnimation,
     slashAnimation,
     stabAnimation,
-    bulletAnimation,
     hugeExplosionAnimation,
 } = require('animations');
 
@@ -90,7 +89,7 @@ const attacks = {
         },
     },
     [ATTACK_BULLET]: {
-        animation: bulletAnimation,
+        animation: createAnimation('gfx/attacks/ebout.png', r(14, 15), {cols: 4}),
         props: {
             deflectable: true,
         }

@@ -7,19 +7,19 @@ const Rectangle = require('Rectangle');
 const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
 const { allWorlds, getNewLayer } = require('world');
 
-const WORLD_ZOO_BOSS = 'zooBoss';
+const WORLD_CIRCUS_BOSS = 'circusBoss';
 const BOSS_DURATION = 80000;
 
-function transitionToZooBoss(state) {
+function transitionToCircusBoss(state) {
     const world = {
         ...state.world,
-        type: WORLD_ZOO_BOSS,
+        type: WORLD_CIRCUS_BOSS,
         time: 0,
         targetFrames: 50 * 5,
     };
     return {...state, world};
 }
-allWorlds[WORLD_ZOO_BOSS] = {
+allWorlds[WORLD_CIRCUS_BOSS] = {
     advanceWorld: (state) => {
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
@@ -63,9 +63,9 @@ allWorlds[WORLD_ZOO_BOSS] = {
 };
 
 module.exports = {
-    transitionToZooBoss,
+    transitionToCircusBoss,
 };
-const { transitionToOcean } = require('areas/zooToOcean');
+const { transitionToOcean } = require('areas/circusToOcean');
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');

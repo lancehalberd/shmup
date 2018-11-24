@@ -154,21 +154,10 @@ const stabAnimation = {
     frameDuration: 3,
 };
 
-const bulletRectangle = r(14, 15);
-const bulletAnimation = {
-    frames: [
-        {...bulletRectangle, image: requireImage('gfx/attacks/eb1.png', PRIORITY_FIELD)},
-        {...bulletRectangle, image: requireImage('gfx/attacks/eb2.png', PRIORITY_FIELD)},
-        {...bulletRectangle, image: requireImage('gfx/attacks/eb3.png', PRIORITY_FIELD)},
-        {...bulletRectangle, image: requireImage('gfx/attacks/eb4.png', PRIORITY_FIELD)},
-        {...bulletRectangle, image: requireImage('gfx/attacks/eb5.png', PRIORITY_FIELD)},
-    ],
-    frameDuration: 2,
-};
 const deflectAnimation = {
     frames: [
-        {...bulletRectangle, image: requireImage('gfx/attacks/deflect1.png', PRIORITY_FIELD)},
-        {...bulletRectangle, image: requireImage('gfx/attacks/deflect2.png', PRIORITY_FIELD)},
+        {...r(14, 15), image: requireImage('gfx/attacks/deflect1.png', PRIORITY_FIELD)},
+        {...r(14, 15), image: requireImage('gfx/attacks/deflect2.png', PRIORITY_FIELD)},
     ],
     frameDuration: 4,
 };
@@ -446,7 +435,6 @@ module.exports = {
     blastLoopAnimation,
     slashAnimation,
     stabAnimation,
-    bulletAnimation,
     deflectAnimation,
     damageAnimation,
     explosionAnimation,

@@ -3,7 +3,7 @@ const Rectangle = require('Rectangle');
 const random = require('random');
 const { drawImage } = require('draw');
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
-const { getFrame } = require('animations');
+const { getFrame, r, createAnimation } = require('animations');
 const { getNewSpriteState } = require('sprites');
 
 const allWorlds = {};
@@ -118,6 +118,7 @@ function clearLayers(state, layerNames) {
 }
 
 const advanceLayer = (state, layerName) => {
+    if (layerName === 'heroShadow') return state;
     // Check to add a new element to scroll onto the screen.
     state = addElementToLayer(state, layerName);
     const layer = {...state.world[layerName]};
@@ -248,7 +249,7 @@ const renderBackgroundLayer = (context, {frame, x, y, maxY}) => {
     }
 };
 // Render scenery that appear behind the main game sprites.
-const renderBackground = (context, state) => {
+function renderBackground(context, state) {
     // The background needs to be rendered behind the HUD so that it can cover the screen
     // even when the HUD is not rendered (for example on the title screen).
     for (const layerName of state.world.bgLayerNames) renderLayer(context, state, layerName);
@@ -256,16 +257,34 @@ const renderBackground = (context, state) => {
     context.translate(0, HUD_HEIGHT);
     for (const layerName of state.world.mgLayerNames) renderLayer(context, state, layerName);
     context.restore();
-};
+}
 // Render scenery that appears in front of the main game sprites.
-const renderForeground = (context, state) => {
+function renderForeground(context, state) {
     context.save();
     context.translate(0, HUD_HEIGHT);
     for (const layerName of state.world.fgLayerNames) renderLayer(context, state, layerName);
     context.restore();
-};
-
-const renderLayer = (context, state, layerName) => {
+}
+const shadowAnimation = createAnimation('gfx/heroes/shadow.png', r(24, 11));
+function renderHeroShadow(context, state) {
+    const y = Math.min(getGroundHeight(state), getHazardHeight(state));
+    const frame = getFrame(shadowAnimation, state.world.time);
+    const heroHitBox = getHeroHitBox(state.players[0]);
+    context.save();
+    const scale = Math.max(1, 5 - (y - (heroHitBox.top + heroHitBox.height)) / 100);
+    context.globalAlpha = 0.1 + scale * 0.07;
+    const target = new Rectangle(frame).scale(scale).moveCenterTo(
+        heroHitBox.left + heroHitBox.width / 2,
+        y,
+    );
+    drawImage(context, frame.image, frame, target);
+    context.restore();
+}
+function renderLayer(context, state, layerName) {
+    if (layerName === 'heroShadow') {
+        renderHeroShadow(context, state);
+        return;
+    }
     const layer = state.world[layerName];
     let frame;
     if (layer.backgroundColor) {
@@ -307,7 +326,7 @@ const renderLayer = (context, state, layerName) => {
             context.restore();
         }
     }
-};
+}
 
 function setCheckpoint(state, checkpoint) {
     return {...state, checkpoint};

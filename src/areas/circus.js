@@ -23,40 +23,40 @@ const setEvent = (state, event) => {
 };
 
 // Add check points for:
-const CHECK_POINT_ZOO_START = 'zooStart';
-const CHECK_POINT_ZOO_MIDDLE = 'zooMiddle';
-const CHECK_POINT_ZOO_MIDDLE_TIME = 40000;
-const CHECK_POINT_ZOO_END = 'zooEnd'
-const CHECK_POINT_ZOO_BOSS = 'zooBoss'
-checkpoints[CHECK_POINT_ZOO_START] = function (state) {
-    const world = getZooWorld();
+const CHECK_POINT_CIRCUS_START = 'circusStart';
+const CHECK_POINT_CIRCUS_MIDDLE = 'circusMiddle';
+const CHECK_POINT_CIRCUS_MIDDLE_TIME = 40000;
+const CHECK_POINT_CIRCUS_END = 'circusEnd'
+const CHECK_POINT_CIRCUS_BOSS = 'circusBoss'
+checkpoints[CHECK_POINT_CIRCUS_START] = function (state) {
+    const world = getCircusWorld();
     return {...state, world};
 };
-checkpoints[CHECK_POINT_ZOO_MIDDLE] = function (state) {
-    const world = getZooWorld();
+checkpoints[CHECK_POINT_CIRCUS_MIDDLE] = function (state) {
+    const world = getCircusWorld();
     // This is 1/3 of the way through the stage.
-    world.time = CHECK_POINT_ZOO_MIDDLE_TIME;
+    world.time = CHECK_POINT_CIRCUS_MIDDLE_TIME;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_ZOO_END] = function (state) {
-    const world = getZooWorld();
+checkpoints[CHECK_POINT_CIRCUS_END] = function (state) {
+    const world = getCircusWorld();
     // This is just enough time for a few powerups + large enemies before the boss fight.
     world.time = 100000;
     return {...state, world};
 };
-checkpoints[CHECK_POINT_ZOO_BOSS] = function (state) {
-    const world = getZooWorld();
+checkpoints[CHECK_POINT_CIRCUS_BOSS] = function (state) {
+    const world = getCircusWorld();
     world.time = 120000;
-    return transitionToZooBoss({...state, world});
+    return transitionToCircusBoss({...state, world});
 };
 
-const ZOO_DURATION = 120000;
-const ZOO_EASY_DURATION = 30000;
+const CIRCUS_DURATION = 120000;
+const CIRCUS_EASY_DURATION = 30000;
 
 const SAFE_HEIGHT = GAME_HEIGHT;
 
-const WORLD_ZOO = 'zoo';
-allWorlds[WORLD_ZOO] = {
+const WORLD_CIRCUS = 'circus';
+allWorlds[WORLD_CIRCUS] = {
     initialEvent: 'nothing',
 
     events: {
@@ -89,7 +89,7 @@ allWorlds[WORLD_ZOO] = {
             }
         },
         wrens: (state, eventTime) => {
-            let spacing = state.world.time < ZOO_EASY_DURATION ? 3000 : 2000;
+            let spacing = state.world.time < CIRCUS_EASY_DURATION ? 3000 : 2000;
             eventTime -= spacing;
             if (eventTime >= 0) {
                 return setEvent(state, random.element(['lightningBeetle']));
@@ -107,8 +107,8 @@ allWorlds[WORLD_ZOO] = {
         },
         bossPrep: (state) => {
             if (state.enemies.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_ZOO_END);
-                return transitionToZooBoss(state);
+                state = setCheckpoint(state, CHECK_POINT_CIRCUS_END);
+                return transitionToCircusBoss(state);
             }
         },
     },
@@ -123,11 +123,11 @@ allWorlds[WORLD_ZOO] = {
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        if (world.type === WORLD_ZOO && world.time >= ZOO_DURATION && world.event !== 'bossPrep') {
+        if (world.type === WORLD_CIRCUS && world.time >= CIRCUS_DURATION && world.event !== 'bossPrep') {
             return setEvent(state, 'bossPrep');
         }
-        if (world.time === CHECK_POINT_ZOO_MIDDLE_TIME) {
-            state = setCheckpoint(state, CHECK_POINT_ZOO_MIDDLE);
+        if (world.time === CHECK_POINT_CIRCUS_MIDDLE_TIME) {
+            state = setCheckpoint(state, CHECK_POINT_CIRCUS_MIDDLE);
         }
 
         if (!world.event) world = {...world, event: allWorlds[world.type].initialEvent, eventTime: 0};
@@ -137,8 +137,8 @@ allWorlds[WORLD_ZOO] = {
     },
 };
 
-const getZooWorld = () => ({
-    type: WORLD_ZOO,
+const getCircusWorld = () => ({
+    type: WORLD_CIRCUS,
     x: 0,
     y: 0,
     vx: 0,
@@ -148,15 +148,15 @@ const getZooWorld = () => ({
     targetFrames: 50 * 10,
     time: 0,
     bgm: 'bgm/title.mp3',
-    ...getZooLayers(),
+    ...getCircusLayers(),
 });
 
 const skyLoop = createAnimation('gfx/scene/sky/sky.png', r(400, 400));
-const getZooLayers = () => ({
+const getCircusLayers = () => ({
     background: getNewLayer({
         xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
         spriteData: {
-            zoo: {animation: skyLoop, scale: 2},
+            circus: {animation: skyLoop, scale: 2},
         },
     }),
     // Background layers start at the top left corner of the screen.
@@ -169,12 +169,12 @@ const getZooLayers = () => ({
 });
 
 module.exports = {
-    CHECK_POINT_ZOO_START,
-    WORLD_ZOO,
-    getZooWorld,
+    CHECK_POINT_CIRCUS_START,
+    WORLD_CIRCUS,
+    getCircusWorld,
 };
 
 const { updatePlayer } = require('heroes');
 const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy } = require('enemies');
-const { transitionToZooBoss } = require('areas/zooBoss');
+const { transitionToCircusBoss } = require('areas/circusBoss');
 
