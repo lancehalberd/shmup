@@ -289,7 +289,27 @@ enemyData[ENEMY_FROG] = {
     },
     // needs death soundfx
     deathSound: 'sfx/hornetdeath.mp3',
-    accelerate: (state, enemy) => {
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        state = this.updateTongues(state, enemy);
+        enemy = state.idMap[enemy.id];
+        // These don't handle killing the frog on land. Probably that isn't possible to trigger.
+        if (enemy.snaredForFinisher) {
+            // Leave the frog as is if it is snared during any frames where it is visible.
+            if (enemy.mode === 'swimming' || enemy.mode === 'swimmingAttacking' || enemy.mode === 'swimmingRetracting')  {
+                return state;
+            }
+            // Let the frog animate through emerging while snared.
+            if (enemy.mode === 'emerging') {
+                if (enemy.modeTime >= 200) {
+                    return updateEnemy(state, enemy, {mode: 'swimming', animationTime: 0});
+                }
+                return updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
+            }
+            // Force the frog to emerge if it is not visible or emerging already.
+            return updateEnemy(state, enemy, {mode: 'emerging', modeTime: 0, animationTime: 0});
+        }
+
         let {mode, vx, vy, modeTime, inPond, animationTime} = enemy;
         let tongues = [...enemy.tongues];
         const poolPhase = startPoolPhase(state);
@@ -501,7 +521,7 @@ enemyData[ENEMY_FROG] = {
             }
         }
         //console.log({mode, tongues});
-        return {...enemy, vx, vy, mode, modeTime, animationTime, tongues, inPond};
+        return updateEnemy(state, enemy, {vx, vy, mode, modeTime, animationTime, tongues, inPond});
     },
     onDeathEffect(state, enemy) {
         let delay = 4;
@@ -521,7 +541,7 @@ enemyData[ENEMY_FROG] = {
         return updateEnemy(state, enemy, {ttl: 500});
     },
     // Make the tongue damage the player.
-    updateState(state, enemy) {
+    updateTongues(state, enemy) {
         if (!enemy.tongues || enemy.tongues.length < 3) return state;
         const points = enemy.tongues.map(t => ({x: enemy.left + t[0], y: enemy.top + t[1]}));
         const heroHitBox = getHeroHitBox(state.players[0]);

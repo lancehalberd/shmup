@@ -32,7 +32,7 @@ function transitionToSewerBoss(state) {
     // of this last sprite.
     const lastBackgroundSprite = world.background.sprites.slice(-1)[0];
     // It is safe to edit world in place here since we just created the object above.
-    world.targetX = lastBackgroundSprite.left + lastBackgroundSprite.width;
+    world.targetX = world.x + lastBackgroundSprite.left + lastBackgroundSprite.width;
     world.targetY = 150;
     return {...state, world};
 }

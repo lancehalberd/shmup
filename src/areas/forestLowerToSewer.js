@@ -15,7 +15,7 @@ function transitionToSewer(state) {
 const FOREST_LOWER_TO_SEWER = 'forestLowerToSewer';
 allWorlds[FOREST_LOWER_TO_SEWER] = {
     advanceWorld: (state) => {
-        state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
+        state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: -100});
         state = {...state,
             world: {
             ...state.world,
@@ -26,7 +26,7 @@ allWorlds[FOREST_LOWER_TO_SEWER] = {
         state = setCheckpoint(state, CHECK_POINT_SEWER_START);
         state = applyCheckpointToState(state, CHECK_POINT_SEWER_START);
         // Use fade transition for now.
-        return {...state, world: {...state.world, transitionFrames: 100}};
+        return {...state, world: {...state.world, transitionFrames: 100, event: 'transition', eventTime: 0}};
     },
 };
 
