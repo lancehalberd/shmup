@@ -266,7 +266,7 @@ enemyData[ENEMY_RAT] = {
     pauseAnimation: createAnimation('gfx/enemies/rat.png', ratGeometry, {x: 3}),
     jumpAnimation: createAnimation('gfx/enemies/rat.png', ratJumpGeometry, {x: 5}),
     deathAnimation: createAnimation('gfx/enemies/rat.png', ratGeometry, {x: 4}),
-    deathSound: 'sfx/hit.mp3',
+    deathSound: 'squeek',
     getAnimation(state, enemy) {
         if (enemy.dead) return this.deathAnimation;
         if (enemy.mode === 'pause') return this.pauseAnimation;
