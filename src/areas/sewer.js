@@ -275,11 +275,12 @@ enemyData[ENEMY_RAT] = {
     },
     accelerate(state, enemy) {
         const minTop = Math.max(-10, getHazardCeilingHeight(state) + 5);
+        const maxTop = Math.min(GAME_HEIGHT + 10, getHazardHeight(state) - 5) * 0.6;
         if (enemy.mode === 'pause') {
             const heroHitBox = getHeroHitBox(state.players[0]);
             const enemyHitBox = getEnemyHitBox(state, enemy);
             const dx = (heroHitBox.left + heroHitBox.width / 2) - (enemyHitBox.left + enemyHitBox.width / 2);
-            if (dx >= -100 && dx <= 100) {
+            if (!enemy.passive && dx >= -100 && dx <= 100 && heroHitBox.top > enemyHitBox.top) {
                 return { ...enemy,
                     vy: 3,
                     // Adding the player velocity makes them track the player much better,
@@ -289,26 +290,26 @@ enemyData[ENEMY_RAT] = {
                     mode: 'jump', modeTime: 0, animationTime: 0,
                     hanging: false, grounded: true,
                 };
-            } else if (enemy.modeTime < 1500) {
+            } else if (enemy.modeTime < 1000) {
                 return { ...enemy, vy: enemy.vy * 0.5, modeTime: enemy.modeTime + FRAME_LENGTH };
             } else {
-                return { ...enemy, mode: enemy.top <= minTop ? 'climbDown' : 'climb', modeTime: 0 };
+                return { ...enemy, mode: 'climb', modeTime: 0 };
             }
         } else if (enemy.mode === 'climb') {
             if (enemy.modeTime >= 600) {
                 return { ...enemy, mode: 'pause', modeTime: 0 };
-            } else if (enemy.top >= minTop) {
-                return { ...enemy, vy: -3, modeTime: enemy.modeTime + FRAME_LENGTH };
-            } else if (enemy.modeTime >= 500) {
-                return { ...enemy, mode: 'pause', modeTime: 0 };
+            } else if (enemy.direction === 'up') {
+                if (enemy.top >= minTop) {
+                    return { ...enemy, vy: -3, modeTime: enemy.modeTime + FRAME_LENGTH };
+                } else {
+                    return { ...enemy, mode: 'pause', modeTime: 0, direction: 'down' };
+                }
             } else {
-                return { ...enemy, vy: enemy.vy * 0.5, modeTime: enemy.modeTime + FRAME_LENGTH };
-            }
-        } else if (enemy.mode === 'climbDown') {
-            if (enemy.modeTime >= 400) {
-                return { ...enemy, mode: 'pause', modeTime: 0 };
-            } else {
-                return { ...enemy, vy: 2, modeTime: enemy.modeTime + FRAME_LENGTH };
+                if (enemy.top + enemy.height <= maxTop) {
+                    return { ...enemy, vy: 3, modeTime: enemy.modeTime + FRAME_LENGTH };
+                } else {
+                    return { ...enemy, mode: 'pause', modeTime: 0, direction: 'up' };
+                }
             }
         }
         return enemy;
@@ -323,6 +324,9 @@ enemyData[ENEMY_RAT] = {
         mode: 'climb',
         modeTime: 0,
         score: 50,
+        // Can set to true to remove the jumping behavior.
+        passive: false,
+        direction: 'up',
     }
 };
 const stinkBugGeometry = r(30, 30);

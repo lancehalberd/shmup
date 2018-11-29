@@ -42,6 +42,7 @@ allWorlds[WORLD_SEWER_BOSS] = {
             state = spawnBoss(state);
         }
         state = checkIfBossDefeated(state);
+        state = checkToSpawnRats(state);
         state = {
             ...state,
             world: {
@@ -59,6 +60,10 @@ function spawnBoss(state) {
         top: snakeBackground.top + 231, left: snakeBackground.left + 350
     });
     state = addEnemyToState(state, snake);
+    const snakeTail = createEnemy(state, ENEMY_SNAKE_TAIL, {
+        top: snakeBackground.top + 650, left: snakeBackground.left + 34
+    });
+    state = addEnemyToState(state, snakeTail);
     const lifebars = {};
     lifebars[snake.id] = {
         left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: state.world.time,
@@ -67,6 +72,20 @@ function spawnBoss(state) {
         bgm: 'bgm/boss.mp3',
         world: {...state.world, lifebars, bgm: 'bgm/boss.mp3'}
     };
+}
+function checkToSpawnRats(state) {
+    if (state.world.time < 10000 || state.world.time % 6000) return state;
+    const rats = state.enemies.filter(enemy => enemy.type === ENEMY_RAT);
+    if (rats.length >= 3) return state;
+    const rat = createEnemy(state, ENEMY_RAT, {
+        passive: true,
+        top: -100,
+        direction: 'down',
+        left: -15,
+    });
+    // Increase left position until an empty column is found.
+    while (rats.some(oldRat => oldRat.left === rat.left)) rat.left += 50;
+    return addEnemyToState(state, rat);
 }
 function checkIfBossDefeated(state) {
     const snake = state.enemies.filter(enemy => enemy.type === ENEMY_SNAKE)[0];
@@ -80,8 +99,12 @@ module.exports = {
     transitionToSewerBoss,
 };
 const { transitionToCircus } = require('areas/sewerToCircus');
+const { ENEMY_RAT } = require('areas/sewer');
 
-const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
+const { enemyData, createEnemy, addEnemyToState, updateEnemy,
+    isIntersectingEnemyHitBoxes, getEnemyHitBox, removeEnemy,
+    damageEnemy,
+} = require('enemies');
 const { getHeroHitBox } = require('heroes');
 /*
 
@@ -174,7 +197,7 @@ enemyData[ENEMY_SNAKE] = {
         {x: 4, cols: 2, frameMap: [0, 1]}
     ),
     hurtAnimation: createAnimation('gfx/enemies/snake/base.png', snakeHurtGeometry, {x: 6}),
-    deathAnimation: createAnimation('gfx/enemies/snake/base.png', r(224, 213), {x: 7}),
+    deathAnimation: createAnimation('gfx/enemies/snake/base.png', snakeNormalGeometry, {x: 7}),
     biteHighAnimation: createAnimation('gfx/enemies/snake/bite.png', snakeBiteHighGeometry,
         {y: 4, rows: 3, frameMap: [0, 1, 2, 2, 2, 0], loop: false}
     ),
@@ -197,9 +220,9 @@ enemyData[ENEMY_SNAKE] = {
         return this.setMode(state, enemy, 'biteLow');
     },
     updateState(state, enemy) {
+        if (enemy.dead) return state;
         state = updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
         enemy = state.idMap[enemy.id];
-        if (enemy.dead) return state;
         if (enemy.mode === 'bide') {
             if (enemy.modeTime >= 5000) {
                 state = this.setMode(state, enemy, 'hiss');
@@ -210,6 +233,18 @@ enemyData[ENEMY_SNAKE] = {
             }
         }if (enemy.mode === 'biteHigh' || enemy.mode === 'biteLow') {
             const animation = this.getAnimation(state, enemy);
+            if (enemy.modeTime === animation.frameDuration * FRAME_LENGTH / 2) {
+                // Sort rats right to left so that it will eat the one closest to it if there are two in range.
+                const rats = state.enemies.filter(enemy => enemy.type === ENEMY_RAT).sort((A, B) => B.left - A.left);
+                for (const rat of rats) {
+                    if (isIntersectingEnemyHitBoxes(state, enemy, getEnemyHitBox(state, rat))) {
+                        state = removeEnemy(state, rat);
+                        state = updateEnemy(state, enemy, {life: Math.min(enemy.maxLife, enemy.life + enemy.maxLife / 10)});
+                        enemy = state.idMap[enemy.id];
+                        break;
+                    }
+                }
+            }
             if (enemy.modeTime >= animation.frameDuration * animation.frames.length * FRAME_LENGTH) {
                 // Reposition for the non bite animation.
                 state = updateEnemy(state, enemy, {left: enemy.left + 2 * 140, top: enemy.top - 2 * 35});
@@ -223,7 +258,8 @@ enemyData[ENEMY_SNAKE] = {
         return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0});
     },
     props: {
-        life: 10000,
+        life: 500,
+        enrageAt: 400,
         hanging: true,
         vx: 0, vy: 0,
         boss: true,
@@ -233,3 +269,86 @@ enemyData[ENEMY_SNAKE] = {
         doNotFlip: true,
     },
 };
+
+const snakeTailGeometry = r(382, 78, {
+    scaleX: 2,
+    scaleY: 2,
+    hitBoxes: [
+        {left: 201, top: 68, width: 100, height: 10},
+        {left: 300, top: 58, width: 20, height: 10},
+        {left: 330, top: 48, width: 20, height: 10},
+        {left: 350, top: 38, width: 20, height: 10},
+        {left: 367, top: 33, width: 15, height: 5},
+    ]
+});
+const snakeTailSlamGeometry = r(382, 78, {
+    scaleX: 2,
+    scaleY: 2,
+    hitBoxes: [
+        {left: 206, top: 35, width: 80, height: 30},
+        {left: 293, top: 40, width: 50, height: 15},
+        {left: 357, top: 33, width: 24, height: 13},
+    ]
+});
+const stabAnimation = createAnimation('gfx/enemies/snake/tailhit.png', snakeTailGeometry, {x: 2, cols: 2});
+stabAnimation.frames[0].hitBoxes = [
+    {left: 3, top: 36, width: 380, height: 10},
+    {left: 225, top: 23, width: 157, height: 10},
+];
+stabAnimation.frames[1].hitBoxes = [
+    {left: 5, top: 20, width: 375, height: 10},
+    {left: 242, top: 37, width: 140, height: 10},
+];
+
+const ENEMY_SNAKE_TAIL = 'snakeTail';
+enemyData[ENEMY_SNAKE_TAIL] = {
+    animation: createAnimation('gfx/enemies/snake/tailhit.png', snakeTailGeometry),
+    slamAnimation: createAnimation('gfx/enemies/snake/tailhit.png', snakeTailSlamGeometry, {x: 1, frameDuration: 20}),
+    stabAnimation,
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.animation;
+        if (enemy.mode === 'slam') return this.slamAnimation;
+        if (enemy.mode === 'stab') return this.stabAnimation;
+        return this.animation;
+    },
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        state = updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
+        enemy = state.idMap[enemy.id];
+        if (enemy.mode === 'normal') {
+            if (enemy.modeTime >= 2000) {
+                return this.setMode(state, enemy, random.element(['slam', 'stab']));
+            }
+        } else  if (enemy.mode === 'slam') {
+            if (enemy.modeTime >= this.slamAnimation.frameDuration * this.slamAnimation.frames.length * FRAME_LENGTH) {
+                return this.setMode(state, enemy, 'normal');
+            }
+        } else if (enemy.mode === 'stab') {
+            if (enemy.modeTime >= 1000) {
+                return this.setMode(state, enemy, 'normal');
+            }
+        }
+        return state;
+    },
+    setMode(state, enemy, mode) {
+        return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0});
+    },
+    onDamageEffect(state, enemy, attack) {
+        const snake = state.enemies.filter(enemy => enemy.type === ENEMY_SNAKE)[0];
+        state = damageEnemy(state, snake.id, {playerIndex: 0, damage: attack.damage});
+        // The tail never takes damage. Alternatively, we could make it defeatable and have it
+        // respawn after a while or when the snake enrages.
+        state = updateEnemy(state, enemy, {life: enemy.maxLife});
+        return state;
+    },
+    props: {
+        life: 10000,
+        mode: 'normal',
+        modeTime: 0,
+        doNotFlip: true,
+        hanging: true,
+        vx: 0, vy: 0,
+        boss: true,
+        permanent: true,
+    }
+}
