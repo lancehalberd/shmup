@@ -10,6 +10,7 @@ const {
     LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 const random = require('random');
+const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 const {
     PRIORITY_HEROES,
@@ -118,7 +119,14 @@ heroesData[HERO_BEE] = {
             if (!player.actions.melee && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
                 !state.idMap[targets[i].enemyId].dead
             ) {
-                const hitBox = getEnemyHitBox(state, state.idMap[targets[i].enemyId]);
+                const hitBoxes = getEnemyHitBoxes(state, state.idMap[targets[i].enemyId]);
+                let hitBox = hitBoxes[0];
+                for (let j = 0; j < hitBoxes.length; j++) {
+                    if (Rectangle.collision(hitBoxes[j], targets[i])) {
+                        hitBox = hitBoxes[j];
+                        break;
+                    }
+                }
                 targets[i] = {
                     left: (targets[i].left + hitBox.left + hitBox.width / 2 - targets[i].width / 2) / 2,
                     top: (targets[i].top + hitBox.top + hitBox.height / 2 - targets[i].height / 2) / 2,
@@ -137,7 +145,7 @@ heroesData[HERO_BEE] = {
             if (player.actions.left) vx -= factor * 2;
             if (player.actions.down) vy += factor * 2;
             if (player.actions.up) vy -= factor * 2;
-            for (var j = 0; j < player[HERO_BEE].targets.length; j++) {
+            for (let j = 0; j < player[HERO_BEE].targets.length; j++) {
                 if ( j === i) continue;
                 const otherTarget = player[HERO_BEE].targets[j];
                 if (otherTarget.enemyId) continue;
@@ -205,10 +213,10 @@ heroesData[HERO_BEE] = {
                 const enemy = state.idMap[state.enemies[j].id];
                 if (!enemyIsActive(state, enemy)) continue;
                 if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
-                if (isIntersectingEnemyHitBoxes(state, enemy, targetHitBox)) {
-                    const hitBox = getEnemyHitBox(state, enemy);
+                const hitBox = isIntersectingEnemyHitBoxes(state, enemy, targetHitBox);
+                if (hitBox) {
                     state = addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
-                        playerIndex, enemyId: enemy.id,
+                        playerIndex, enemyId: enemy.id, hitBox,
                         sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
                         sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
                         dx: Math.random() * 50 +
@@ -254,6 +262,6 @@ heroesData[HERO_BEE] = {
 
 const { getAttackTint } = require('attacks');
 const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitBox, enemyIsActive, isIntersectingEnemyHitBoxes } = require('enemies');
+const { getEnemyHitBox, getEnemyHitBoxes, enemyIsActive, isIntersectingEnemyHitBoxes } = require('enemies');
 const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 

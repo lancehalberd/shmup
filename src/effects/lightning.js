@@ -133,7 +133,8 @@ effects[EFFECT_ARC_LIGHTNING] = {
         } else {
             let tx = effect.tx, ty = effect.ty;
             if (target) {
-                const hitBox = getEnemyHitBox(state, target);
+                //const hitBox = getEnemyHitBox(state, target);
+                const hitBox = effect.hitBox;
                 tx = hitBox.left + hitBox.width / 2;
                 ty = hitBox.top + hitBox.height / 2;
             }

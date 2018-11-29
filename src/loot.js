@@ -193,7 +193,12 @@ const lootData = {
             const threshold = state.players[0].relics[LOOT_HELMET] ? 200 : 50;
             const {dx, dy} = getTargetVector(state.loot[lootIndex], state.players[0].sprite);
             const mag = Math.sqrt(dx*dx+dy*dy);
-            if (mag > threshold) return state;
+            if (mag > threshold || mag < 1) {
+                return updateLoot(state, lootIndex, {
+                    vx: state.loot[lootIndex].vx * 0.8,
+                    vy: state.loot[lootIndex].vy * 0.8,
+                });
+            }
             return updateLoot(state, lootIndex, {vx: 20 * dx / mag, vy: 20 * dy / mag});
         },
         collect(state, playerIndex, loot) {

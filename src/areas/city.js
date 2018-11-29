@@ -288,15 +288,15 @@ const trashCatGeometry = {
     hitBoxes: [],
     scaleX: 2, scaleY: 2,
 };
-const swipeAnimation = createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+const swipeAnimation = createAnimation('gfx/enemies/trashcat.png', trashCatGeometry,
     {cols: 3, x: 3, frameMap: [0, 1, 2, 2, 2, 0]}
 );
 swipeAnimation.frames[1].damageBoxes = [{left: 10, top: 10, width: 60, height: 60}];
 enemyData[ENEMY_TRASH_CAT] = {
-    animation: createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+    animation: createAnimation('gfx/enemies/trashcat.png', trashCatGeometry,
         {cols: 2, frameMap: [0, 0, 0, 0, 1, 1, 1], duration: 12}
     ),
-    peekAnimation: createAnimation('gfx/enemies/trashCat.png', trashCatGeometry,
+    peekAnimation: createAnimation('gfx/enemies/trashcat.png', trashCatGeometry,
         {cols: 1, x: 2}
     ),
     swipeAnimation,

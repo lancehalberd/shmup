@@ -948,6 +948,7 @@ module.exports = {
     renderEnemy,
     renderEnemyFrame,
     getEnemyHitBox,
+    getEnemyHitBoxes,
     enemyHitBoxesToGlobalHitBoxes,
     getEnemyDrawBox,
     getEnemyCenter,
