@@ -1,0 +1,202 @@
+/* global state, canvas */
+const Rectangle = require('Rectangle');
+const { drawImage, fillRectangle } = require('draw');
+
+function getEventCoords(event) {
+    const x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+    return {x, y};
+}
+const threshold = 2;
+function getOverEdges(rectangle, x, y) {
+    const edges = {};
+    if (y > rectangle.top - threshold && y < rectangle.bottom + threshold) {
+        const lAbs = Math.abs(rectangle.left - x), rAbs = Math.abs(rectangle.right - x);
+        if (lAbs < rAbs && lAbs < threshold) edges.left = true;
+        else if (rAbs < threshold) edges.right = true;
+    }
+    if (x > rectangle.left - threshold && x < rectangle.right + threshold) {
+        const tAbs = Math.abs(rectangle.top - y), bAbs = Math.abs(rectangle.bottom - y);
+        if (tAbs < bAbs && tAbs < threshold) edges.top = true;
+        else if (bAbs < threshold) edges.bottom = true;
+    }
+    return edges;
+}
+
+document.onmousedown = function(event) {
+    const state = window.state;
+    if (!state || !state.hitBoxFrame) return;
+    state.mousedown = true;
+    const { x, y } = getEventCoords(event);
+    if (state.selectedHitBox && state.overEdges) {
+        state.selectedEdges = state.overEdges;
+        console.log('over edges', Object.keys(state.overEdges));
+        return;
+    }
+    state.selectedHitBox = state.overHitBox;
+};
+document.onmousemove = function (event) {
+    const state = window.state;
+    if (!state || !state.hitBoxFrame) return;
+    const { x, y } = getEventCoords(event);
+    if (state.mousedown) ondrag(x, y);
+    else onhover(x, y);
+}
+function ondrag(x, y) {
+    const state = window.state;
+    let dx = 0, dy =0;
+    if (state.lastCoords) {
+        dx = x - state.lastCoords.x;
+        dy = y - state.lastCoords.y;
+    }
+    const selectedHitBox = state.selectedHitBox;
+    state.lastCoords = {x, y};
+    if (state.selectedEdges) {
+        if (state.selectedEdges.left) {
+            selectedHitBox.left += dx;
+            selectedHitBox.width -= dx;
+            if (selectedHitBox.width < 0) {
+                selectedHitBox.left += selectedHitBox.width;
+                selectedHitBox.width *= -1;
+                delete state.selectedEdges.left;
+                state.selectedEdges.right = true;
+            }
+        } else if (state.selectedEdges.right) {
+            selectedHitBox.width += dx;
+            if (selectedHitBox.width < 0) {
+                selectedHitBox.left += selectedHitBox.width;
+                selectedHitBox.width *= -1;
+                delete state.selectedEdges.right;
+                state.selectedEdges.left = true;
+            }
+        }
+        if (state.selectedEdges.top) {
+            selectedHitBox.top += dy;
+            selectedHitBox.height -= dy;
+            if (selectedHitBox.height < 0) {
+                selectedHitBox.top += selectedHitBox.height;
+                selectedHitBox.height *= -1;
+                delete state.selectedEdges.top;
+                state.selectedEdges.bottom = true;
+            }
+        } else if (state.selectedEdges.bottom) {
+            selectedHitBox.height += dy;
+            if (selectedHitBox.height < 0) {
+                selectedHitBox.top += selectedHitBox.height;
+                selectedHitBox.height *= -1;
+                delete state.selectedEdges.bottom;
+                state.selectedEdges.top = true;
+            }
+        }
+    } else if (selectedHitBox) {
+        selectedHitBox.left += dx;
+        selectedHitBox.top += dy;
+    } else if (dx || dy) {
+        const hitBox = {
+            left: Math.min(x, x - dx), width: Math.abs(dx),
+            top: Math.min(y, y - dy), height: Math.abs(dy),
+        };
+        state.hitBoxFrame.hitBoxes = state.hitBoxFrame.hitBoxes || [];
+        state.hitBoxFrame.hitBoxes.push(hitBox);
+        state.selectedHitBox = hitBox;
+        state.selectedEdges = {};
+        if (x === hitBox.left) state.selectedEdges.left = true;
+        else state.selectedEdges.right = true;
+        if (y === hitBox.top) state.selectedEdges.top = true;
+        else state.selectedEdges.bottom = true;
+    }
+}
+function onhover(x, y) {
+    const state = window.state;
+    if (state.selectedHitBox) {
+        const edges = getOverEdges(new Rectangle(state.selectedHitBox), x, y);
+        if (Object.keys(edges).length) {
+            state.overEdges = edges;
+            return;
+        }
+        state.overEdges = null;
+    }
+    const frame = state.hitBoxFrame;
+    const hitBoxes = frame.hitBoxes || [];
+    for (const hitBox of hitBoxes) {
+        if (new Rectangle(hitBox).containsPoint(x, y)) {
+            state.overHitBox = hitBox;
+            return;
+        }
+    }
+    state.overHitBox = null;
+}
+document.onmouseup = function (event) {
+    const state = window.state;
+    if (!state || !state.hitBoxFrame) return;
+    state.mousedown = false;
+    // Edges are only selected during drag operations.
+    state.selectedEdges = null;
+    state.lastCoords = null;
+}
+
+function renderHitBoxes(context, state) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const frame = state.hitBoxFrame;
+    drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(0, 0));
+    const hitBoxes = frame.hitBoxes || [];
+    for (const hitBox of hitBoxes) {
+        let color = 'rgba(255, 120, 0, 0.3)';
+        if (hitBox === state.selectedHitBox) {
+            color = 'rgba(255, 0, 0, 0.3)';
+        } else if (hitBox === state.overHitBox) {
+            color = 'rgba(255, 0, 0, 0.6)';
+        }
+        fillRectangle(context, color, hitBox);
+    }
+    const edges = state.selectedEdges || state.overEdges;
+    if (edges) {
+        const box = new Rectangle(state.selectedHitBox);
+        context.beginPath();
+        if (edges.left) {
+            context.moveTo(box.left, box.top);
+            context.lineTo(box.left, box.bottom);
+        }
+        if (edges.right) {
+            context.moveTo(box.right, box.top);
+            context.lineTo(box.right, box.bottom);
+        }
+        if (edges.top) {
+            context.moveTo(box.left, box.top);
+            context.lineTo(box.right, box.top);
+        }
+        if (edges.bottom) {
+            context.moveTo(box.left, box.bottom);
+            context.lineTo(box.right, box.bottom);
+        }
+        context.strokeStyle = 'black';
+        context.stroke();
+    }
+}
+
+function startEditingHitBoxes(state, hitBoxFrame) {
+    window.document.onkeydown = function (event) {
+        const state = window.state;
+        // console.log(event.which);
+        if (event.which === 8 && state.selectedHitBox) {
+            const index = state.hitBoxFrame.hitBoxes.indexOf(state.selectedHitBox);
+            state.hitBoxFrame.hitBoxes.splice(index, 1);
+            state.selectedHitBox = null;
+            state.overEdges = null;
+            state.selectedEdges = null;
+        }
+        if (event.which === 13) {
+            console.log(
+                "[\n\t" +
+                state.hitBoxFrame.hitBoxes.map(b => JSON.stringify(b)).join(",\n\t") +
+                ",\n]"
+            );
+        }
+    }
+    return {...state, hitBoxFrame};
+}
+
+module.exports = {
+    renderHitBoxes,
+    startEditingHitBoxes,
+};
+

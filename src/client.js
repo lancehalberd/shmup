@@ -6,6 +6,7 @@ const {
     PRIORITY_PRELOADER, PRIORITY_TITLE,
     PRIORITY_HEROES, PRIORITY_FIELD,
     priorityCounts,
+    createAnimation, r,
 } = require('animations');
 const { preloadSounds } = require('sounds');
 
@@ -22,6 +23,10 @@ const { isKeyDown,
     KEY_T,
 } = require('keyboard');
 
+const {
+    startEditingHitBoxes,
+} = require('editHitboxes');
+
 // Currently we only support a single player.
 const playerIndex = 0;
 
@@ -30,9 +35,34 @@ let preloadedSounds = false;
 let stateQueue = [];
 let state = {};
 
+const snakeTailGeometry = r(382, 218, {
+    scaleX: 2,
+    scaleY: 2,
+});
+let frameToEdit = null;
+//frameToEdit = snakeTailAnimation.frames[1];
+
+
 const update = () => {
     if (!state.world) {
         state = getNewState();
+        if (frameToEdit) state = startEditingHitBoxes(state, frameToEdit);
+        window.state = state;
+    }
+
+    // Wait to load sounds until the graphics are loaded for the first few scenes.
+    if (!preloadedSounds && !(
+            priorityCounts[PRIORITY_PRELOADER] > 0 ||
+            priorityCounts[PRIORITY_TITLE] > 0 ||
+            priorityCounts[PRIORITY_FIELD] > 0 ||
+            priorityCounts[PRIORITY_HEROES] > 0
+        )
+    ) {
+        preloadSounds();
+        preloadedSounds = true;
+    }
+    if (state.hitBoxFrame) {
+        return;
     }
     // Set the game to demo mode.
     // state.demo = true;
@@ -49,18 +79,6 @@ const update = () => {
         toggleDebug: isKeyDown(KEY_T, thresholdTime),
         start: isKeyDown(KEY_ENTER, thresholdTime),
     });
-
-    // Wait to load sounds until the graphics are loaded for the first few scenes.
-    if (!preloadedSounds && !(
-            priorityCounts[PRIORITY_PRELOADER] > 0 ||
-            priorityCounts[PRIORITY_TITLE] > 0 ||
-            priorityCounts[PRIORITY_FIELD] > 0 ||
-            priorityCounts[PRIORITY_HEROES] > 0
-        )
-    ) {
-        preloadSounds();
-        preloadedSounds = true;
-    }
 
     if (stateQueue.length && isKeyDown(KEY_R)) {
         state = stateQueue.shift();

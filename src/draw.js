@@ -40,9 +40,15 @@ const embossText = (context, {left, top, text, color = 'white', backgroundColor 
     context.fillText(text, left, top);
 }
 
+function fillRectangle(context, color, target) {
+    context.fillStyle = color;
+    context.fillRect(target.left, target.top, target.width, target.height);
+}
+
 module.exports = {
     drawImage,
     drawTintedImage,
+    fillRectangle,
     embossText,
 };
 

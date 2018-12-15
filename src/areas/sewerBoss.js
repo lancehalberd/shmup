@@ -191,13 +191,13 @@ const snakeBiteHighGeometry = r(364, 178, {
 
 enemyData[ENEMY_SNAKE] = {
     animation: createAnimation('gfx/enemies/snake/base.png', snakeNormalGeometry,
-        {cols: 4, frameMap: [0, 0, 0, 0, 0, 1, 2, 3, 2, 1]}
+        {x: 2, cols: 4, frameMap: [0, 0, 0, 0, 0, 1, 2, 3, 2, 1]}
     ),
     hissAnimation: createAnimation('gfx/enemies/snake/base.png', snakeHissGeometry,
-        {x: 4, cols: 2, frameMap: [0, 1]}
+        {x: 6, cols: 3}, {loop: false},
     ),
-    hurtAnimation: createAnimation('gfx/enemies/snake/base.png', snakeHurtGeometry, {x: 6}),
-    deathAnimation: createAnimation('gfx/enemies/snake/base.png', snakeNormalGeometry, {x: 7}),
+    hurtAnimation: createAnimation('gfx/enemies/snake/base.png', snakeHurtGeometry),
+    deathAnimation: createAnimation('gfx/enemies/snake/base.png', snakeNormalGeometry, {x: 1}),
     biteHighAnimation: createAnimation('gfx/enemies/snake/bite.png', snakeBiteHighGeometry,
         {y: 4, rows: 3, frameMap: [0, 1, 2, 2, 2, 0], loop: false}
     ),
@@ -270,18 +270,38 @@ enemyData[ENEMY_SNAKE] = {
     },
 };
 
-const snakeTailGeometry = r(382, 78, {
+
+const snakeTailGeometry = r(382, 218, {
     scaleX: 2,
     scaleY: 2,
-    hitBoxes: [
-        {left: 201, top: 68, width: 100, height: 10},
-        {left: 300, top: 58, width: 20, height: 10},
-        {left: 330, top: 48, width: 20, height: 10},
-        {left: 350, top: 38, width: 20, height: 10},
-        {left: 367, top: 33, width: 15, height: 5},
-    ]
 });
-const snakeTailSlamGeometry = r(382, 78, {
+const snakeTailAnimation = createAnimation('gfx/enemies/snake/snaketail.png', snakeTailGeometry, {cols: 2, duration: 12});
+snakeTailAnimation.frames[0].hitBoxes = [
+    {"left":305,"top":166,"width":75,"height":22},
+    {"left":227,"top":164,"width":79,"height":9},
+    {"left":220,"top":142,"width":14,"height":21},
+    {"left":211,"top":114,"width":9,"height":28},
+    {"left":207,"top":80,"width":10,"height":34},
+    {"left":215,"width":8,"top":55,"height":24},
+    {"left":225,"width":6,"top":32,"height":23},
+    {"left":232,"width":7,"top":21,"height":12},
+    {"left":247,"width":5,"top":11,"height":5},
+    {"left":241,"width":4,"top":16,"height":5},
+];
+snakeTailAnimation.frames[1].hitBoxes = [
+    {"left":305,"top":166,"width":75,"height":22},
+    {"left":227,"top":164,"width":79,"height":9},
+    {"left":220,"top":142,"width":14,"height":21},
+    {"left":211,"top":114,"width":9,"height":28},
+    {"left":207,"top":80,"width":10,"height":34},
+    {"left":215,"width":8,"top":55,"height":24},
+    {"left":222,"width":6,"top":32,"height":23},
+    {"left":229,"width":7,"top":20,"height":12},
+    {"left":241,"width":5,"top":9,"height":5},
+    {"left":237,"width":4,"top":16,"height":5},
+];
+
+const snakeTailSlamGeometry = r(382, 218, {
     scaleX: 2,
     scaleY: 2,
     hitBoxes: [
@@ -302,8 +322,8 @@ stabAnimation.frames[1].hitBoxes = [
 
 const ENEMY_SNAKE_TAIL = 'snakeTail';
 enemyData[ENEMY_SNAKE_TAIL] = {
-    animation: createAnimation('gfx/enemies/snake/tailhit.png', snakeTailGeometry),
-    slamAnimation: createAnimation('gfx/enemies/snake/tailhit.png', snakeTailSlamGeometry, {x: 1, frameDuration: 20}),
+    animation: snakeTailAnimation,
+    slamAnimation: createAnimation('gfx/enemies/snake/snaketail.png', snakeTailSlamGeometry, {x: 1, frameDuration: 20}),
     stabAnimation,
     getAnimation(state, enemy) {
         if (enemy.dead) return this.animation;
