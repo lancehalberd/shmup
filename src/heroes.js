@@ -141,10 +141,10 @@ const useMeleeAttack = (state, playerIndex) => {
         scale,
     });
     if (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) {
-        meleeAttack.scale *= 3;
+        meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 3);
         meleeAttack.damage += 5;
     } else if (player.chargeAttackFrames >= CHARGE_FRAMES_FIRST) {
-        meleeAttack.scale *= 2;
+        meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 2);
         meleeAttack.damage += 2;
     }
     meleeAttack.top -= meleeAttack.height * meleeAttack.scale / 2;
