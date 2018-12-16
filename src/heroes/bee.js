@@ -20,8 +20,8 @@ const {
 } = require('animations');
 const { heroesData, updatePlayer, isHeroSwapping } = require('heroes');
 
-const beeHitBox = {left: 10, top: 12, width: 60, height: 40};
-const beeRectangle = r(88, 56, {hitBox: beeHitBox});
+const beeHitbox = {left: 10, top: 12, width: 60, height: 40};
+const beeRectangle = r(88, 56, {hitbox: beeHitbox});
 
 const crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30), {priority: PRIORITY_HEROES});
 const crosshairLockedAnimation = {
@@ -119,17 +119,17 @@ heroesData[HERO_BEE] = {
             if (!player.actions.melee && targets[i].enemyId && state.idMap[targets[i].enemyId] &&
                 !state.idMap[targets[i].enemyId].dead
             ) {
-                const hitBoxes = getEnemyHitBoxes(state, state.idMap[targets[i].enemyId]);
-                let hitBox = hitBoxes[0];
-                for (let j = 0; j < hitBoxes.length; j++) {
-                    if (Rectangle.collision(hitBoxes[j], targets[i])) {
-                        hitBox = hitBoxes[j];
+                const hitboxes = getEnemyHitboxes(state, state.idMap[targets[i].enemyId]);
+                let hitbox = hitboxes[0];
+                for (let j = 0; j < hitboxes.length; j++) {
+                    if (Rectangle.collision(hitboxes[j], targets[i])) {
+                        hitbox = hitboxes[j];
                         break;
                     }
                 }
                 targets[i] = {
-                    left: (targets[i].left + hitBox.left + hitBox.width / 2 - targets[i].width / 2) / 2,
-                    top: (targets[i].top + hitBox.top + hitBox.height / 2 - targets[i].height / 2) / 2,
+                    left: (targets[i].left + hitbox.left + hitbox.width / 2 - targets[i].width / 2) / 2,
+                    top: (targets[i].top + hitbox.top + hitbox.height / 2 - targets[i].height / 2) / 2,
                     vx: 0, vy: 0,
                     width: (targets[i].width * 10 + size) / 11,
                     height: (targets[i].height * 10 + size) / 11,
@@ -208,21 +208,21 @@ heroesData[HERO_BEE] = {
         let hit = false;
         const targets = [...player[HERO_BEE].targets];
         for (let i = 0; i < targets.length; i++) {
-            const targetHitBox = targets[i];
+            const targetHitbox = targets[i];
             for (let j = 0; j < state.enemies.length; j++) {
                 const enemy = state.idMap[state.enemies[j].id];
                 if (!enemyIsActive(state, enemy)) continue;
-                if (targetHitBox.enemyId && targetHitBox.enemyId != enemy.id) continue;
-                const hitBox = isIntersectingEnemyHitBoxes(state, enemy, targetHitBox);
-                if (hitBox) {
+                if (targetHitbox.enemyId && targetHitbox.enemyId != enemy.id) continue;
+                const hitbox = isIntersectingEnemyHitboxes(state, enemy, targetHitbox);
+                if (hitbox) {
                     state = addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
-                        playerIndex, enemyId: enemy.id, hitBox,
+                        playerIndex, enemyId: enemy.id, hitbox,
                         sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
                         sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
                         dx: Math.random() * 50 +
-                            2 * ((targetHitBox.left + targetHitBox.width / 2) - (hitBox.left + hitBox.width / 2)),
+                            2 * ((targetHitbox.left + targetHitbox.width / 2) - (hitbox.left + hitbox.width / 2)),
                         dy: Math.random() * 50 +
-                            2 * ((targetHitBox.top + targetHitBox.height / 2) - (hitBox.top + hitBox.height / 2)),
+                            2 * ((targetHitbox.top + targetHitbox.height / 2) - (hitbox.top + hitbox.height / 2)),
                         duration: 6 * FRAME_LENGTH,
                         // This will be rendered before it is positioned correctly,
                         // so just stick it off screen.
@@ -239,11 +239,11 @@ heroesData[HERO_BEE] = {
         // If no enemies are in range, just fire a random shot, otherwise the player may not
         // realize they are attacking.
         if (!hit) {
-            const targetHitBox = random.element(targets);
+            const targetHitbox = random.element(targets);
             return addEffectToState(state, createEffect(EFFECT_ARC_LIGHTNING, {
                 playerIndex,
-                tx: targetHitBox.left + targetHitBox.width / 2,
-                ty: targetHitBox.top + targetHitBox.height / 2,
+                tx: targetHitbox.left + targetHitbox.width / 2,
+                ty: targetHitbox.top + targetHitbox.height / 2,
                 sx: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
                 sy: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
                 dx: Math.random() * 40,
@@ -262,6 +262,6 @@ heroesData[HERO_BEE] = {
 
 const { getAttackTint } = require('attacks');
 const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitBox, getEnemyHitBoxes, enemyIsActive, isIntersectingEnemyHitBoxes } = require('enemies');
+const { getEnemyHitbox, getEnemyHitboxes, enemyIsActive, isIntersectingEnemyHitboxes } = require('enemies');
 const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 

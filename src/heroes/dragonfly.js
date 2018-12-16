@@ -11,10 +11,10 @@ const {
     requireImage, r,
     createAnimation,
 } = require('animations');
-const { heroesData, updatePlayer, useMeleeAttack, getHeroHitBox } = require('heroes');
+const { heroesData, updatePlayer, useMeleeAttack, getHeroHitbox } = require('heroes');
 
-const dragonflyHitBox = {left: 10, top: 15, width: 70, height: 30};
-const dragonflyRectangle = r(88, 56, {hitBox: dragonflyHitBox});
+const dragonflyHitbox = {left: 10, top: 15, width: 70, height: 30};
+const dragonflyRectangle = r(88, 56, {hitbox: dragonflyHitbox});
 const dragonflyAnimation = {
     frames: [
         {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png', PRIORITY_HEROES)},
@@ -80,7 +80,7 @@ heroesData[HERO_DRAGONFLY] = {
         for (let i = 0; i < state.enemies.length; i++) {
             let enemy = state.enemies[i];
             if (enemyIsActive(state, enemy) &&
-                isIntersectingEnemyHitBoxes(state, enemy, getHeroHitBox(player))
+                isIntersectingEnemyHitboxes(state, enemy, getHeroHitbox(player))
             ) {
                 state = damageEnemy(state, enemy.id, {playerIndex});
             }
@@ -141,5 +141,5 @@ heroesData[HERO_DRAGONFLY] = {
 };
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { isIntersectingEnemyHitBoxes, damageEnemy, enemyIsActive } = require('enemies');
+const { isIntersectingEnemyHitboxes, damageEnemy, enemyIsActive } = require('enemies');
 

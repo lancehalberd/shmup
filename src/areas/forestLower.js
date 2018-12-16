@@ -321,7 +321,7 @@ const {
 const { updatePlayer } = require('heroes');
 
 const ENEMY_CEILING_THORNS = 'ceilingThorns';
-const ceilingThornRectangle = r(200, 200, {hitBox: {left: 41, top: 0, width: 130, height: 150}});
+const ceilingThornRectangle = r(200, 200, {hitbox: {left: 41, top: 0, width: 130, height: 150}});
 enemyData[ENEMY_CEILING_THORNS] = {
     animation: createAnimation('gfx/scene/forest/thorn1.png', ceilingThornRectangle),
     deathAnimation: createAnimation('gfx/scene/forest/thorn3.png', r(200, 200)),
@@ -337,7 +337,7 @@ enemyData[ENEMY_CEILING_THORNS] = {
     },
 };
 const ENEMY_FLOOR_THORNS = 'floorThorns';
-const floorThornsRectangle = r(200, 200, {hitBox: {left: 21, top: 125, width: 170, height: 75}});
+const floorThornsRectangle = r(200, 200, {hitbox: {left: 21, top: 125, width: 170, height: 75}});
 enemyData[ENEMY_FLOOR_THORNS] = {
     ...enemyData[ENEMY_CEILING_THORNS],
     animation: createAnimation('gfx/scene/forest/thorn2.png', floorThornsRectangle),

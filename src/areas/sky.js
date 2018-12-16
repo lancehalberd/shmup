@@ -12,7 +12,7 @@ const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles'
 
 function spawnEnemy(state, enemyType, props) {
     const newEnemy = createEnemy(state, enemyType, props);
-    const hitbox = getEnemyHitBox(state, newEnemy);
+    const hitbox = getEnemyHitbox(state, newEnemy);
     newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - hitbox.height : newEnemy.top - hitbox.height / 2;
     newEnemy.vx = newEnemy.vx || (newEnemy.stationary || newEnemy.hanging ? 0 : -6);
     newEnemy.left = newEnemy.vx <= 0 ? Math.max(newEnemy.left, WIDTH) : newEnemy.left;
@@ -333,22 +333,22 @@ module.exports = {
 };
 
 const { updatePlayer } = require('heroes');
-const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy, getEnemyHitBox,
+const { createEnemy, updateEnemy, addEnemyToState, enemyData, removeEnemy, getEnemyHitbox,
     accelerate_followPlayer, onHitGroundEffect_spawnMonk,
 } = require('enemies');
 // Bluebirds, slowly follow the Knight, when mounted can fire long lasers.
 const blueBirdGeometry = {
     ...r(130, 130),
-    hitBox: {left: 27, top: 25, width: 65, height: 80},
-    hitBoxes: [
+    hitbox: {left: 27, top: 25, width: 65, height: 80},
+    hitboxes: [
         {left: 18, top: 40, width: 30, height: 33}, // Head
         {left: 42, top: 52, width: 45, height: 65}, // Body
     ]
 };
 const mountedBlueBirdGeometry = {
     ...blueBirdGeometry,
-    hitBoxes: [
-        ...blueBirdGeometry.hitBoxes,
+    hitboxes: [
+        ...blueBirdGeometry.hitboxes,
         {left: 33, top: 19, width: 27, height: 38}, // Mount
     ]
 }
@@ -427,7 +427,7 @@ const ENEMY_DUCK = 'duck';
 const duckGeometry = {
     ...r(200, 102),
     scaleX: 2, scaleY: 2,
-    hitBoxes: [
+    hitboxes: [
         {left: 25, top: 28, width: 35, height: 20},
         {left: 56, top: 35, width: 50, height: 15},
         {left: 114, top: 24, width: 55, height: 60},
@@ -454,7 +454,7 @@ enemyData[ENEMY_DUCK] = {
 const ENEMY_WREN = 'wren';
 const wrenGeometry = {
     ...r(80, 74),
-    hitBox: {left: 15, top: 15, width: 45, height: 35},
+    hitbox: {left: 15, top: 15, width: 45, height: 35},
 };
 enemyData[ENEMY_WREN] = {
     animation: createAnimation('gfx/enemies/birds/wrenspritesheet.png', wrenGeometry, {cols: 4}),
@@ -494,7 +494,7 @@ effects[EFFECT_GUST] = {
 
 const EFFECT_GUST_LEAF = 'gustLeaf';
 // Make the leaf scale from the center of its hitbox instead of the top left corner.
-const leafGeometry = a({...r(40, 37), hitBox: r(30, 37)}, 0.5, 0.5);
+const leafGeometry = a({...r(40, 37), hitbox: r(30, 37)}, 0.5, 0.5);
 effects[EFFECT_GUST_LEAF] = {
     animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry),
     advanceEffect: (state, effectIndex) => {

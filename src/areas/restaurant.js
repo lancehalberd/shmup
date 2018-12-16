@@ -282,7 +282,7 @@ Do they stop? Alternatively, we can treat the groundloop as a "bar" and never ha
 
 */
 const flameGeometry = r(100, 100, {
-    hitBox: {left:45, top:27, width: 10, height: 8}
+    hitbox: {left:45, top:27, width: 10, height: 8}
 });
 const candleAnimation = createAnimation('gfx/scene/city/candle.png', r(100, 100), {cols: 1, x: 6});
 const flameBurnAnimation = createAnimation('gfx/scene/city/candle.png', flameGeometry, {cols: 4});

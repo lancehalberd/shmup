@@ -8,7 +8,7 @@ const {
 const random = require('random');
 const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
-const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
+const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { allWorlds, getGroundHeight, getNewLayer } = require('world');
 
@@ -63,8 +63,8 @@ allWorlds[WORLD_FOREST_LOWER_BOSS] = {
         if (time === 500) {
             const lifebars = {};
             let frog = createEnemy(state, ENEMY_FROG, {left: WIDTH});
-            const hitBox = getEnemyHitBox(state, frog).translate(-frog.left, -frog.top);
-            frog.top = getGroundHeight(state) - (hitBox.top + hitBox.height);
+            const hitbox = getEnemyHitbox(state, frog).translate(-frog.left, -frog.top);
+            frog.top = getGroundHeight(state) - (hitbox.top + hitbox.height);
             lifebars[frog.id] = {
                 left: 100, top: 40, width: 600, height: 8, startTime: world.time,
             };
@@ -158,10 +158,10 @@ const { transitionToSewer } = require('areas/forestLowerToSewer');
 
 const {
     enemyData, createEnemy, addEnemyToState, getDefaultEnemyAnimation,
-    getEnemyHitBox, getEnemyCenter, renderEnemyFrame, updateEnemy, removeEnemy,
+    getEnemyHitbox, getEnemyCenter, renderEnemyFrame, updateEnemy, removeEnemy,
 } = require('enemies');
 const {
-    getHeroHitBox,
+    getHeroHitbox,
     damageHero,
 } = require('heroes');
 
@@ -173,11 +173,11 @@ function startPoolPhase(state) {
 const ENEMY_FROG = 'frog';
 // Frames when the frog is on dry land.
 const landFrogRect = r(250, 220);
-const landFrogHitBox = {left: 30, top: 45, width:200, height: 105};
+const landFrogHitbox = {left: 30, top: 45, width:200, height: 105};
 const landFrogGeometry = {
     ...landFrogRect,
-    hitBox: landFrogHitBox,
-    hitBoxes: [
+    hitbox: landFrogHitbox,
+    hitboxes: [
         {left: 37, top: 39, width: 75, height: 88},
         {left: 112, top: 57, width: 61, height: 77},
         {left: 173, top: 83, width: 45, height: 65},
@@ -185,8 +185,8 @@ const landFrogGeometry = {
 };
 const jumpingFrogGeometry = {
     ...landFrogRect,
-    hitBox: landFrogHitBox,
-    hitBoxes: [
+    hitbox: landFrogHitbox,
+    hitboxes: [
         {left: 31, top: 17, width: 72, height: 59},
         {left: 74, top: 43, width: 100, height: 72},
         {left: 169, top: 68, width: 47, height: 75},
@@ -196,8 +196,8 @@ const jumpingFrogGeometry = {
 const swimmingFrogRect = r(251, 113);
 const swimmingFrogGeometry = {
     ...swimmingFrogRect,
-    hitBox: {left: 15, top: 17, width: 210, height: 80},
-    hitBoxes: [
+    hitbox: {left: 15, top: 17, width: 210, height: 80},
+    hitboxes: [
         {left: 15, top: 20, width: 100, height: 83},
         {left: 118, top: 32, width: 45, height: 72},
         {left: 163, top: 69, width: 52, height: 30},
@@ -206,17 +206,17 @@ const swimmingFrogGeometry = {
 // Frames when only the frog's head is sticking out of the water.
 const divingFrogGeometry = {
     ...swimmingFrogRect,
-    hitBox: {left: 57, top: 53, width: 100, height: 55},
-    hitBoxes: [
+    hitbox: {left: 57, top: 53, width: 100, height: 55},
+    hitboxes: [
         {left: 60, top: 49, width: 60, height: 50},
         {left: 125, top: 79, width: 16, height: 23}
     ],
 };
-// When the frog is completely underwater. No actual hitBoxes.
+// When the frog is completely underwater. No actual hitboxes.
 const submergedFrogGeometry = {
     ...swimmingFrogRect,
-    hitBox: {left: 45, top: 75, width: 205, height: 30},
-    hitBoxes: [],
+    hitbox: {left: 45, top: 75, width: 205, height: 30},
+    hitboxes: [],
 };
 // This image was originally designed to be placed on top of the swimming frog.
 // It needs to be moved down about 18 pixels when drawn on the land frog.
@@ -315,9 +315,9 @@ enemyData[ENEMY_FROG] = {
         const poolPhase = startPoolPhase(state);
         const pool = state.world.pool && state.world.pool.sprites[0];
         modeTime += FRAME_LENGTH;
-        const hitBox = getEnemyHitBox(state, enemy);
-        const heroHitBox = getHeroHitBox(state.players[0]);
-        const [targetX, targetY] = heroHitBox.getCenter();
+        const hitbox = getEnemyHitbox(state, enemy);
+        const heroHitbox = getHeroHitbox(state.players[0]);
+        const [targetX, targetY] = heroHitbox.getCenter();
         // This line was used to test the tongue works for erratic targets.
         // Making sure it doesn't bend at awkward angles.
         //const [targetX, targetY] = [random.range(0, 800), random.range(0, 600)];
@@ -375,7 +375,7 @@ enemyData[ENEMY_FROG] = {
                     // Mirror the starting tongue coords if the frogs sprite is flipped (facing right).
                     if (vx > 0) {
                         if (mode === 'swimmingAttacking')
-                            tongues = tongues.map(t => [enemy.width - t[0] - hitBox.left + enemy.left, t[1]]);
+                            tongues = tongues.map(t => [enemy.width - t[0] - hitbox.left + enemy.left, t[1]]);
                         else
                             tongues = tongues.map(t => [enemy.width - t[0], t[1]]);
                     }
@@ -420,7 +420,7 @@ enemyData[ENEMY_FROG] = {
                     break;
                 }
                 if (modeTime < 400) break;
-                if (hitBox.left >= WIDTH / 2) {
+                if (hitbox.left >= WIDTH / 2) {
                     mode = 'attacking';
                     animationTime = modeTime = 0;
                 } else {
@@ -458,7 +458,7 @@ enemyData[ENEMY_FROG] = {
                 break;
             }
             case 'jumping': {
-                if (hitBox.bottom >= getGroundHeight(state)) {
+                if (hitbox.bottom >= getGroundHeight(state)) {
                     vx = poolPhase ? 0.01 : dx * 0.01 / Math.abs(dx);
                     if (pool && enemy.left >= WIDTH && pool.left <= WIDTH + 100) {
                         enemy = {
@@ -544,7 +544,7 @@ enemyData[ENEMY_FROG] = {
     updateTongues(state, enemy) {
         if (!enemy.tongues || enemy.tongues.length < 3) return state;
         const points = enemy.tongues.map(t => ({x: enemy.left + t[0], y: enemy.top + t[1]}));
-        const heroHitBox = getHeroHitBox(state.players[0]);
+        const heroHitbox = getHeroHitbox(state.players[0]);
         // Check if the frog caught a flying ant (the tip of its tongue hits an ant).
         if (enemy.mode === 'swimmingAttacking') {
             const ants = state.enemies.filter(enemy => enemy.type === ENEMY_FLYING_ANT);
@@ -552,7 +552,7 @@ enemyData[ENEMY_FROG] = {
                 points[points.length - 1], points[points.length - 2]
             );
             for (let ant of ants) {
-                if (lastRectangle.overlapsRectangle(getEnemyHitBox(state, ant))) {
+                if (lastRectangle.overlapsRectangle(getEnemyHitbox(state, ant))) {
                     state = updateEnemy(state, enemy,
                         {mode: 'swimmingRetracting', modeTime: 0, caughtFly: true}
                     );
@@ -562,9 +562,9 @@ enemyData[ENEMY_FROG] = {
         }
         // Check if the player is hitting any of the tongue sections.
         for (let i = 2; i < points.length; i++) {
-            // This hitBox is a crude estimation for the tongues actual position.
+            // This hitbox is a crude estimation for the tongues actual position.
             const sectionBox = Rectangle.defineFromPoints(points[i], points[i - 1]);
-            if (sectionBox.overlapsRectangle(heroHitBox)) {
+            if (sectionBox.overlapsRectangle(heroHitbox)) {
                 return damageHero(state, 0);
             }
 
@@ -636,7 +636,7 @@ enemyData[ENEMY_FROG] = {
     },
 };
 const ENEMY_GRATE = 'grate';
-const grateRectangle = r(800, 600, {hitBox: {left: 718, top: 195, width: 30, height: 175}});
+const grateRectangle = r(800, 600, {hitbox: {left: 718, top: 195, width: 30, height: 175}});
 enemyData[ENEMY_GRATE] = {
     animation: {
         frames: [
@@ -662,11 +662,11 @@ enemyData[ENEMY_GRATE] = {
             });
             delay += random.range(8, 12);
             if (i % 3 === 2) delay += 10;
-            const hitBox = getEnemyHitBox(state, enemy);
+            const hitbox = getEnemyHitbox(state, enemy);
             explosion.width *= 3;
             explosion.height *= 3;
-            explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2 + random.range(-40, 40);
-            explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2 + random.range(-100, 100);
+            explosion.left = hitbox.left + (hitbox.width - explosion.width ) / 2 + random.range(-40, 40);
+            explosion.top = hitbox.top + (hitbox.height - explosion.height ) / 2 + random.range(-100, 100);
             state = addEffectToState(state, explosion);
         }
         return updateEnemy(state, enemy, {stationary: false, bounces: 2, vx: 2});
@@ -705,15 +705,15 @@ enemyData[ENEMY_GRATE] = {
 const ENEMY_WATER_MONK = 'waterMonk';
 const ENEMY_DROWNING_MONK = 'drowningMonk';
 
-const waterMonkGeometry = r(60, 40, {hitBox: {left: 0, top: 0, width: 50, height: 20}});
+const waterMonkGeometry = r(60, 40, {hitbox: {left: 0, top: 0, width: 50, height: 20}});
 // This drowning monk is created dead when a waterbug is defeated and has a special
 // frame for showing the monk sinking in the water.
 enemyData[ENEMY_DROWNING_MONK] = {
     ...enemyData[ENEMY_MONK],
     waterDeathAnimation: createAnimation('gfx/enemies/monks/waterbugsheet.png', waterMonkGeometry, {y: 3}),
     getAnimation(state, enemy) {
-        const hitBox = getHitBox(this.deathAnimation, 0);
-        if (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state)) {
+        const hitbox = getHitbox(this.deathAnimation, 0);
+        if (enemy.top + hitbox.top + hitbox.height >= getGroundHeight(state)) {
             return this.waterDeathAnimation;
         }
         return getDefaultEnemyAnimation(state, enemy);

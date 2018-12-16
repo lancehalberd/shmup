@@ -139,9 +139,9 @@ const advanceLayer = (state, layerName) => {
         }
         if (sprite.onHit) {
             const frame = getFrame(sprite.animation, sprite.animationTime);
-            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
+            const hitbox = new Rectangle(frame.hitbox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
             for (const attack of state.playerAttacks) {
-                if (Rectangle.collision(hitBox, getAttackHitBox(state, attack))) {
+                if (Rectangle.collision(hitbox, getAttackHitbox(state, attack))) {
                     state = sprite.onHit(state, layerName, i, attack);
                     sprite = state.world[layerName].sprites[i];
                     break;
@@ -150,14 +150,14 @@ const advanceLayer = (state, layerName) => {
         }
         if (sprite.onContact) {
             const frame = getFrame(sprite.animation, sprite.animationTime);
-            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
+            const hitbox = new Rectangle(frame.hitbox || frame).scale(sprite.scale).moveTo(sprite.left, sprite.top);
             const player = state.players[0];
-            const heroHitBox = new Rectangle(getHeroHitBox(player));
-            if (Rectangle.collision(hitBox, heroHitBox)) {
+            const heroHitbox = new Rectangle(getHeroHitbox(player));
+            if (Rectangle.collision(hitbox, heroHitbox)) {
                 state = sprite.onContact(state, layerName, i);
             } else {
                 for (const enemy of state.enemies) {
-                    if (Rectangle.collision(hitBox, getEnemyHitBox(state, enemy))) {
+                    if (Rectangle.collision(hitbox, getEnemyHitbox(state, enemy))) {
                         state = sprite.onContact(state, layerName, i);
                         break;
                     }
@@ -269,12 +269,12 @@ const shadowAnimation = createAnimation('gfx/heroes/shadow.png', r(24, 11));
 function renderHeroShadow(context, state) {
     const y = Math.min(getGroundHeight(state), getHazardHeight(state));
     const frame = getFrame(shadowAnimation, state.world.time);
-    const heroHitBox = getHeroHitBox(state.players[0]);
+    const heroHitbox = getHeroHitbox(state.players[0]);
     context.save();
-    const scale = Math.max(1, 5 - (y - (heroHitBox.top + heroHitBox.height)) / 100);
+    const scale = Math.max(1, 5 - (y - (heroHitbox.top + heroHitbox.height)) / 100);
     context.globalAlpha = 0.1 + scale * 0.07;
     const target = new Rectangle(frame).scale(scale).moveCenterTo(
-        heroHitBox.left + heroHitBox.width / 2,
+        heroHitbox.left + heroHitbox.width / 2,
         y,
     );
     drawImage(context, frame.image, frame, target);
@@ -319,10 +319,10 @@ function renderLayer(context, state, layerName) {
         context.restore();
         if (isKeyDown(KEY_SHIFT) && sprite.onHit) {
             context.save();
-            const hitBox = new Rectangle(frame.hitBox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
+            const hitbox = new Rectangle(frame.hitbox || frame).scale(sprite.scale).translate(sprite.left, sprite.top);
             context.globalAlpha = 0.5;
             context.fillStyle = 'green';
-            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
             context.restore();
         }
     }
@@ -372,7 +372,7 @@ module.exports = {
 const { getFieldWorldStart, CHECK_POINT_FIELD_START} = require('areas/field');
 // require('areas/forestLower');
 // require('areas/forestUpper');
-const { getEnemyHitBox } = require('enemies');
-const { getHeroHitBox } = require('heroes');
+const { getEnemyHitbox } = require('enemies');
+const { getHeroHitbox } = require('heroes');
 
-const { getAttackHitBox } = require('attacks');
+const { getAttackHitbox } = require('attacks');

@@ -164,8 +164,8 @@ allWorlds[WORLD_SEWER] = {
 function floatEnemies(state) {
     for (const enemy of state.enemies) {
         if (!enemy.dead) continue;
-        const enemyHitBox = getEnemyHitBox(state, enemy);
-        if (enemyHitBox.top + enemyHitBox.height / 2 >= getHazardHeight(state)) {
+        const enemyHitbox = getEnemyHitbox(state, enemy);
+        if (enemyHitbox.top + enemyHitbox.height / 2 >= getHazardHeight(state)) {
             state = updateEnemy(state, enemy, {vx: (enemy.vx - 1.5) * 0.9, vy: enemy.vy * 0.85 - 1.2 });
         }
     }
@@ -250,16 +250,16 @@ function getSewerWorld() {
     };
 }
 
-const { updatePlayer, getHeroHitBox } = require('heroes');
-const { spawnEnemy, enemyData, getEnemyHitBox, updateEnemy } = require('enemies');
+const { updatePlayer, getHeroHitbox } = require('heroes');
+const { spawnEnemy, enemyData, getEnemyHitbox, updateEnemy } = require('enemies');
 const { transitionToSewerBoss } = require('areas/sewerBoss');
 const { createAttack, addEnemyAttackToState, ATTACK_GAS, ATTACK_WATER } = require('attacks');
 
 const ratGeometry = r(120, 120, {
-    hitBox: {left: 50, top: 2, width: 25, height: 85}
+    hitbox: {left: 50, top: 2, width: 25, height: 85}
 });
 const ratJumpGeometry = r(120, 120, {
-    hitBox: {left: 35, top: 35, width: 75, height: 30}
+    hitbox: {left: 35, top: 35, width: 75, height: 30}
 });
 enemyData[ENEMY_RAT] = {
     animation: createAnimation('gfx/enemies/rat.png', ratGeometry, {cols: 4, frameMap: [0, 1, 2, 3, 2, 1]}),
@@ -277,10 +277,10 @@ enemyData[ENEMY_RAT] = {
         const minTop = Math.max(-10, getHazardCeilingHeight(state) + 5);
         const maxTop = Math.min(GAME_HEIGHT + 10, getHazardHeight(state) - 5) * 0.6;
         if (enemy.mode === 'pause') {
-            const heroHitBox = getHeroHitBox(state.players[0]);
-            const enemyHitBox = getEnemyHitBox(state, enemy);
-            const dx = (heroHitBox.left + heroHitBox.width / 2) - (enemyHitBox.left + enemyHitBox.width / 2);
-            if (!enemy.passive && dx >= -100 && dx <= 100 && heroHitBox.top > enemyHitBox.top) {
+            const heroHitbox = getHeroHitbox(state.players[0]);
+            const enemyHitbox = getEnemyHitbox(state, enemy);
+            const dx = (heroHitbox.left + heroHitbox.width / 2) - (enemyHitbox.left + enemyHitbox.width / 2);
+            if (!enemy.passive && dx >= -100 && dx <= 100 && heroHitbox.top > enemyHitbox.top) {
                 return { ...enemy,
                     vy: 3,
                     // Adding the player velocity makes them track the player much better,
@@ -335,10 +335,10 @@ enemyData[ENEMY_STINK_BUG] = {
     deathAnimation: createAnimation('gfx/enemies/stinkbugsheet.png', stinkBugGeometry, {x: 3}),
     deathSound: 'sfx/flydeath.mp3',
     onDeathEffect(state, enemy) {
-        const enemyHitBox = getEnemyHitBox(state, enemy);
+        const enemyHitbox = getEnemyHitbox(state, enemy);
         const gas = createAttack(ATTACK_GAS, {
-            left: enemyHitBox.left + enemyHitBox.width / 2,
-            top: enemyHitBox.top + enemyHitBox.height / 2,
+            left: enemyHitbox.left + enemyHitbox.width / 2,
+            top: enemyHitbox.top + enemyHitbox.height / 2,
         });
         gas.left -= gas.width / 2;
         gas.top -= gas.height / 2;
@@ -355,7 +355,7 @@ enemyData[ENEMY_STINK_BUG] = {
 };
 
 const archerFishGeometry = r(80, 80, {
-    hitBox: {left: 7, top: 20, width: 70, height: 50},
+    hitbox: {left: 7, top: 20, width: 70, height: 50},
 });
 
 enemyData[ENEMY_ARCHER_FISH] = {
@@ -370,19 +370,19 @@ enemyData[ENEMY_ARCHER_FISH] = {
     updateState(state, enemy) {
         if (enemy.dead) return state;
         if (enemy.mode === 'rising') {
-            const hitBox = getEnemyHitBox(state, enemy);
+            const hitbox = getEnemyHitbox(state, enemy);
             const offset = (enemy.type === ENEMY_ARCHER_FISH_SOLDIER) ? 20 : 30;
-            if (hitBox.top + offset > getHazardHeight(state)) {
+            if (hitbox.top + offset > getHazardHeight(state)) {
                 return updateEnemy(state, enemy, {vy: enemy.vy * .85 - 0.4});
             }
             return this.changeMode(state, enemy, 'pause');
         }
         if (enemy.mode === 'attack') {
             if (enemy.modeTime >= 400 && !(enemy.modeTime % 10) && (enemy.modeTime % 100 < 50)) {
-                const hitBox = getEnemyHitBox(state, enemy);
+                const hitbox = getEnemyHitbox(state, enemy);
                 const water = createAttack(ATTACK_WATER, {
-                    left: hitBox.left + hitBox.width / 2 + 36 * (enemy.flipped ? 1 : -1),
-                    top: hitBox.top + 4,
+                    left: hitbox.left + hitbox.width / 2 + 36 * (enemy.flipped ? 1 : -1),
+                    top: hitbox.top + 4,
                     vx: (enemy.flipped ? 1 : -2) * 5,
                     vy: -8,
                 });
@@ -401,9 +401,9 @@ enemyData[ENEMY_ARCHER_FISH] = {
             if (enemy.modeTime === 800) {
                 return this.changeMode(state, enemy, 'attack');
             }
-            const playerHitBox = getHeroHitBox(state.players[0]);
-            const hitBox = getEnemyHitBox(state, enemy);
-            const dx = (playerHitBox.left + playerHitBox.width / 2) - (hitBox.left + hitBox.width / 2);
+            const playerHitbox = getHeroHitbox(state.players[0]);
+            const hitbox = getEnemyHitbox(state, enemy);
+            const dx = (playerHitbox.left + playerHitbox.width / 2) - (hitbox.left + hitbox.width / 2);
             return updateEnemy(state, enemy, {
                 modeTime: enemy.modeTime + FRAME_LENGTH,
                 flipped: dx > 0,
@@ -429,8 +429,8 @@ enemyData[ENEMY_ARCHER_FISH] = {
 
 const archerFishSoldierGeometry = {
     ...archerFishGeometry,
-    hitBoxes: [
-        archerFishGeometry.hitBox,
+    hitboxes: [
+        archerFishGeometry.hitbox,
         {left: 23, top: 0, width: 20, height: 34},
     ]
 }

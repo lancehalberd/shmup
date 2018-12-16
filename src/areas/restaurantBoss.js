@@ -7,11 +7,10 @@ const random = require('random');
 const Rectangle = require('Rectangle');
 const { drawImage } = require('draw');
 const { getNewSpriteState } = require('sprites');
-const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
+const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
 const { allWorlds, getNewLayer } = require('world');
 
 const WORLD_RESTAURANT_BOSS = 'restaurantBoss';
-const BOSS_DURATION = 80000;
 
 function transitionToRestaurantBoss(state) {
     const world = {
@@ -209,7 +208,7 @@ module.exports = {
 const { transitionToBeach } = require('areas/restaurantToBeach');
 const { transitionToCircus } = require('areas/restaurantToCircus');
 
-const { damageHero, getHeroHitBox } = require('heroes');
+const { damageHero, getHeroHitbox } = require('heroes');
 const {
     enemyData, createEnemy, addEnemyToState, updateEnemy,
     getEnemyDrawBox, renderEnemyFrame
@@ -243,7 +242,7 @@ You can also have it any death at the boss means they get trapped into the web, 
 */
 const ENEMY_SPIDER = 'spider';
 const spiderGeometry = r(69, 111,
-    {hitBox: {left: 23, top: 7, width: 20, height: 66},
+    {hitbox: {left: 23, top: 7, width: 20, height: 66},
     scaleX: 2, scaleY: 2
 },
 );
@@ -273,11 +272,11 @@ enemyData[ENEMY_SPIDER] = {
         let { webs, webDx, webDy } = enemy;
         if (!webs || !webs.length) return state;
         // Check if the player is hitting any of the web sections.
-        const heroHitBox = getHeroHitBox(state.players[0]);
+        const heroHitbox = getHeroHitbox(state.players[0]);
         for (let i = 1; i < webs.length; i++) {
-            // This hitBox is a crude estimation for the webs position.
+            // This hitbox is a crude estimation for the webs position.
             const sectionBox = Rectangle.defineFromPoints(webs[i], webs[i - 1]);
-            if (sectionBox.overlapsRectangle(heroHitBox)) {
+            if (sectionBox.overlapsRectangle(heroHitbox)) {
                 state = damageHero(state, 0);
                 break;
             }
@@ -314,8 +313,8 @@ enemyData[ENEMY_SPIDER] = {
                 stopTime = 1600;
             }
             if (enemy.modeTime === fireTime) {
-                const heroHitBox = getHeroHitBox(state.players[0]);
-                const [targetX, targetY] = heroHitBox.getCenter();
+                const heroHitbox = getHeroHitbox(state.players[0]);
+                const [targetX, targetY] = heroHitbox.getCenter();
                 const drawBox = getEnemyDrawBox(state, enemy);
                 const web = {
                     x: enemy.left + 18 * spiderGeometry.scaleX,
@@ -419,7 +418,7 @@ enemyData[ENEMY_SPIDER] = {
 };
 const ENEMY_SPIDER_WEB = 'spiderWeb';
 const webGeometry = r(212, 371, {
-    hitBoxes: [
+    hitboxes: [
         {left:0, top: 0, width: 212, height: 283},
         {left:152, top: 0, width: 60, height: 350},
     ],

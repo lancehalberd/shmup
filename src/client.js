@@ -24,7 +24,7 @@ const { isKeyDown,
 } = require('keyboard');
 
 const {
-    startEditingHitBoxes,
+    startEditingHitboxes,
 } = require('editHitboxes');
 
 // Currently we only support a single player.
@@ -35,18 +35,14 @@ let preloadedSounds = false;
 let stateQueue = [];
 let state = {};
 
-const snakeTailGeometry = r(382, 218, {
-    scaleX: 2,
-    scaleY: 2,
-});
 let frameToEdit = null;
-//frameToEdit = snakeTailAnimation.frames[1];
+//frameToEdit = splashAnimation.frames[0];
 
 
 const update = () => {
     if (!state.world) {
         state = getNewState();
-        if (frameToEdit) state = startEditingHitBoxes(state, frameToEdit);
+        if (frameToEdit) state = startEditingHitboxes(state, frameToEdit);
         window.state = state;
     }
 
@@ -61,7 +57,7 @@ const update = () => {
         preloadSounds();
         preloadedSounds = true;
     }
-    if (state.hitBoxFrame) {
+    if (state.hitboxFrame) {
         return;
     }
     // Set the game to demo mode.

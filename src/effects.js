@@ -20,7 +20,7 @@ const {
     requireImage,
     createAnimation,
     getFrame,
-    getHitBox,
+    getHitbox,
     damageAnimation,
     dustAnimation,
     explosionAnimation,
@@ -187,9 +187,9 @@ const effects = {
 };
 window.effects = effects;
 
-function getEffectHitBox(effect) {
+function getEffectHitbox(effect) {
     let animation = effects[effect.type].animation;
-    return new Rectangle(getHitBox(animation, effect.animationTime)).translate(effect.left, effect.top);
+    return new Rectangle(getHitbox(animation, effect.animationTime)).translate(effect.left, effect.top);
 }
 
 const createEffect = (type, props) => {
@@ -232,22 +232,22 @@ const renderEffect = (context, effect) => {
             context.save();
             context.globalAlpha = 0.6;
             context.fillStyle = 'orange';
-            let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
-            hitBox = hitBox.translate(effect.left, effect.top);
-            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            let hitbox = getHitbox(effects[effect.type].animation, effect.animationTime);
+            hitbox = hitbox.translate(effect.left, effect.top);
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
             context.restore();
         }
     } else {
-        let hitBox = getHitBox(effects[effect.type].animation, effect.animationTime);
-        // This moves the origin to where we want the center of the enemies hitBox to be.
+        let hitbox = getHitbox(effects[effect.type].animation, effect.animationTime);
+        // This moves the origin to where we want the center of the enemies hitbox to be.
         context.save();
         const xScale = effect.xScale || 1;
         const yScale = effect.yScale || 1;
         /*context.translate(
-            effect.left + xScale * (hitBox.left + hitBox.width / 2),
-            effect.top + yScale * (hitBox.top + hitBox.height / 2)
+            effect.left + xScale * (hitbox.left + hitbox.width / 2),
+            effect.top + yScale * (hitbox.top + hitbox.height / 2)
         );*/
-        const anchor = frame.anchor || {x: hitBox.left, y: hitBox.top};
+        const anchor = frame.anchor || {x: hitbox.left, y: hitbox.top};
         context.translate(effect.left + anchor.x, effect.top + anchor.y);
         context.scale(xScale, yScale);
         if (effect.rotation) context.rotate(effect.rotation);
@@ -260,10 +260,10 @@ const renderEffect = (context, effect) => {
             context.save();
             context.globalAlpha = 0.6;
             context.fillStyle = 'orange';
-            hitBox = hitBox.stretchFromPoint(anchor.x, anchor.y, xScale, yScale)
+            hitbox = hitbox.stretchFromPoint(anchor.x, anchor.y, xScale, yScale)
                 .translate(effect.left, effect.top);
             // console.log(effect.left + effect.width * effect.xScale / 2, effect.top + effect.width * effect.yScale / 2);
-            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
             context.restore();
         }
     }
@@ -278,9 +278,9 @@ const advanceEffect = (state, effectIndex) => {
             state = effectInfo.advanceEffect(state, effectIndex, state.effects[effectIndex]);
         }
         if (effectInfo.onHitPlayer) {
-            const effectHitBox = getEffectHitBox(effect);
+            const effectHitbox = getEffectHitbox(effect);
             for (let j = 0; j < state.players.length; j++) {
-                if (Rectangle.collision(getHeroHitBox(state.players[j]), effectHitBox)) {
+                if (Rectangle.collision(getHeroHitbox(state.players[j]), effectHitbox)) {
                     state = effectInfo.onHitPlayer(state, effectIndex, j, effect);
                 }
             }
@@ -349,7 +349,7 @@ module.exports = {
     renderEffect,
     updateEffect,
     getEffectIndex,
-    getEffectHitBox,
+    getEffectHitbox,
 };
 
-const { getHeroHitBox } = require('heroes');
+const { getHeroHitbox } = require('heroes');

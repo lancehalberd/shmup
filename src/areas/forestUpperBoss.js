@@ -169,7 +169,7 @@ module.exports = {
 const { transitionToCity } = require('areas/forestUpperToCity');
 const { transitionToSky } = require('areas/forestUpperToSky');
 
-const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitBox } = require('enemies');
+const { enemyData, createEnemy, addEnemyToState, damageEnemy, getEnemyHitbox } = require('enemies');
 const {
     ENEMY_HORNET,
     ENEMY_HORNET_CIRCLER,
@@ -188,7 +188,7 @@ const EFFECT_NEST_DAMAGE_LOWER = 'nestDamageLower';
 const EFFECT_NEST_DAMAGE_UPPER = 'nestDamageUpper';
 enemyData[ENEMY_HORNET_NEST_0] = {
     animation: createAnimation('gfx/enemies/hornetnest/nest6.png',
-        r(300, 600, {hitBox: {left: 87, top: 33, width: 115, height: 105}})
+        r(300, 600, {hitbox: {left: 87, top: 33, width: 115, height: 105}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt6.png', r(300, 600)),
     deathSound: 'sfx/explosion.mp3+0+0.5',
@@ -213,7 +213,7 @@ enemyData[ENEMY_HORNET_NEST_0] = {
         return state;
     },
     onDeathEffect(state, enemy) {
-        const hitBox = getEnemyHitBox(state, enemy);
+        const hitbox = getEnemyHitbox(state, enemy);
         let delay = random.range(4, 6);
         for (let i = 0; i < 3; i++) {
             const explosion = createEffect(EFFECT_EXPLOSION, {
@@ -221,15 +221,15 @@ enemyData[ENEMY_HORNET_NEST_0] = {
                 delay,
             });
             delay += random.range(8, 12);
-            explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2 + random.range(-15, 15);
-            explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2 + random.range(-15, 15);
+            explosion.left = hitbox.left + (hitbox.width - explosion.width ) / 2 + random.range(-15, 15);
+            explosion.top = hitbox.top + (hitbox.height - explosion.height ) / 2 + random.range(-15, 15);
             state = addEffectToState(state, explosion);
         }
         delay = 3;
         for (const enemyType of enemy.spawns) {
             let newEnemy = createEnemy(state, enemyType, {
-                left: hitBox.left + hitBox.width / 2,
-                top: hitBox.top + hitBox.height / 2,
+                left: hitbox.left + hitbox.width / 2,
+                top: hitbox.top + hitbox.height / 2,
                 delay,
             });
             state = addEnemyToState(state, newEnemy);
@@ -256,7 +256,7 @@ enemyData[ENEMY_HORNET_NEST_0] = {
 enemyData[ENEMY_HORNET_NEST_1] = {
     ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest5.png',
-        r(300, 600, {hitBox: {left: 87, top: 33, width: 115, height: 105}})
+        r(300, 600, {hitbox: {left: 87, top: 33, width: 115, height: 105}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt5.png', r(300, 600)),
     props: {
@@ -269,7 +269,7 @@ enemyData[ENEMY_HORNET_NEST_1] = {
 enemyData[ENEMY_HORNET_NEST_2] = {
     ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest4.png',
-        r(300, 600, {hitBox: {left: 32, top: 134, width: 215, height:120}})
+        r(300, 600, {hitbox: {left: 32, top: 134, width: 215, height:120}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt4.png', r(300, 600)),
     props: {
@@ -282,7 +282,7 @@ enemyData[ENEMY_HORNET_NEST_2] = {
 enemyData[ENEMY_HORNET_NEST_3] = {
     ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest3.png',
-        r(300, 600, {hitBox: {left: 45, top: 195, width: 160, height:120}})
+        r(300, 600, {hitbox: {left: 45, top: 195, width: 160, height:120}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt3.png', r(300, 600)),
     props: {
@@ -295,7 +295,7 @@ enemyData[ENEMY_HORNET_NEST_3] = {
 enemyData[ENEMY_HORNET_NEST_4] = {
     ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest2.png',
-        r(300, 600, {hitBox: {left: 43, top: 204, width: 240, height:140}})
+        r(300, 600, {hitbox: {left: 43, top: 204, width: 240, height:140}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt2.png', r(300, 600)),
     props: {
@@ -308,7 +308,7 @@ enemyData[ENEMY_HORNET_NEST_4] = {
 enemyData[ENEMY_HORNET_NEST_5] = {
     ...enemyData[ENEMY_HORNET_NEST_0],
     animation: createAnimation('gfx/enemies/hornetnest/nest1.png',
-        r(300, 600, {hitBox: {left: 130, top: 302, width: 130, height:85}})
+        r(300, 600, {hitbox: {left: 130, top: 302, width: 130, height:85}})
     ),
     hurtAnimation: createAnimation('gfx/enemies/hornetnest/hornethurt1.png', r(300, 600)),
     props: { life: NEST_LIFE * 0.2, hanging: true,

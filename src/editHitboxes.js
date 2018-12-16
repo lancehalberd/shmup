@@ -24,19 +24,19 @@ function getOverEdges(rectangle, x, y) {
 
 document.onmousedown = function(event) {
     const state = window.state;
-    if (!state || !state.hitBoxFrame) return;
+    if (!state || !state.hitboxFrame) return;
     state.mousedown = true;
     const { x, y } = getEventCoords(event);
-    if (state.selectedHitBox && state.overEdges) {
+    if (state.selectedHitbox && state.overEdges) {
         state.selectedEdges = state.overEdges;
         console.log('over edges', Object.keys(state.overEdges));
         return;
     }
-    state.selectedHitBox = state.overHitBox;
+    state.selectedHitbox = state.overHitbox;
 };
 document.onmousemove = function (event) {
     const state = window.state;
-    if (!state || !state.hitBoxFrame) return;
+    if (!state || !state.hitboxFrame) return;
     const { x, y } = getEventCoords(event);
     if (state.mousedown) ondrag(x, y);
     else onhover(x, y);
@@ -48,109 +48,109 @@ function ondrag(x, y) {
         dx = x - state.lastCoords.x;
         dy = y - state.lastCoords.y;
     }
-    const selectedHitBox = state.selectedHitBox;
+    const selectedHitbox = state.selectedHitbox;
     state.lastCoords = {x, y};
     if (state.selectedEdges) {
         if (state.selectedEdges.left) {
-            selectedHitBox.left += dx;
-            selectedHitBox.width -= dx;
-            if (selectedHitBox.width < 0) {
-                selectedHitBox.left += selectedHitBox.width;
-                selectedHitBox.width *= -1;
+            selectedHitbox.left += dx;
+            selectedHitbox.width -= dx;
+            if (selectedHitbox.width < 0) {
+                selectedHitbox.left += selectedHitbox.width;
+                selectedHitbox.width *= -1;
                 delete state.selectedEdges.left;
                 state.selectedEdges.right = true;
             }
         } else if (state.selectedEdges.right) {
-            selectedHitBox.width += dx;
-            if (selectedHitBox.width < 0) {
-                selectedHitBox.left += selectedHitBox.width;
-                selectedHitBox.width *= -1;
+            selectedHitbox.width += dx;
+            if (selectedHitbox.width < 0) {
+                selectedHitbox.left += selectedHitbox.width;
+                selectedHitbox.width *= -1;
                 delete state.selectedEdges.right;
                 state.selectedEdges.left = true;
             }
         }
         if (state.selectedEdges.top) {
-            selectedHitBox.top += dy;
-            selectedHitBox.height -= dy;
-            if (selectedHitBox.height < 0) {
-                selectedHitBox.top += selectedHitBox.height;
-                selectedHitBox.height *= -1;
+            selectedHitbox.top += dy;
+            selectedHitbox.height -= dy;
+            if (selectedHitbox.height < 0) {
+                selectedHitbox.top += selectedHitbox.height;
+                selectedHitbox.height *= -1;
                 delete state.selectedEdges.top;
                 state.selectedEdges.bottom = true;
             }
         } else if (state.selectedEdges.bottom) {
-            selectedHitBox.height += dy;
-            if (selectedHitBox.height < 0) {
-                selectedHitBox.top += selectedHitBox.height;
-                selectedHitBox.height *= -1;
+            selectedHitbox.height += dy;
+            if (selectedHitbox.height < 0) {
+                selectedHitbox.top += selectedHitbox.height;
+                selectedHitbox.height *= -1;
                 delete state.selectedEdges.bottom;
                 state.selectedEdges.top = true;
             }
         }
-    } else if (selectedHitBox) {
-        selectedHitBox.left += dx;
-        selectedHitBox.top += dy;
+    } else if (selectedHitbox) {
+        selectedHitbox.left += dx;
+        selectedHitbox.top += dy;
     } else if (dx || dy) {
-        const hitBox = {
+        const hitbox = {
             left: Math.min(x, x - dx), width: Math.abs(dx),
             top: Math.min(y, y - dy), height: Math.abs(dy),
         };
-        state.hitBoxFrame.hitBoxes = state.hitBoxFrame.hitBoxes || [];
-        state.hitBoxFrame.hitBoxes.push(hitBox);
-        state.selectedHitBox = hitBox;
+        state.hitboxFrame.hitboxes = state.hitboxFrame.hitboxes || [];
+        state.hitboxFrame.hitboxes.push(hitbox);
+        state.selectedHitbox = hitbox;
         state.selectedEdges = {};
-        if (x === hitBox.left) state.selectedEdges.left = true;
+        if (x === hitbox.left) state.selectedEdges.left = true;
         else state.selectedEdges.right = true;
-        if (y === hitBox.top) state.selectedEdges.top = true;
+        if (y === hitbox.top) state.selectedEdges.top = true;
         else state.selectedEdges.bottom = true;
     }
 }
 function onhover(x, y) {
     const state = window.state;
-    if (state.selectedHitBox) {
-        const edges = getOverEdges(new Rectangle(state.selectedHitBox), x, y);
+    if (state.selectedHitbox) {
+        const edges = getOverEdges(new Rectangle(state.selectedHitbox), x, y);
         if (Object.keys(edges).length) {
             state.overEdges = edges;
             return;
         }
         state.overEdges = null;
     }
-    const frame = state.hitBoxFrame;
-    const hitBoxes = frame.hitBoxes || [];
-    for (const hitBox of hitBoxes) {
-        if (new Rectangle(hitBox).containsPoint(x, y)) {
-            state.overHitBox = hitBox;
+    const frame = state.hitboxFrame;
+    const hitboxes = frame.hitboxes || [];
+    for (const hitbox of hitboxes) {
+        if (new Rectangle(hitbox).containsPoint(x, y)) {
+            state.overHitbox = hitbox;
             return;
         }
     }
-    state.overHitBox = null;
+    state.overHitbox = null;
 }
 document.onmouseup = function (event) {
     const state = window.state;
-    if (!state || !state.hitBoxFrame) return;
+    if (!state || !state.hitboxFrame) return;
     state.mousedown = false;
     // Edges are only selected during drag operations.
     state.selectedEdges = null;
     state.lastCoords = null;
 }
 
-function renderHitBoxes(context, state) {
+function renderHitboxes(context, state) {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    const frame = state.hitBoxFrame;
+    const frame = state.hitboxFrame;
     drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(0, 0));
-    const hitBoxes = frame.hitBoxes || [];
-    for (const hitBox of hitBoxes) {
+    const hitboxes = frame.hitboxes || [];
+    for (const hitbox of hitboxes) {
         let color = 'rgba(255, 120, 0, 0.3)';
-        if (hitBox === state.selectedHitBox) {
+        if (hitbox === state.selectedHitbox) {
             color = 'rgba(255, 0, 0, 0.3)';
-        } else if (hitBox === state.overHitBox) {
+        } else if (hitbox === state.overHitbox) {
             color = 'rgba(255, 0, 0, 0.6)';
         }
-        fillRectangle(context, color, hitBox);
+        fillRectangle(context, color, hitbox);
     }
     const edges = state.selectedEdges || state.overEdges;
     if (edges) {
-        const box = new Rectangle(state.selectedHitBox);
+        const box = new Rectangle(state.selectedHitbox);
         context.beginPath();
         if (edges.left) {
             context.moveTo(box.left, box.top);
@@ -173,30 +173,30 @@ function renderHitBoxes(context, state) {
     }
 }
 
-function startEditingHitBoxes(state, hitBoxFrame) {
+function startEditingHitboxes(state, hitboxFrame) {
     window.document.onkeydown = function (event) {
         const state = window.state;
         // console.log(event.which);
-        if (event.which === 8 && state.selectedHitBox) {
-            const index = state.hitBoxFrame.hitBoxes.indexOf(state.selectedHitBox);
-            state.hitBoxFrame.hitBoxes.splice(index, 1);
-            state.selectedHitBox = null;
+        if (event.which === 8 && state.selectedHitbox) {
+            const index = state.hitboxFrame.hitboxes.indexOf(state.selectedHitbox);
+            state.hitboxFrame.hitboxes.splice(index, 1);
+            state.selectedHitbox = null;
             state.overEdges = null;
             state.selectedEdges = null;
         }
         if (event.which === 13) {
             console.log(
                 "[\n\t" +
-                state.hitBoxFrame.hitBoxes.map(b => JSON.stringify(b)).join(",\n\t") +
+                state.hitboxFrame.hitboxes.map(b => JSON.stringify(b)).join(",\n\t") +
                 ",\n]"
             );
         }
     }
-    return {...state, hitBoxFrame};
+    return {...state, hitboxFrame};
 }
 
 module.exports = {
-    renderHitBoxes,
-    startEditingHitBoxes,
+    renderHitboxes,
+    startEditingHitboxes,
 };
 

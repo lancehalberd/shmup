@@ -349,7 +349,7 @@ const advanceAllLoot = (state) => {
         if (loot.done) continue;
         for (let j = 0; j < state.players.length; j++) {
             if (state.players[j].done || state.players[j].spawning) continue;
-            if (Rectangle.collision(loot, getHeroHitBox(state.players[j]))) {
+            if (Rectangle.collision(loot, getHeroHitbox(state.players[j]))) {
                 state = collectLoot(state, j, i);
             }
         }
@@ -463,6 +463,6 @@ const { allWorlds, getHazardHeight, getHazardCeilingHeight } = require('world');
 const { addEnemyToState, createEnemy } = require('enemies');
 const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
 
-const { updatePlayer, getHeroHitBox, ladybugAnimation, } = require('heroes');
+const { updatePlayer, getHeroHitbox, ladybugAnimation, } = require('heroes');
 
 const { createEffect, addEffectToState } = require('effects');

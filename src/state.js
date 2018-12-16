@@ -176,10 +176,10 @@ const advanceState = (state) => {
         if (!enemy) continue;
         for (let j = 0; j < currentPlayerAttacks.length && enemyIsActive(updatedState, enemy); j++) {
             const attack = currentPlayerAttacks[j];
-            const attackHitBox = getAttackHitBox(state, attack);
-            let hitBox = null;
+            const attackHitbox = getAttackHitbox(state, attack);
+            let hitbox = null;
             if (!attack.done && !attack.hitIds[enemy.id]
-                && (hitBox = isIntersectingEnemyHitBoxes(updatedState, enemy, attackHitBox))
+                && (hitbox = isIntersectingEnemyHitboxes(updatedState, enemy, attackHitbox))
             ) {
                 let hitEffect;
                 if (enemyData[enemy.type].isInvulnerable && enemyData[enemy.type].isInvulnerable(updatedState, enemy, attack)) {
@@ -194,7 +194,7 @@ const advanceState = (state) => {
                     };
                 }
                 let x = attack.left + attack.width / 2;
-                x = Math.max(hitBox.left, Math.min(hitBox.left + hitBox.width, x));
+                x = Math.max(hitbox.left, Math.min(hitbox.left + hitbox.width, x));
                 hitEffect.left = x - hitEffect.width / 2;
                 hitEffect.top = attack.top + (attack.height - hitEffect.height ) / 2;
                 updatedState = addEffectToState(updatedState, hitEffect);
@@ -204,7 +204,7 @@ const advanceState = (state) => {
         }
         for (let j = 0; j < updatedState.players.length; j++) {
             if (enemyIsActive(updatedState, enemy) && !enemy.noCollisionDamage &&
-                isIntersectingEnemyHitBoxes(updatedState, enemy, getHeroHitBox(updatedState.players[j]), true)
+                isIntersectingEnemyHitboxes(updatedState, enemy, getHeroHitbox(updatedState.players[j]), true)
             ) {
                 updatedState = damageHero(updatedState, j);
             }
@@ -220,11 +220,11 @@ const advanceState = (state) => {
     }
     for (let i = 0; i < updatedState.players.length; i++) {
         if (isPlayerInvulnerable(updatedState, i)) continue;
-        const playerHitBox = getHeroHitBox(updatedState.players[i]);
+        const playerHitbox = getHeroHitbox(updatedState.players[i]);
         for (let j = 0; j < currentEnemyAttacks.length && !updatedState.players[i].done; j++) {
             const attack = currentEnemyAttacks[j];
-            const attackHitBox = getAttackHitBox(state, attack);
-            if (Rectangle.collision(playerHitBox, attackHitBox)) {
+            const attackHitboxes = getAttackHitboxes(state, attack);
+            if (attackHitboxes.some(attackHitbox => Rectangle.collision(playerHitbox, attackHitbox))) {
                 // Explicit onHitEffect overrides the default attack behavior
                 if (attacks[attack.type] && attacks[attack.type].onHitHero) {
                     updatedState = attacks[attack.type].onHitHero(updatedState, j, i);
@@ -250,11 +250,11 @@ const advanceState = (state) => {
     for (let i = 0; i < currentPlayerAttacks.length; i++) {
         const attack = currentPlayerAttacks[i];
         if (!attack.melee || attack.done) continue;
-        const attackHitBox = getAttackHitBox(state, attack);
+        const attackHitbox = getAttackHitbox(state, attack);
         for (let j = 0; j < currentEnemyAttacks.length; j++) {
             const enemyAttack = currentEnemyAttacks[j];
             if (!currentEnemyAttacks[j].deflectable) continue;
-            if (Rectangle.collision(attackHitBox, getAttackHitBox(state, enemyAttack))) {
+            if (Rectangle.collision(attackHitbox, getAttackHitbox(state, enemyAttack))) {
                 currentEnemyAttacks[j] = {...enemyAttack, done: true};
                 const deflectEffect = createEffect(EFFECT_DEFLECT_BULLET);
                 deflectEffect.left = enemyAttack.left + (enemyAttack.width - deflectEffect.width ) / 2;
@@ -271,13 +271,13 @@ const advanceState = (state) => {
     }
     for (let i = 0; i < currentNeutralAttacks.length; i++) {
         const attack = currentNeutralAttacks[i];
-        const attackHitBox = getAttackHitBox(state, attack);
+        const attackHitbox = getAttackHitbox(state, attack);
         for (let j = 0; j < updatedState.players.length; j++) {
             const player = updatedState.players[j];
             const playerKey = `player${j}`;
             if (isPlayerInvulnerable(updatedState, j) || attack.hitIds[playerKey]) continue;
-            const playerHitBox = getHeroHitBox(player);
-            if (Rectangle.collision(playerHitBox, attackHitBox)) {
+            const playerHitbox = getHeroHitbox(player);
+            if (Rectangle.collision(playerHitbox, attackHitbox)) {
                 updatedState = damageHero(updatedState, j);
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - 1,
@@ -289,7 +289,7 @@ const advanceState = (state) => {
         for (let j = 0; j < updatedState.enemies.length; j++) {
             const enemy = updatedState.idMap[updatedState.enemies[j].id];
             if (!enemyIsActive(updatedState, enemy) || attack.hitIds[enemy.id]) continue;
-            if (isIntersectingEnemyHitBoxes(updatedState, enemy, attackHitBox)) {
+            if (isIntersectingEnemyHitboxes(updatedState, enemy, attackHitbox)) {
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - Math.max(enemy.life, 1),
                     done: !attack.piercing && (attack.damage - Math.max(enemy.life, 1)) <= 0,
@@ -342,12 +342,12 @@ module.exports = {
 };
 
 const {
-    attacks, advanceAttack, getAttackHitBox,
+    attacks, advanceAttack, getAttackHitbox, getAttackHitboxes,
 } = require('attacks');
-const { getNewPlayerState, advanceHero, getHeroHitBox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
+const { getNewPlayerState, advanceHero, getHeroHitbox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
 const {
     enemyData, damageEnemy, advanceEnemy,
-    isIntersectingEnemyHitBoxes, enemyIsActive,
+    isIntersectingEnemyHitboxes, enemyIsActive,
 } = require('enemies');
 const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');

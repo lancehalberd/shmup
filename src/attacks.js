@@ -139,8 +139,8 @@ const attacks = {
                 }
             }
         },
-        getHitBox(state, attack) {
-            // Hack to make no hitBox when the beam hasn't fired yet.
+        getHitbox(state, attack) {
+            // Hack to make no hitbox when the beam hasn't fired yet.
             if (attack.animationTime <= attack.frameDelay * FRAME_LENGTH) {
                 return new Rectangle(-1000, -1000, 0, 0);
             }
@@ -172,11 +172,11 @@ const attacks = {
                 const enemy = source;
                 const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
                 const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
-                const hitBox = getEnemyHitBox(state, enemy);
+                const hitbox = getEnemyHitbox(state, enemy);
                 x = isFiringRight ?
-                    hitBox.left + bulletX * hitBox.width + enemy.vx : // Facing right.
-                    hitBox.left + (1 - bulletX) * hitBox.width + enemy.vx; // Facing left.
-                y = hitBox.top + enemy.vy + bulletY * hitBox.height;
+                    hitbox.left + bulletX * hitbox.width + enemy.vx : // Facing right.
+                    hitbox.left + (1 - bulletX) * hitbox.width + enemy.vx; // Facing left.
+                y = hitbox.top + enemy.vy + bulletY * hitbox.height;
             } else {
                 x = source.left + source.vx + (attack.xOffset || 0) + (isFiringRight ? source.width : 0);
                 y = source.top + source.vy + (attack.yOffset || 0) + source.height / 2;
@@ -267,12 +267,32 @@ function getAttackFrame(state, attack) {
     return getFrame(animation, animationTime);
 }
 
-function getAttackHitBox(state, attack) {
+function getAttackHitbox(state, attack) {
     const attackData = attacks[attack.type];
-    if (attackData.getHitBox) return attackData.getHitBox(state, attack);
+    if (attackData.getHitbox) return attackData.getHitbox(state, attack);
     const frame = getAttackFrame(state, attack);
-    if (frame.hitBox) return new Rectangle(frame.hitBox).scale(attack.scale || 1).translate(attack.left, attack.top);
-    return new Rectangle(frame).scale(attack.scale || 1).moveTo(attack.left, attack.top);
+    const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
+    const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
+    if (frame.hitbox) return new Rectangle(frame.hitbox).stretch(scaleX, scaleY).translate(attack.left, attack.top);
+    return new Rectangle(frame).stretch(scaleX, scaleY).moveTo(attack.left, attack.top);
+}
+function getAttackHitboxes(state, attack) {
+    const attackData = attacks[attack.type];
+    if (attackData.getHitbox) return [attackData.getHitbox(state, attack)];
+    const frame = getAttackFrame(state, attack);
+    const hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
+    return attackHitboxesToGlobalHitboxes(state, attack, hitboxes);
+}
+function attackHitboxesToGlobalHitboxes(state, attack, hitboxes) {
+    const frame = getAttackFrame(state, attack);
+    const globalHitboxes = [];
+    const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
+    const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
+    for (const hitbox of hitboxes) {
+        const globalHitbox = new Rectangle(hitbox).stretch(scaleX, scaleY).translate(attack.left, attack.top);
+        globalHitboxes.push(globalHitbox);
+    }
+    return globalHitboxes;
 }
 
 const addPlayerAttackToState = (state, attack) => {
@@ -374,7 +394,8 @@ function advanceAttack(state, attack) {
 module.exports = {
     attacks,
     createAttack,
-    getAttackHitBox,
+    getAttackHitbox,
+    getAttackHitboxes,
     addPlayerAttackToState,
     addNeutralAttackToState,
     addEnemyAttackToState,
@@ -386,5 +407,5 @@ module.exports = {
     ATTACK_WATER,
 };
 
-const { enemyIsActive, getEnemyHitBox } = require('enemies');
+const { enemyIsActive, getEnemyHitbox } = require('enemies');
 const { updatePlayer } = require('heroes');

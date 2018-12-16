@@ -347,7 +347,7 @@ enemyData[ENEMY_GROUND_MONK] = {
     },
 };
 const ENEMY_DOOR = 'door';
-const doorRectangle = r(129, 275, {hitBox: {left: 22, top: 23, width: 96, height: 220}});
+const doorRectangle = r(129, 275, {hitbox: {left: 22, top: 23, width: 96, height: 220}});
 enemyData[ENEMY_DOOR] = {
     animation: {
         frames: [
@@ -464,7 +464,7 @@ const { createAttack, addEnemyAttackToState } = require('attacks');
 const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
 const EFFECT_LEAF = 'leaf';
 // Make the leaf scale from the center of its hitbox instead of the top left corner.
-const leafGeometry = a({...r(40, 37), hitBox: r(30, 37)}, 0.5, 0.5);
+const leafGeometry = a({...r(40, 37), hitbox: r(30, 37)}, 0.5, 0.5);
 effects[EFFECT_LEAF] = {
     animation: createAnimation('gfx/enemies/plainsboss/leaf.png', leafGeometry, {priority}),
     advanceEffect: (state, effectIndex) => {

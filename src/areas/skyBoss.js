@@ -4,11 +4,10 @@ const {
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
-const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
+const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
 const { allWorlds, getNewLayer, updateLayerSprite, updateLayerSprites, applyCheckpointToState } = require('world');
 
 const WORLD_SKY_BOSS = 'skyBoss';
-const BOSS_DURATION = 80000;
 
 const sunriseAnimation = createAnimation('gfx/scene/beach/sunrisetransition.png', r(400, 800))
 
@@ -172,8 +171,8 @@ Make seagull fall when it is damaged by lightning. (set no hitboxes so it doesn'
 
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,
-    {//hitBox: {left: 39, top: 63, width: 117, height: 40},
-    hitBoxes: [
+    {//hitbox: {left: 39, top: 63, width: 117, height: 40},
+    hitboxes: [
         {width: 45, height: 10, left: 40, top: 80},
         {width: 50, height: 15, left: 90, top: 60},
     ],
@@ -182,7 +181,7 @@ const seagullGeometry = r(200, 102,
 
 
 const seagullDiveGeometry = r(200, 102,
-    {hitBoxes: [
+    {hitboxes: [
         {left: 118, top: 58, width: 20, height: 40},
         {left: 85, top: 28, width: 30, height: 30},
         {left: 55, top: 5, width: 30, height: 23},
@@ -190,7 +189,7 @@ const seagullDiveGeometry = r(200, 102,
     scaleX: 3, scaleY: 3},
 );
 const seagullFallingGeometry = r(200, 102,
-    {hitBoxes: [], scaleX: 3, scaleY: 3},
+    {hitboxes: [], scaleX: 3, scaleY: 3},
 );
 enemyData[ENEMY_SEAGULL] = {
     animation: createAnimation('gfx/enemies/birds/seagull.png', seagullGeometry, {rows: 4}),
@@ -268,7 +267,7 @@ enemyData[ENEMY_SEAGULL] = {
     accelerate(state, enemy) {
         let {vx, vy, targetX, targetY, mode, modeTime, top, left, animationTime} = enemy;
         const drawBox = getEnemyDrawBox(state, enemy);
-        const heroHitBox = getHeroHitBox(state.players[0]);
+        const heroHitbox = getHeroHitbox(state.players[0]);
         if (mode === 'prepare') {
             const prepTime = state.world.type === WORLD_BEACH ? 10000 : 1000;
             if (modeTime === 1000) {
@@ -307,14 +306,14 @@ enemyData[ENEMY_SEAGULL] = {
                 vx = (left > WIDTH / 2) ? -enemy.speed : enemy.speed;
                 vy = 1.5 * enemy.speed;
                 top = -800;
-                const factor = (heroHitBox.top + heroHitBox.height / 2 - (drawBox.height / 2 - 800)) / vy;
-                left = heroHitBox.left + heroHitBox.width / 2 - factor * vx - drawBox.width / 2;
+                const factor = (heroHitbox.top + heroHitbox.height / 2 - (drawBox.height / 2 - 800)) / vy;
+                left = heroHitbox.left + heroHitbox.width / 2 - factor * vx - drawBox.width / 2;
                 mode = 'dive';
                 modeTime = 0;
             } else {
                 vx = (left > WIDTH / 2) ? -enemy.speed : enemy.speed;
                 vy = 0;
-                top = Math.min(GAME_HEIGHT * 1 / 3, heroHitBox.top + heroHitBox.height / 2 - 350);
+                top = Math.min(GAME_HEIGHT * 1 / 3, heroHitbox.top + heroHitbox.height / 2 - 350);
                 left = (vx > 0) ? -200 - drawBox.width : WIDTH + 200;
                 mode = 'glide';
                 modeTime = 0;
@@ -356,7 +355,7 @@ enemyData[ENEMY_SEAGULL] = {
     },
 };
 
-const { getHeroHitBox } = require('heroes');
+const { getHeroHitbox } = require('heroes');
 const { EFFECT_GUST, ENEMY_BLUE_BIRD, ENEMY_BLUE_BIRD_SOLDIER } = require('areas/sky');
 const { CHECK_POINT_BEACH_START, WORLD_BEACH, getBeachWorld } = require('areas/beach');
 const { createEffect, addEffectToState } = require('effects');

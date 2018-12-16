@@ -20,7 +20,7 @@ const {
     r, requireImage, createAnimation,
     getFrame,
     getAnimationLength,
-    getHitBox,
+    getHitbox,
     flyAnimation, flyDeathAnimation,
     locustAnimation, locustDeathAnimation,
     locustSoldierAnimation, locustSoldierDeathAnimation,
@@ -62,15 +62,26 @@ function accelerate_followPlayer(state, enemy) {
     }
     return {...enemy, vx, vy};
 }
+function getBulletCoords(state, enemy) {
+    const bullet = createAttack(ATTACK_BULLET, {});
+    const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
+    const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
+    const hitbox = getEnemyHitbox(state, enemy);
+    const left = (enemy.vx > 0 && !enemy.doNotFlip) ?
+        hitbox.left + bulletX * hitbox.width + enemy.vx + bullet.width * (bulletX - 1): // Facing right.
+        hitbox.left + (1 - bulletX) * hitbox.width + enemy.vx - bullet.width * bulletX; // Facing left.
+    const top = hitbox.top + enemy.vy + bulletY * hitbox.height + bullet.height * (bulletY - 1);
+    return {left, top};
+}
 function addBullet(state, enemy, getTheta) {
     const bullet = createAttack(ATTACK_BULLET, {});
     const bulletX = enemy.bulletX !== undefined ? enemy.bulletX : 1;
     const bulletY = enemy.bulletY !== undefined ? enemy.bulletY : 0.5;
-    const hitBox = getEnemyHitBox(state, enemy);
+    const hitbox = getEnemyHitbox(state, enemy);
     bullet.left = (enemy.vx > 0 && !enemy.doNotFlip) ?
-        hitBox.left + bulletX * hitBox.width + enemy.vx + bullet.width * (bulletX - 1): // Facing right.
-        hitBox.left + (1 - bulletX) * hitBox.width + enemy.vx - bullet.width * bulletX; // Facing left.
-    bullet.top = hitBox.top + enemy.vy + bulletY * hitBox.height + bullet.height * (bulletY - 1);
+        hitbox.left + bulletX * hitbox.width + enemy.vx + bullet.width * (bulletX - 1): // Facing right.
+        hitbox.left + (1 - bulletX) * hitbox.width + enemy.vx - bullet.width * bulletX; // Facing left.
+    bullet.top = hitbox.top + enemy.vy + bulletY * hitbox.height + bullet.height * (bulletY - 1);
     const theta = getTheta(bullet);
     bullet.vx = enemy.bulletSpeed * Math.cos(theta);
     bullet.vy = enemy.bulletSpeed * Math.sin(theta);
@@ -347,55 +358,55 @@ const getDefaultEnemyAnimation = (state, enemy) => {
     return animation;
 };
 
-function getEnemyHitBox(state, enemy) {
+function getEnemyHitbox(state, enemy) {
     let animation = getEnemyAnimation(state, enemy);
     const scaleX = enemy.scaleX || 1;
     const scaleY = enemy.scaleY || 1;
-    return new Rectangle(getHitBox(animation, enemy.animationTime))
+    return new Rectangle(getHitbox(animation, enemy.animationTime))
         .stretch(scaleX, scaleY)
         .translate(enemy.left, enemy.top);
 }
 function getEnemyCenter(state, enemy) {
-    return getEnemyHitBox(state, enemy).getCenter();
+    return getEnemyHitbox(state, enemy).getCenter();
 }
-function isIntersectingEnemyHitBoxes(state, enemy, rectangle, getDamageBoxes = false) {
+function isIntersectingEnemyHitboxes(state, enemy, rectangle, getDamageBoxes = false) {
     /*const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+    const geometryBox = frame.hitbox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
-    const hitBoxes = frame.hitBoxes || [geometryBox];
-    for (let hitBox of hitBoxes) {
+    const hitboxes = frame.hitboxes || [geometryBox];
+    for (let hitbox of hitboxes) {
         const scaleX = (enemy.scaleX || 1) * frame.scaleX || 1);
         const scaleY = (enemy.scaleY || 1) * frame.scaleY || 1);
         if (enemy.vx > 0 && !enemy.doNotFlip) {
-            hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+            hitbox = new Rectangle(hitbox).translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
         }
-        hitBox = new Rectangle(hitBox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
-        if (Rectangle.collision(hitBox, rectangle)) {
-            return hitBox;
+        hitbox = new Rectangle(hitbox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
+        if (Rectangle.collision(hitbox, rectangle)) {
+            return hitbox;
         }
     }
     return false;*/
-    for (const hitBox of getEnemyHitBoxes(state, enemy, getDamageBoxes)) {
-        if (Rectangle.collision(hitBox, rectangle)) {
-            return hitBox;
+    for (const hitbox of getEnemyHitboxes(state, enemy, getDamageBoxes)) {
+        if (Rectangle.collision(hitbox, rectangle)) {
+            return hitbox;
         }
     }
     return false;
 }
 // It would be good to make this into an iterator so we don't have to produce all of them for each
 // call.
-function getEnemyHitBoxes(state, enemy, getDamageBoxes) {
+function getEnemyHitboxes(state, enemy, getDamageBoxes) {
     const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    let hitBoxes = frame.hitBoxes || [frame.hitBox || new Rectangle(frame).moveTo(0, 0)];
+    let hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
     // Damage boxes hurt the player but are not vulnerable on the enemy.
     if (getDamageBoxes && frame.damageBoxes) {
-        hitBoxes = [...hitBoxes, ...frame.damageBoxes];
+        hitboxes = [...hitboxes, ...frame.damageBoxes];
     }
-    return enemyHitBoxesToGlobalHitBoxes(state, enemy, hitBoxes);
+    return enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes);
 }
-function enemyHitBoxesToGlobalHitBoxes(state, enemy, hitBoxes) {
+function enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes) {
     const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+    const geometryBox = frame.hitbox || new Rectangle(frame).moveTo(0, 0);
     const reflectX = geometryBox.left + geometryBox.width / 2;
     // Enemies with flipped flag are flipped by default. This happens when an enemy graphic
     // is facing to the right, because we normally assume enemy graphics face left.
@@ -404,17 +415,17 @@ function enemyHitBoxesToGlobalHitBoxes(state, enemy, hitBoxes) {
     if (enemy.vx > 0 && !enemy.doNotFlip) {
         isFlipped = !isFlipped;
     }
-    const globalHitBoxes = [];
-    for (let hitBox of hitBoxes) {
+    const globalHitboxes = [];
+    for (let hitbox of hitboxes) {
         const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
         const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
         if (isFlipped) {
-            hitBox = new Rectangle(hitBox).translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+            hitbox = new Rectangle(hitbox).translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
         }
-        hitBox = new Rectangle(hitBox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
-        globalHitBoxes.push(hitBox);
+        hitbox = new Rectangle(hitbox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
+        globalHitboxes.push(hitbox);
     }
-    return globalHitBoxes;
+    return globalHitboxes;
 }
 
 function getEnemyDrawBox(state, enemy) {
@@ -465,15 +476,15 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         const explosion = createEffect(EFFECT_EXPLOSION, {
             sfx: enemyData[enemy.type].deathSound,
         });
-        const hitBox = getEnemyHitBox(state, enemy);
-        explosion.left = hitBox.left + (hitBox.width - explosion.width ) / 2;
-        explosion.top = hitBox.top + (hitBox.height - explosion.height ) / 2;
+        const hitbox = getEnemyHitbox(state, enemy);
+        explosion.left = hitbox.left + (hitbox.width - explosion.width ) / 2;
+        explosion.top = hitbox.top + (hitbox.height - explosion.height ) / 2;
         updatedState = addEffectToState(updatedState, explosion);
 
         if (attack.melee && !enemy.stationary) {
             const player = updatedState.players[attack.playerIndex];
             // Make sure to use the hitbox from the enemy when it was still alive.
-            const {dx, dy} = getTargetVector(getHeroHitBox(player), getEnemyHitBox(state, {...enemy, dead: false}));
+            const {dx, dy} = getTargetVector(getHeroHitbox(player), getEnemyHitbox(state, {...enemy, dead: false}));
             let theta = Math.atan2(dy, dx);
             // Restrict theta to be mostly in the forward direction.
             theta = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, theta));
@@ -530,27 +541,27 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
     }
     let flipped = enemy.flipped;
     if (!enemy.doNotFlip && enemy.vx > 0) flipped = !flipped;
-    let hitBox = getEnemyHitBox(state, enemy);
+    let hitbox = getEnemyHitbox(state, enemy);
     drawBox = drawBox || getEnemyDrawBox(state, enemy);
     if (flipped) {
-        // This moves the origin to where we want the center of the enemies hitBox to be.
+        // This moves the origin to where we want the center of the enemies hitbox to be.
         context.save();
-        context.translate(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2);
+        context.translate(hitbox.left + hitbox.width / 2, hitbox.top + hitbox.height / 2);
         context.scale(-1, 1);
         // This draws the image frame so that the center is exactly at the origin.
         const target = drawBox.moveTo(
-            -hitBox.width / 2 - hitBox.left + enemy.left,
-            -hitBox.height / 2 - hitBox.top + enemy.top,
+            -hitbox.width / 2 - hitbox.left + enemy.left,
+            -hitbox.height / 2 - hitbox.top + enemy.top,
         );
         if (!enemy.tint || !enemy.tint.amount) drawImage(context, frame.image, frame, target);
         else drawTintedImage(context, frame.image, enemy.tint.color, enemy.tint.amount, frame, target);
         context.restore();
     } else {
         context.save();
-        context.translate(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2);
+        context.translate(hitbox.left + hitbox.width / 2, hitbox.top + hitbox.height / 2);
         const target = drawBox.moveTo(
-            -hitBox.width / 2 - hitBox.left + enemy.left,
-            -hitBox.height / 2 - hitBox.top + enemy.top,
+            -hitbox.width / 2 - hitbox.left + enemy.left,
+            -hitbox.height / 2 - hitbox.top + enemy.top,
         );
         if (!enemy.tint || !enemy.tint.amount) drawImage(context, frame.image, frame, target);
         else drawTintedImage(context, frame.image, enemy.tint.color, enemy.tint.amount, frame, target);
@@ -567,24 +578,24 @@ const renderEnemy = (context, state, enemy) => {
     let animation = getEnemyAnimation(state, enemy);
     const frame = getFrame(animation, enemy.animationTime);
     renderEnemyFrame(context, state, enemy, frame);
-   // context.translate(x, y - hitBox.height * yScale / 2);
+   // context.translate(x, y - hitbox.height * yScale / 2);
    // if (rotation) context.rotate(rotation * Math.PI/180);
    // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
 
     /*if (isKeyDown(KEY_SHIFT)) {
-        const geometryBox = frame.hitBox || new Rectangle(frame).moveTo(0, 0);
+        const geometryBox = frame.hitbox || new Rectangle(frame).moveTo(0, 0);
         const reflectX = geometryBox.left + geometryBox.width / 2;
-        const hitBoxes = frame.hitBoxes || [geometryBox];
-        for (let hitBox of hitBoxes) {
-            hitBox = new Rectangle(hitBox)
+        const hitboxes = frame.hitboxes || [geometryBox];
+        for (let hitbox of hitboxes) {
+            hitbox = new Rectangle(hitbox)
             if (enemy.vx > 0 && !enemy.doNotFlip) {
-                hitBox = hitBox.translate(2 * (reflectX - hitBox.left) - hitBox.width, 0);
+                hitbox = hitbox.translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
             }
-            hitBox = hitBox.translate(enemy.left, enemy.top);
+            hitbox = hitbox.translate(enemy.left, enemy.top);
             context.save();
             context.globalAlpha = .6;
             context.fillStyle = 'red';
-            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
             context.restore();
         }
     }*/
@@ -592,12 +603,12 @@ const renderEnemy = (context, state, enemy) => {
         context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'red';
-        for (const hitBox of getEnemyHitBoxes(state, enemy, true)) {
-            context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+        for (const hitbox of getEnemyHitboxes(state, enemy, true)) {
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
         }
         context.fillStyle = 'yellow';
-        const hitBox = getEnemyHitBox(state, enemy);
-        context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+        const hitbox = getEnemyHitbox(state, enemy);
+        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
         context.restore();
     }
     if (enemyData[enemy.type].drawOver) {
@@ -667,18 +678,18 @@ const advanceEnemy = (state, enemy) => {
     }
     state = updateEnemy(state, enemy, {left, top, animationTime, spawned});
     enemy = state.idMap[enemy.id];
-    const hitBox = getEnemyHitBox(state, enemy).translate(-enemy.left, -enemy.top);
+    const hitbox = getEnemyHitbox(state, enemy).translate(-enemy.left, -enemy.top);
     const groundOffset = enemy.groundOffset || 0;
     if (!enemy.dead) {
         if (!enemy.stationary) {
-            top = Math.min(top, getGroundHeight(state) + groundOffset - (hitBox.top + hitBox.height));
+            top = Math.min(top, getGroundHeight(state) + groundOffset - (hitbox.top + hitbox.height));
         }
-        if (!enemy.boss && !enemy.hazardProof && top + hitBox.top + hitBox.height > getHazardHeight(state)) {
+        if (!enemy.boss && !enemy.hazardProof && top + hitbox.top + hitbox.height > getHazardHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             enemy = state.idMap[enemy.id];
             if (!enemy) return state;
         }
-        if (!enemy.boss && !enemy.hazardProof && top + hitBox.top < getHazardCeilingHeight(state)) {
+        if (!enemy.boss && !enemy.hazardProof && top + hitbox.top < getHazardCeilingHeight(state)) {
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage: 100, type: 'hazard'});
             if (!state.idMap) debugger;
             enemy = state.idMap[enemy.id];
@@ -690,7 +701,7 @@ const advanceEnemy = (state, enemy) => {
 
     if (enemy && ((!enemy.stationary && enemy.dead) || enemy.grounded)) {
         // Flying enemies fall when they are dead, grounded enemies always fall unless they are on the ground.
-        const touchingGround = (enemy.vy >= 0) && (enemy.top + hitBox.top + hitBox.height >= getGroundHeight(state) + groundOffset);
+        const touchingGround = (enemy.vy >= 0) && (enemy.top + hitbox.top + hitbox.height >= getGroundHeight(state) + groundOffset);
         state = updateEnemy(state, enemy, {
             vy: (!touchingGround || !enemy.grounded) ? enemy.vy + 1 : 0,
             // Dead bodies shouldn't slide along the ground
@@ -701,7 +712,7 @@ const advanceEnemy = (state, enemy) => {
             const onHitGroundEffect = enemyData[enemy.type].onHitGroundEffect;
             if (onHitGroundEffect) {
 
-                if (enemy.top + hitBox.top + hitBox.height > Math.min(getHazardHeight(state), getGroundHeight(state) + groundOffset)) {
+                if (enemy.top + hitbox.top + hitbox.height > Math.min(getHazardHeight(state), getGroundHeight(state) + groundOffset)) {
                     state = onHitGroundEffect(state, enemy);
                     enemy = state.idMap[enemy.id];
                     if (enemy && getHazardHeight(state) < getGroundHeight(state) + groundOffset) {
@@ -711,7 +722,7 @@ const advanceEnemy = (state, enemy) => {
                         });
                         dust.left = enemy.left + (enemy.width - dust.width ) / 2;
                         // Add dust at the bottom of the enemy frame.
-                        dust.top = Math.min(enemy.top + hitBox.top + hitBox.height, getGroundHeight(state) + groundOffset) - dust.height;
+                        dust.top = Math.min(enemy.top + hitbox.top + hitbox.height, getGroundHeight(state) + groundOffset) - dust.height;
                         state = addEffectToState(state, dust);
                         enemy = state.idMap[enemy.id];
                     }
@@ -763,7 +774,7 @@ const advanceEnemy = (state, enemy) => {
 
 const ENEMY_DEMO_EMPRESS = 'demoEmpress';
 const demoEmpressGeometry = r(90, 93,
-    {hitBox: {left: 47, top: 3, width: 20, height: 71}, scaleX: 3, scaleY: 3},
+    {hitbox: {left: 47, top: 3, width: 20, height: 71}, scaleX: 3, scaleY: 3},
 );
 const thanksImage = r(298, 88, {image: requireImage('gfx/thanksyouw.png')});
 
@@ -865,10 +876,10 @@ enemyData[ENEMY_FLEA] = {
             vx: player.sprite.vx * 0.7,
             vy: player.sprite.vy * 0.5 + 1,
         });
-        const enemyHitBox = getEnemyHitBox(state, enemy);
-        const hitBox = getHeroHitBox(player);
-        const dx = hitBox.left + hitBox.width / 2 - (enemyHitBox.left + enemyHitBox.width / 2);
-        const dy = hitBox.top + hitBox.height / 2 - (enemyHitBox.top + enemyHitBox.height / 2);
+        const enemyHitbox = getEnemyHitbox(state, enemy);
+        const hitbox = getHeroHitbox(player);
+        const dx = hitbox.left + hitbox.width / 2 - (enemyHitbox.left + enemyHitbox.width / 2);
+        const dy = hitbox.top + hitbox.height / 2 - (enemyHitbox.top + enemyHitbox.height / 2);
         return updateEnemy(state, enemy, {
             vy: enemy.vy * 0.8 + dy / 20,
             vx: enemy.vx * 0.8 + dx / 20,
@@ -881,8 +892,8 @@ enemyData[ENEMY_FLEA] = {
             return this.moveTowardPlayer(state, enemy);
         }
         const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-        const heroHitBox = getHeroHitBox(state.players[0]);
-        if (enemy.attached < -10 && isIntersectingEnemyHitBoxes(state, enemy, heroHitBox)) {
+        const heroHitbox = getHeroHitbox(state.players[0]);
+        if (enemy.attached < -10 && isIntersectingEnemyHitboxes(state, enemy, heroHitbox)) {
             return updateEnemy(state, enemy, {attached: 80});
         }
         let { vx, vy, jumps, attached } = enemy;
@@ -899,17 +910,17 @@ enemyData[ENEMY_FLEA] = {
         const baseSpeed = state.world.vx * state.world.ground.xFactor;
         //if on ground, move toward player if player is not above
         //otherwise jump at player
-        if (heroHitBox.left + heroHitBox.width < enemy.left - 100) {
+        if (heroHitbox.left + heroHitbox.width < enemy.left - 100) {
             //console.log('left');
             vx = baseSpeed - 5;
             vy = -8;
-        } else if (heroHitBox.left > enemy.left + enemy.width + 100) {
+        } else if (heroHitbox.left > enemy.left + enemy.width + 100) {
             //console.log('right');
             vx = baseSpeed + 2;
             vy = -8;
         } else {
-            const targetY = heroHitBox.top + heroHitBox.height / 2;
-            vx = (heroHitBox.left + heroHitBox.width / 2 < enemy.left + enemy.width / 2) ? baseSpeed - 5 : baseSpeed + 2;
+            const targetY = heroHitbox.top + heroHitbox.height / 2;
+            vx = (heroHitbox.left + heroHitbox.width / 2 < enemy.left + enemy.width / 2) ? baseSpeed - 5 : baseSpeed + 2;
             if (targetY > 2 * GAME_HEIGHT / 3) vy = -15;
             else vy = -25;
             jumps++;
@@ -947,12 +958,12 @@ module.exports = {
     advanceEnemy,
     renderEnemy,
     renderEnemyFrame,
-    getEnemyHitBox,
-    getEnemyHitBoxes,
-    enemyHitBoxesToGlobalHitBoxes,
+    getEnemyHitbox,
+    getEnemyHitboxes,
+    enemyHitboxesToGlobalHitboxes,
     getEnemyDrawBox,
     getEnemyCenter,
-    isIntersectingEnemyHitBoxes,
+    isIntersectingEnemyHitboxes,
     updateEnemy,
     getDefaultEnemyAnimation,
     enemyIsActive,
@@ -962,6 +973,8 @@ module.exports = {
     accelerate_followPlayer,
     onHitGroundEffect_spawnMonk,
     shoot_bulletAtPlayer,
+    addBullet,
+    getBulletCoords,
 };
 
 // Move possible circular imports to after exports.
@@ -973,4 +986,4 @@ const { createEffect, addEffectToState, } = require('effects');
 const { EFFECT_FINISHER, getFinisherPosition } = require('effects/finisher');
 const { attacks, createAttack, addEnemyAttackToState, addPlayerAttackToState } = require('attacks');
 const { createLoot, addLootToState, gainPoints } = require('loot');
-const { updatePlayer, getHeroHitBox } = require('heroes');
+const { updatePlayer, getHeroHitbox } = require('heroes');

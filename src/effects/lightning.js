@@ -49,12 +49,12 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.idMap[state.enemies[i].id];
         if (!enemyIsActive(state, enemy)) continue;
-        const hitBox = getEnemyHitBox(state, enemy);
+        const hitbox = getEnemyHitbox(state, enemy);
         // The large lightning attack can only hit enemies in front of each bolt.
-        if (type === EFFECT_LIGHTNING && hitBox.left + hitBox.width / 2 <= left) continue;
-        const dx = hitBox.left + hitBox.width / 2 - left,
-            dy = hitBox.top + hitBox.height / 2 - top;
-        const radius = Math.sqrt(hitBox.width * hitBox.width + hitBox.height * hitBox.height) / 2;
+        if (type === EFFECT_LIGHTNING && hitbox.left + hitbox.width / 2 <= left) continue;
+        const dx = hitbox.left + hitbox.width / 2 - left,
+            dy = hitbox.top + hitbox.height / 2 - top;
+        const radius = Math.sqrt(hitbox.width * hitbox.width + hitbox.height * hitbox.height) / 2;
         if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
             targetRotations.push(Math.atan2(dy, dx));
             state = damageEnemy(state, enemy.id, {playerIndex: 0, damage});
@@ -84,7 +84,7 @@ module.exports = {
 };
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
-const { getEnemyHitBox, damageEnemy, enemyIsActive } = require('enemies');
+const { getEnemyHitbox, damageEnemy, enemyIsActive } = require('enemies');
 effects[EFFECT_LIGHTNING] = {
     animation: {
         frames: lightningFrames,
@@ -133,10 +133,10 @@ effects[EFFECT_ARC_LIGHTNING] = {
         } else {
             let tx = effect.tx, ty = effect.ty;
             if (target) {
-                //const hitBox = getEnemyHitBox(state, target);
-                const hitBox = effect.hitBox;
-                tx = hitBox.left + hitBox.width / 2;
-                ty = hitBox.top + hitBox.height / 2;
+                //const hitbox = getEnemyHitbox(state, target);
+                const hitbox = effect.hitbox;
+                tx = hitbox.left + hitbox.width / 2;
+                ty = hitbox.top + hitbox.height / 2;
             }
             const p1 = {
                 x: (1 - p) * effect.sx + p * tx + effect.dx * p * (1 - p),

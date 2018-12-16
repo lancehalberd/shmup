@@ -7,7 +7,7 @@ const {
 
 const { enemyData, updateEnemy, getDefaultEnemyAnimation } = require('enemies');
 const { getGroundHeight, getHazardCeilingHeight } = require('world');
-const { getAttackHitBox } = require('attacks');
+const { getAttackHitbox } = require('attacks');
 
 function getMinHeight(state) {
     return Math.max(-10, getHazardCeilingHeight(state) + 5);
@@ -33,10 +33,10 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
         if (!grounded) {
             const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
             for (const meleeAttack of meleeAttacks) {
-                const attackHitBox = getAttackHitBox(state, meleeAttack);
-                if (attackHitBox.top < enemy.top - 10 &&
-                    attackHitBox.left + attackHitBox.width > enemy.left + enemy.width / 2 &&
-                    attackHitBox.left < enemy.left + enemy.width / 2
+                const attackHitbox = getAttackHitbox(state, meleeAttack);
+                if (attackHitbox.top < enemy.top - 10 &&
+                    attackHitbox.left + attackHitbox.width > enemy.left + enemy.width / 2 &&
+                    attackHitbox.left < enemy.left + enemy.width / 2
                 ) {
                     return {...enemy, grounded: true, hanging: false, mode: 'jumping'};
                 }
@@ -141,10 +141,10 @@ enemyData[ENEMY_BROWN_SPIDER] = {
 
         const meleeAttacks = state.playerAttacks.filter(attack => attack.melee);
         for (const meleeAttack of meleeAttacks) {
-            const attackHitBox = getAttackHitBox(state, meleeAttack);
-            if (attackHitBox.top < enemy.top - 10 &&
-                attackHitBox.left + attackHitBox.width > enemy.left + enemy.width / 2 &&
-                attackHitBox.left < enemy.left + enemy.width / 2
+            const attackHitbox = getAttackHitbox(state, meleeAttack);
+            if (attackHitbox.top < enemy.top - 10 &&
+                attackHitbox.left + attackHitbox.width > enemy.left + enemy.width / 2 &&
+                attackHitbox.left < enemy.left + enemy.width / 2
             ) {
                 return {...enemy, grounded: true};
             }
@@ -238,10 +238,10 @@ effects[EFFECT_SPIDER_BALLOON] = {
         if (state.players[playerIndex].invulnerableFor > 0) {
             return updateEffect(state, effectIndex, {attached: false});
         }
-        const hitBox = getHeroHitBox(state.players[playerIndex]);
-        const dx = hitBox.left + hitBox.width / 2 - effect.left - effect.width / 2;
-        const dy = hitBox.top + hitBox.height / 2 - effect.top - effect.height / 2;
-        //console.log({hitBox, effect, dx, dy});
+        const hitbox = getHeroHitbox(state.players[playerIndex]);
+        const dx = hitbox.left + hitbox.width / 2 - effect.left - effect.width / 2;
+        const dy = hitbox.top + hitbox.height / 2 - effect.top - effect.height / 2;
+        //console.log({hitbox, effect, dx, dy});
         return updateEffect(state, effectIndex, {
             vy: effect.vy * 0.9 + dy / 20,
             vx: effect.vx * 0.9 + dx / 20,
@@ -279,4 +279,4 @@ effects[EFFECT_SPIDER_BALLOON_DONE] = {
     },
 };
 
-const { getHeroHitBox, updatePlayer } = require('heroes');
+const { getHeroHitbox, updatePlayer } = require('heroes');

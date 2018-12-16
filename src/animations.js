@@ -70,9 +70,9 @@ const r = (width, height, props) => ({left: 0, top: 0, width, height, ...props})
 // Default anchor is h=v=0 is the top left. Center would be h=v=0.5. Left center
 // would be h=0, v=0.5
 const a = (rectangle, h, v) => {
-    const hitBox = rectangle.hitBox || rectangle;
+    const hitbox = rectangle.hitbox || rectangle;
     return {...rectangle, anchor: {
-        x: hitBox.left + h * hitBox.width, y: hitBox.top + v * hitBox.height,
+        x: hitbox.left + h * hitbox.width, y: hitbox.top + v * hitbox.height,
     }};
 };
 
@@ -179,14 +179,14 @@ const flyDeathAnimation = {
     frameDuration: 3,
 };
 
-const locustRectangle = r(100, 100, {hitBox: {left: 0, top: 40, width: 100, height: 60}});
+const locustRectangle = r(100, 100, {hitbox: {left: 0, top: 40, width: 100, height: 60}});
 const locustAnimation = createAnimation('gfx/enemies/locust.png', locustRectangle,
     {x: 1, cols: 3, duration: 3, priority: PRIORITY_FIELD}
 );
 const locustDeathAnimation = createAnimation('gfx/enemies/locust.png', locustRectangle,
     {cols: 1, duration: 3, priority: PRIORITY_FIELD}
 );
-const locustSoldierRectangle = {...locustRectangle, hitBox: {left: 0, top: 18, width: 100, height: 82}};
+const locustSoldierRectangle = {...locustRectangle, hitbox: {left: 0, top: 18, width: 100, height: 82}};
 const locustSoldierAnimation = createAnimation('gfx/enemies/locust.png', locustSoldierRectangle,
     {x: 4, cols: 3, duration: 3, priority: PRIORITY_FIELD}
 );
@@ -194,8 +194,8 @@ const locustSoldierDeathAnimation = createAnimation('gfx/enemies/locust.png', lo
     {x: 7, cols: 1, duration: 3, priority: PRIORITY_FIELD}
 );
 
-const flyingAntHitBox = {left: 0, top: 20, width: 35, height: 20};
-const flyingAntRectangle = r(46, 41, {hitBox: flyingAntHitBox});
+const flyingAntHitbox = {left: 0, top: 20, width: 35, height: 20};
+const flyingAntRectangle = r(46, 41, {hitbox: flyingAntHitbox});
 const flyingAntAnimation = {
     frames: [
         {...flyingAntRectangle, image: requireImage('gfx/enemies/flies/fant1.png', PRIORITY_FIELD)},
@@ -212,8 +212,8 @@ const flyingAntDeathAnimation = {
     frameDuration: 3,
 };
 
-const flyingAntSoldierHitBox = {left: 0, top: 4, width: 35, height: 36};
-const flyingAntSoldierRectangle = r(46, 41, {hitBox: flyingAntSoldierHitBox});
+const flyingAntSoldierHitbox = {left: 0, top: 4, width: 35, height: 36};
+const flyingAntSoldierRectangle = r(46, 41, {hitbox: flyingAntSoldierHitbox});
 const flyingAntSoldierAnimation = {
     frames: [
         {...flyingAntSoldierRectangle, image: requireImage('gfx/enemies/flies/mfant1.png', PRIORITY_FIELD)},
@@ -230,8 +230,8 @@ const flyingAntSoldierDeathAnimation = {
     frameDuration: 3,
 };
 
-const monkHitBox = {left: 0, top: 8, width: 42, height: 42};
-const monkRectangle = r(42, 50, {hitBox: monkHitBox});
+const monkHitbox = {left: 0, top: 8, width: 42, height: 42};
+const monkRectangle = r(42, 50, {hitbox: monkHitbox});
 const monkAnimation = {
     frames: [
         {...monkRectangle, image: requireImage('gfx/enemies/monks/robe1.png', PRIORITY_FIELD)},
@@ -249,7 +249,7 @@ const monkAttackAnimation = {
 };
 const monkDeathAnimation = {
     frames: [
-        {...r(46, 41, {hitBox: {left: 0, top: 8, width: 42, height: 33}}), image: requireImage('gfx/enemies/monks/robeded.png', PRIORITY_FIELD)},
+        {...r(46, 41, {hitbox: {left: 0, top: 8, width: 42, height: 33}}), image: requireImage('gfx/enemies/monks/robeded.png', PRIORITY_FIELD)},
     ],
     frameDuration: 5,
 };
@@ -406,12 +406,12 @@ const getFrame = (animation, animationTime) => {
     return animation.frames[frameIndex % animation.frames.length];
 };
 const getAnimationLength = (animation) => animation.frames.length * animation.frameDuration;
-const getHitBox = (animation, animationTime) => {
+const getHitbox = (animation, animationTime) => {
     const frame = getFrame(animation, animationTime);
     const scaleX = frame.scaleX || 1;
     const scaleY = frame.scaleY || 1;
-    return (frame.hitBox ?
-        new Rectangle(frame.hitBox) :
+    return (frame.hitbox ?
+        new Rectangle(frame.hitbox) :
         new Rectangle(frame).moveTo(0, 0)).stretch(scaleX, scaleY);
 };
 
@@ -429,7 +429,7 @@ module.exports = {
     getFrame,
     getAnimationLength,
     createAnimation,
-    getHitBox,
+    getHitbox,
     needleFlipAnimation,
     blastStartAnimation,
     blastLoopAnimation,

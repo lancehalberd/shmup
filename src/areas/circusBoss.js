@@ -4,7 +4,7 @@ const {
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
-const { createAnimation, r, getFrame, requireImage, getHitBox } = require('animations');
+const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
 const { allWorlds, getNewLayer } = require('world');
 
 const WORLD_CIRCUS_BOSS = 'circusBoss';
@@ -72,7 +72,7 @@ const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,
-    {hitBox: {left: 39, top: 63, width: 117, height: 40}},
+    {hitbox: {left: 39, top: 63, width: 117, height: 40}},
 );
 enemyData[ENEMY_SEAGULL] = {
     animation: createAnimation('gfx/enemies/birds/seagull.png', seagullGeometry, {rows: 4}),

@@ -285,7 +285,7 @@ I don't imagine there will be too many of these cats, and they will pop out and 
 const ENEMY_TRASH_CAT = 'trashCat';
 const trashCatGeometry = {
     ...r(80, 100),
-    hitBoxes: [],
+    hitboxes: [],
     scaleX: 2, scaleY: 2,
 };
 const swipeAnimation = createAnimation('gfx/enemies/trashcat.png', trashCatGeometry,
@@ -347,11 +347,11 @@ enemyData[ENEMY_TRASH_CAT] = {
 
 const cockroachGeometry = {
     ...r(65, 60),
-    hitBox: {left: 10, top: 20, width: 50, height: 30},
+    hitbox: {left: 10, top: 20, width: 50, height: 30},
 };
 const cockroachSoldierGeometry = {
     ...r(65, 60),
-    hitBox: {left: 10, top: 5, width: 50, height: 65},
+    hitbox: {left: 10, top: 5, width: 50, height: 65},
 };
 enemyData[ENEMY_COCKROACH] = {
     animation: createAnimation('gfx/enemies/flies/cockroachsheet.png', cockroachGeometry,

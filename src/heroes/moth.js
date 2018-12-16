@@ -13,8 +13,8 @@ const {
 } = require('animations');
 const { heroesData, updatePlayer } = require('heroes');
 
-const mothHitBox = {left: 27, top: 10, width: 48, height: 40};
-const mothRectangle = r(88, 56, {hitBox: mothHitBox});
+const mothHitbox = {left: 27, top: 10, width: 48, height: 40};
+const mothRectangle = r(88, 56, {hitbox: mothHitbox});
 const mothAnimation = {
     frames: [
         {...mothRectangle, image: requireImage('gfx/heroes/moth/moth1.png', PRIORITY_HEROES)},

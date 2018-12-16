@@ -31,7 +31,7 @@ const { getNewSpriteState } = require('sprites');
 const {
     r,
     createAnimation,
-    getHitBox,
+    getHitbox,
     getFrame,
 } = require('animations');
 
@@ -233,9 +233,9 @@ const advanceHero = (state, playerIndex) => {
     // the finisher.
     const buttonPressed = player.actions.special || player.actions.shoot || player.actions.melee;
     if (buttonPressed && !isHeroSwapping(player)) {
-        const heroHitBox = getHeroHitBox(player);
+        const heroHitbox = getHeroHitbox(player);
         for (const finisherEffect of state.effects.filter(effect => effect.type === EFFECT_FINISHER)) {
-            if (Rectangle.collision(heroHitBox, getEffectHitBox(finisherEffect))) {
+            if (Rectangle.collision(heroHitbox, getEffectHitbox(finisherEffect))) {
                 const enemy = state.idMap[finisherEffect.enemyId];
                 if (!enemy || enemy.dead) continue;
                 state = updateEffect(state, state.effects.indexOf(finisherEffect), {done: true});
@@ -278,13 +278,13 @@ const advanceHero = (state, playerIndex) => {
     }
 
     let {top, left, vx, vy, animationTime, targetLeft, targetTop} = player.sprite;
-    const playerHitBox = getHeroHitBox(player);
+    const playerHitbox = getHeroHitbox(player);
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
-    } else if (targetLeft === false && playerHitBox.top + playerHitBox.height > getHazardHeight(state)) {
+    } else if (targetLeft === false && playerHitbox.top + playerHitbox.height > getHazardHeight(state)) {
         return damageHero(state, playerIndex);
-    } else if (targetLeft === false && playerHitBox.top < getHazardCeilingHeight(state)) {
+    } else if (targetLeft === false && playerHitbox.top < getHazardCeilingHeight(state)) {
         return damageHero(state, playerIndex);
     }
     if (targetLeft !== false) {
@@ -326,24 +326,24 @@ const advanceHero = (state, playerIndex) => {
         left += vx;
         top +=  vy;
     }
-    const hitBox = new Rectangle(getHeroHitBox(player)).translate(-player.sprite.left, -player.sprite.top);
-    if (top + hitBox.top < 0) {
-        top = -hitBox.top;
+    const hitbox = new Rectangle(getHeroHitbox(player)).translate(-player.sprite.left, -player.sprite.top);
+    if (top + hitbox.top < 0) {
+        top = -hitbox.top;
         vy = 0;
     }
     const bottom = Math.min(getGroundHeight(state), GAME_HEIGHT);
-    if (top + hitBox.top + hitBox.height > bottom) {
-        top = bottom - (hitBox.top + hitBox.height);
+    if (top + hitbox.top + hitbox.height > bottom) {
+        top = bottom - (hitbox.top + hitbox.height);
         vy = 0;
     }
-    if (left + hitBox.left < 0) {
-        left = -hitBox.left;
+    if (left + hitbox.left < 0) {
+        left = -hitbox.left;
         vx = 0;
     }
     let rightEdge = state.world.rightEdge || WIDTH;
     rightEdge = Math.min(rightEdge, WIDTH);
-    if (left + hitBox.left + hitBox.width > rightEdge) {
-        left = rightEdge - (hitBox.left + hitBox.width);
+    if (left + hitbox.left + hitbox.width > rightEdge) {
+        left = rightEdge - (hitbox.left + hitbox.width);
         vx = 0;
     }
     const sprite = {...player.sprite, left, top, vx, vy, animationTime};
@@ -467,17 +467,17 @@ const switchHeroes = (updatedState, playerIndex) => {
 
     const heroes = [...player.heroes];
     heroes.push(heroes.shift());
-    const hitBoxA = getHeroHitBox(player);
+    const hitboxA = getHeroHitbox(player);
     // If the first hero has no energy, switch to the next hero.
     if (player[heroes[0]].energy < 0) {
         heroes.push(heroes.shift());
     }
     updatedState = updatePlayer(updatedState, playerIndex, {heroes});
     player = updatedState.players[playerIndex];
-    const hitBoxB = getHeroHitBox(player);
+    const hitboxB = getHeroHitbox(player);
     // Set the target coords so that the center of the incoming hero matches the center of the leaving hero.
-    const targetLeft = sprite.left + hitBoxA.left + hitBoxA.width / 2 - hitBoxB.left - hitBoxB.width / 2;
-    const targetTop = sprite.top + hitBoxA.top + hitBoxA.height / 2 - hitBoxB.top - hitBoxB.height / 2;
+    const targetLeft = sprite.left + hitboxA.left + hitboxA.width / 2 - hitboxB.left - hitboxB.width / 2;
+    const targetTop = sprite.top + hitboxA.top + hitboxA.height / 2 - hitboxB.top - hitboxB.height / 2;
     const left = -100, top = GAME_HEIGHT - 100;
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
@@ -582,13 +582,13 @@ const damageHero = (updatedState, playerIndex) => {
     return {...updatedState, deathCooldown, sfx};
 };
 
-function getHeroHitBox(player) {
+function getHeroHitbox(player) {
     const {animationTime, left, top} = player.sprite;
     const animation = heroesData[player.heroes[0]].animation;
-    return new Rectangle(getHitBox(animation, animationTime)).translate(left, top);
+    return new Rectangle(getHitbox(animation, animationTime)).translate(left, top);
 }
 function getHeroCenter(player) {
-    return getHeroHitBox(player).getCenter();
+    return getHeroHitbox(player).getCenter();
 }
 
 const chargingAnimation = createAnimation('gfx/heroes/charging.png', r(80, 79), {rows: 2, cols: 3});
@@ -658,11 +658,11 @@ const renderHero = (context, player) => {
         context.restore();
     }
     if (isKeyDown(KEY_SHIFT)) {
-        const hitBox = getHeroHitBox(player);
+        const hitbox = getHeroHitbox(player);
         context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'green';
-        context.fillRect(hitBox.left, hitBox.top, hitBox.width, hitBox.height);
+        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
         context.restore();
     }
     if (heroData.render) {
@@ -685,7 +685,7 @@ const renderLadybug = (context, ladybug) => {
 module.exports = {
     getNewPlayerState,
     advanceHero,
-    getHeroHitBox,
+    getHeroHitbox,
     getHeroCenter,
     damageHero,
     renderHero,
@@ -705,7 +705,7 @@ const { createAttack, addPlayerAttackToState } = require('attacks');
 const {
     createEffect,
     addEffectToState,
-    getEffectHitBox,
+    getEffectHitbox,
     updateEffect,
 } = require('effects');
 const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');

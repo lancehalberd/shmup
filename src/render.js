@@ -19,7 +19,7 @@ const {
     stopTrack,
 } = require('sounds');
 
-const { renderHitBoxes } = require('editHitboxes');
+const { renderHitboxes } = require('editHitboxes');
 
 const { isKeyDown, KEY_SHIFT, KEY_R } = require('keyboard');
 
@@ -46,8 +46,8 @@ const dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyid
 
 let rewindAlpha = 1;
 const render = (state) => {
-    if (state.hitBoxFrame) {
-        renderHitBoxes(context, state);
+    if (state.hitboxFrame) {
+        renderHitboxes(context, state);
         return;
     }
     if (state.interacted && state.bgm) {
@@ -297,7 +297,7 @@ for (const coords of orangeCoords) {
 //Helper for getting coords off the screen (for example, to create the sparkle coords above)
 const coords = [];
 canvas.onmousedown = function(event) {
-    if (window.state && window.state.hitBoxFrame) return;
+    if (window.state && window.state.hitboxFrame) return;
     coords.push({x:event.pageX - canvas.offsetLeft, y:event.pageY - canvas.offsetTop});
     console.log(JSON.stringify(coords));
 };

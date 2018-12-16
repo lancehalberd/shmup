@@ -18,7 +18,7 @@ const { attacks, createAttack, addNeutralAttackToState, default_advanceAttack } 
 const { enemyData } = require('enemies');
 const { createLoot, getAdaptivePowerupType, addLootToState } = require('loot');
 
-const beetleRectangle = r(100, 100, {hitBox: {left: 0, top: 16, width: 100, height: 84}});
+const beetleRectangle = r(100, 100, {hitbox: {left: 0, top: 16, width: 100, height: 84}});
 enemyData[ENEMY_CARGO_BEETLE] = {
     animation: {
         frames: [
