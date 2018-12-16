@@ -21,6 +21,7 @@ const {
     stabAnimation,
     hugeExplosionAnimation,
 } = require('animations');
+const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
 const { getNewSpriteState } = require('sprites');
 
@@ -332,6 +333,14 @@ const renderAttack = (context, state, attack) => {
     if (!amount) drawImage(context, frame.image, frame, target);
     else drawTintedImage(context, frame.image, color, amount, frame, target);
     context.restore();
+    if (isKeyDown(KEY_SHIFT)) {
+        context.save();
+        context.globalAlpha = .6;
+        context.fillStyle = 'red';
+        const hitbox = getAttackHitbox(state, attack);
+        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
+        context.restore();
+    }
 };
 
 function getAttackTint(attack) {

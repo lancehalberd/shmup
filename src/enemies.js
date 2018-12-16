@@ -370,22 +370,6 @@ function getEnemyCenter(state, enemy) {
     return getEnemyHitbox(state, enemy).getCenter();
 }
 function isIntersectingEnemyHitboxes(state, enemy, rectangle, getDamageBoxes = false) {
-    /*const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    const geometryBox = frame.hitbox || new Rectangle(frame).moveTo(0, 0);
-    const reflectX = geometryBox.left + geometryBox.width / 2;
-    const hitboxes = frame.hitboxes || [geometryBox];
-    for (let hitbox of hitboxes) {
-        const scaleX = (enemy.scaleX || 1) * frame.scaleX || 1);
-        const scaleY = (enemy.scaleY || 1) * frame.scaleY || 1);
-        if (enemy.vx > 0 && !enemy.doNotFlip) {
-            hitbox = new Rectangle(hitbox).translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
-        }
-        hitbox = new Rectangle(hitbox).stretch(scaleX, scaleY).translate(enemy.left, enemy.top);
-        if (Rectangle.collision(hitbox, rectangle)) {
-            return hitbox;
-        }
-    }
-    return false;*/
     for (const hitbox of getEnemyHitboxes(state, enemy, getDamageBoxes)) {
         if (Rectangle.collision(hitbox, rectangle)) {
             return hitbox;

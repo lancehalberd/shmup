@@ -73,11 +73,10 @@ enemyData[ENEMY_EXPLOSIVE_BEETLE] = {
             playerIndex,
             delay: 10,
             vx: enemy.vx, vy: enemy.vy,
+            scale: 4
         });
-        explosion.width *= 4;
-        explosion.height *= 4;
-        explosion.left -= explosion.width / 2;
-        explosion.top -= explosion.height / 2;
+        explosion.left -= explosion.width * explosion.scale / 2;
+        explosion.top -= explosion.height * explosion.scale / 2;
         return addNeutralAttackToState(state, explosion);
     },
 };

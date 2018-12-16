@@ -276,19 +276,20 @@ const explosionAnimation = {
     frameDuration: 3
 };
 
-const hugeExplosionRectangle = r(67, 67);
+const hugeExplosionGeometry = r(67, 67, {
+    hitbox: {left: 14, top: 14, width:40, height: 43},
+});
 const hugeExplosionAnimation = {
     frames: [
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode1.png', PRIORITY_FIELD)},
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode2.png', PRIORITY_FIELD)},
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode3.png', PRIORITY_FIELD)},
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode4.png', PRIORITY_FIELD)},
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode5.png', PRIORITY_FIELD)},
-        {...hugeExplosionRectangle, image: requireImage('gfx/effects/explode6.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode1.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode2.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode3.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode4.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode5.png', PRIORITY_FIELD)},
+        {...hugeExplosionGeometry, image: requireImage('gfx/effects/explode6.png', PRIORITY_FIELD)},
     ],
     frameDuration: 6,
 };
-
 
 const dustRectangle = r(20, 20);
 const dustAnimation = {
