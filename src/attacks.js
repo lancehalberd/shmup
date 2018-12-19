@@ -350,7 +350,7 @@ const renderAttack = (context, state, attack) => {
     context.restore();
     if (isKeyDown(KEY_SHIFT)) {
         context.save();
-        context.globalAlpha = .6;
+        context.globalAlpha = .15;
         context.fillStyle = 'red';
         let hitboxes = getAttackHitboxes(state, attack);
         hitboxes.push(getAttackHitbox(state, attack));
