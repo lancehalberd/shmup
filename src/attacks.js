@@ -283,31 +283,26 @@ function getAttackHitbox(state, attack) {
     const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
     const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
     let hitbox = frame.hitbox || {...frame, left: 0, top: 0};
-    return new Rectangle(hitbox)
-        .moveCenterTo(0, 0)
-        .stretch(scaleX, scaleY)
-        .translate(
-            attack.left + hitbox.width / 2,
-            attack.top + hitbox.height / 2,
-        );
+    return attackHitboxToGlobalHitbox(state, attack, hitbox);
 }
 function getAttackHitboxes(state, attack) {
     const attackData = attacks[attack.type];
     if (attackData.getHitbox) return [attackData.getHitbox(state, attack)];
     const frame = getAttackFrame(state, attack);
     const hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
-    return attackHitboxesToGlobalHitboxes(state, attack, hitboxes);
+    return hitboxes.map(hitbox => attackHitboxToGlobalHitbox(state, attack, hitbox));
 }
-function attackHitboxesToGlobalHitboxes(state, attack, hitboxes) {
+function attackHitboxToGlobalHitbox(state, attack, hitbox) {
     const frame = getAttackFrame(state, attack);
-    const globalHitboxes = [];
     const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
     const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
-    for (const hitbox of hitboxes) {
-        const globalHitbox = new Rectangle(hitbox).stretch(scaleX, scaleY).translate(attack.left, attack.top);
-        globalHitboxes.push(globalHitbox);
-    }
-    return globalHitboxes;
+    return new Rectangle(hitbox)
+        .moveCenterTo(0, 0)
+        .stretch(scaleX, scaleY)
+        .translate(
+            attack.left + hitbox.left + hitbox.width / 2,
+            attack.top + hitbox.top + hitbox.height / 2,
+        );
 }
 
 const addPlayerAttackToState = (state, attack) => {
@@ -357,8 +352,11 @@ const renderAttack = (context, state, attack) => {
         context.save();
         context.globalAlpha = .6;
         context.fillStyle = 'red';
-        const hitbox = getAttackHitbox(state, attack);
-        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
+        let hitboxes = getAttackHitboxes(state, attack);
+        hitboxes.push(getAttackHitbox(state, attack));
+        for (const hitbox of hitboxes) {
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
+        }
         context.restore();
     }
 };

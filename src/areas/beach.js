@@ -125,7 +125,7 @@ allWorlds[WORLD_BEACH] = {
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
         // Later we can change this depending on the scenario.
-        const targetFrames = 70 * 5;
+        const targetFrames = 70 * 6;
         const targetX = Math.max(world.targetX, world.x + 1000);
         let targetY = world.y;
         const time = world.time + FRAME_LENGTH;
@@ -215,7 +215,7 @@ const ENEMY_SHELL_MONK = 'shellMonk';
 enemyData[ENEMY_SHELL_MONK] = {
     animation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
     deathAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
-    attackAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 1], duration: 12}),
+    attackAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 0, 0, 1], duration: 12}),
     deathSound: 'sfx/robedeath1.mp3',
     isInvulnerable(state, enemy) {
         return !(enemy.attackCooldownFramesLeft > 0);
