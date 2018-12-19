@@ -75,7 +75,8 @@ const render = (state) => {
 
         context.save();
         context.translate(0, hudImage.height);
-        state.enemies.map(enemy => renderEnemy(context, state, enemy));
+        state.enemies.filter(enemy => enemy.background).map(enemy => renderEnemy(context, state, enemy));
+        state.enemies.filter(enemy => !enemy.background).map(enemy => renderEnemy(context, state, enemy));
         state.playerAttacks.map(attack => renderAttack(context, state, attack));
         state.loot.map(loot => renderLoot(context, state, loot));
         state.players.map(hero => renderHero(context, hero));
@@ -260,7 +261,7 @@ const renderHUD = (context, state) => {
 
 const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png', PRIORITY_TITLE)});
 const startGameImage = r(116, 26, {image: requireImage('gfx/startgame.png', PRIORITY_TITLE)});
-const optionsImage = r(90, 26, {image: requireImage('gfx/options.png', PRIORITY_TITLE)});
+//const optionsImage = r(90, 26, {image: requireImage('gfx/options.png', PRIORITY_TITLE)});
 const instructionsImage = r(120, 26, {image: requireImage('gfx/instructions.png', PRIORITY_TITLE)});
 // const startImage = r(58, 30, {image: requireImage('gfx/start.png', PRIORITY_TITLE)});
 const titleRectangle = r(298, 88);

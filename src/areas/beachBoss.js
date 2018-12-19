@@ -78,6 +78,11 @@ const { transitionToOcean } = require('areas/beachToOcean');
 
 const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemies');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
+/**
+Add crab that blows bubbles, some with projectiles in them. The crab also tries to get under the Knight and snap upward.
+When the crab’s eyes are shot enough, the eyes are lowered and the robe standing on the crab’s head is exposed, allowing it to be shot.
+Add bubble SFX
+*/
 
 const ENEMY_SEAGULL = 'seagull';
 const seagullGeometry = r(200, 102,

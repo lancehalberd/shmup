@@ -160,6 +160,7 @@ const enemyData = {
             life: 8,
             score: 100,
             speed: 3,
+            difficulty: 6,
         }
     },
     [ENEMY_LOCUST_SOLDIER]: {
@@ -204,6 +205,7 @@ const enemyData = {
             shotCooldownFrames: [8, 8, 8, 8, 8, 8, 8, 125],
             bulletX: 1,
             bulletY: 0.25,
+            difficulty: 7,
         }
     },
     [ENEMY_FLYING_ANT]: {
@@ -215,6 +217,7 @@ const enemyData = {
             life: 1,
             score: 30,
             speed: 6,
+            difficulty: 3,
         }
     },
     [ENEMY_FLYING_ANT_SOLDIER]: {
@@ -246,6 +249,7 @@ const enemyData = {
             speed: 5,
             shotCooldownFrames: 100,
             initialShotCooldownFrames: [25, 50],
+            difficulty: 4,
         },
     },
     [ENEMY_MONK]: {
@@ -272,7 +276,8 @@ const enemyData = {
             shotCooldownFrames: 80,
             bulletX: 0.5,
             bulletY: 0,
-            initialShotCooldownFrames: [20, 50]
+            initialShotCooldownFrames: [20, 50],
+            difficulty: 3,
         },
     },
 };
@@ -293,6 +298,7 @@ enemyData[ENEMY_SHIELD_MONK] = {
         attackCooldownFrames: 15,
         shotCooldownFrames: 80,
         weakness: {[ATTACK_SLASH]: 5, [ATTACK_STAB]: 5},
+        difficulty: 5,
     },
     isInvulnerable(state, enemy, attack) {
         // Can still be defeated by explosions and defeated enemies.
@@ -324,6 +330,17 @@ function createEnemy(state, type, props) {
         vx,
         id: `enemy${state.uniqueEnemyIdCounter++}`,
     });
+}
+function spawnEnemy(state, enemyType, props) {
+    const difficulty = state.enemies.filter(e => !e.dead).reduce((sum, e) => sum + (e.difficulty || 1), 0);
+    // Don't add new enemies if the difficult is too high for the current level time.
+    if (difficulty >= Math.min(20, 5 + state.world.time / 5000)) {
+        return state;
+    }
+    const newEnemy = createEnemy(state, enemyType, props);
+    newEnemy.left = Math.max(newEnemy.left, WIDTH);
+    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
+    return addEnemyToState(state, newEnemy);
 }
 
 function updateEnemy(state, enemy, props) {
@@ -380,11 +397,16 @@ function isIntersectingEnemyHitboxes(state, enemy, rectangle, getDamageBoxes = f
 // It would be good to make this into an iterator so we don't have to produce all of them for each
 // call.
 function getEnemyHitboxes(state, enemy, getDamageBoxes) {
-    const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    let hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
-    // Damage boxes hurt the player but are not vulnerable on the enemy.
-    if (getDamageBoxes && frame.damageBoxes) {
-        hitboxes = [...hitboxes, ...frame.damageBoxes];
+    let hitboxes = [];
+    if (enemyData[enemy.type].getHitboxes) {
+        hitboxes = enemyData[enemy.type].getHitboxes(state, enemy);
+    } else {
+        const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
+        hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
+        // Damage boxes hurt the player but are not vulnerable on the enemy.
+        if (getDamageBoxes && frame.damageBoxes) {
+            hitboxes = [...hitboxes, ...frame.damageBoxes];
+        }
     }
     return enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes);
 }
@@ -454,7 +476,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
             let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 4 + 8 * hits);
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });
         }
-        if (enemy.score) {
+        if (enemy.score && attack.playerIndex >= 0) {
             updatedState = gainPoints(updatedState, attack.playerIndex, enemy.score);
         }
         const explosion = createEffect(EFFECT_EXPLOSION, {
@@ -488,14 +510,16 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         }
 
         // Knock grounded enemies back when killed by an attack (but not if they died from other damage).
-        if (updatedState.idMap[enemyId] && enemy.grounded && attack.type !== 'fall' && attack.type !== 'hazard') {
+        if (updatedState.idMap[enemyId] && !enemy.stationary && enemy.grounded &&
+            attack.type !== 'fall' && attack.type !== 'hazard'
+        ) {
             updatedState = updateEnemy(updatedState, enemy, {vx: 6, vy: -6});
             enemy = updatedState.idMap[enemyId];
         }
         if (!state.world.spawnsDisabled && Math.random() < enemy.score / 200) {
             const loot = createLoot(LOOT_COIN);
-            loot.left = enemy.left + (enemy.width - loot.width ) / 2;
-            loot.top = enemy.top + (enemy.height - loot.height ) / 2;
+            loot.left = hitbox.left + (hitbox.width - loot.width ) / 2;
+            loot.top = hitbox.top + (hitbox.height - loot.height ) / 2;
             updatedState = addLootToState(updatedState, loot);
         }
         if (enemyData[enemy.type].onDeathEffect) {
@@ -875,7 +899,6 @@ enemyData[ENEMY_FLEA] = {
         if (enemy.attached > 0) {
             return this.moveTowardPlayer(state, enemy);
         }
-        const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
         const heroHitbox = getHeroHitbox(state.players[0]);
         if (enemy.attached < -10 && isIntersectingEnemyHitboxes(state, enemy, heroHitbox)) {
             return updateEnemy(state, enemy, {attached: 80});
@@ -925,11 +948,8 @@ enemyData[ENEMY_FLEA] = {
     }
 }
 
-const spawnEnemy = (state, enemyType, props) => {
-    const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
-    return addEnemyToState(state, newEnemy);
+function setMode(state, enemy, mode) {
+    return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0});
 };
 
 module.exports = {
@@ -959,6 +979,7 @@ module.exports = {
     shoot_bulletAtPlayer,
     addBullet,
     getBulletCoords,
+    setMode,
 };
 
 // Move possible circular imports to after exports.

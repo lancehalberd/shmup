@@ -84,7 +84,7 @@ module.exports = {
 };
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
-const { getEnemyHitbox, damageEnemy, enemyIsActive } = require('enemies');
+const { enemyData, getEnemyHitbox, damageEnemy, enemyIsActive } = require('enemies');
 effects[EFFECT_LIGHTNING] = {
     animation: {
         frames: lightningFrames,
@@ -127,8 +127,12 @@ effects[EFFECT_ARC_LIGHTNING] = {
         if (done) {
             if (target && !target.dead) {
                 const attack = {playerIndex: effect.playerIndex, damage: effect.damage};
-                state = damageEnemy(state, effect.enemyId, attack);
-                state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
+                if (enemyData[target.type].isInvulnerable && enemyData[target.type].isInvulnerable(state, target, attack)) {
+                    state = {...state, sfx: {...state.sfx, 'reflect': true}};
+                } else {
+                    state = damageEnemy(state, effect.enemyId, attack);
+                    state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
+                }
             }
         } else {
             let tx = effect.tx, ty = effect.ty;

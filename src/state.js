@@ -59,8 +59,8 @@ const advanceState = (state) => {
     }
     if (updatedState.title) {
         updatedState = {...updatedState, titleTime: updatedState.titleTime + FRAME_LENGTH}
-        //return {...require('states/skyBossTransition'), interacted: false};
-        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'fieldStart'));
+        //return {...require('states/frogBossFinisher'), interacted: false};
+        // return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'forestLowerStart'));
 
         const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;

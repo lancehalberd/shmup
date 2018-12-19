@@ -3,9 +3,8 @@ const {
     FRAME_LENGTH, HEIGHT, WIDTH, ATTACK_BULLET,
 } = require('gameConstants');
 const random = require('random');
-const Rectangle = require('Rectangle');
-const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
-const { allWorlds, getNewLayer } = require('world');
+const { createAnimation, r } = require('animations');
+const { allWorlds } = require('world');
 
 const WORLD_SEWER_BOSS = 'sewerBoss';
 

@@ -11,7 +11,7 @@ const {
     requireImage, r,
     createAnimation,
 } = require('animations');
-const { heroesData, updatePlayer, useMeleeAttack, getHeroHitbox } = require('heroes');
+const { heroesData, updatePlayer } = require('heroes');
 
 const dragonflyHitbox = {left: 10, top: 15, width: 70, height: 30};
 const dragonflyRectangle = r(88, 56, {hitbox: dragonflyHitbox});
@@ -133,7 +133,7 @@ heroesData[HERO_DRAGONFLY] = {
                 playerIndex,
                 scale,
             });
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height * scale) / 2);
+            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
             state = addPlayerAttackToState(state, blast);
         }
         return state;
@@ -141,5 +141,3 @@ heroesData[HERO_DRAGONFLY] = {
 };
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
-const { isIntersectingEnemyHitboxes, damageEnemy, enemyIsActive } = require('enemies');
-

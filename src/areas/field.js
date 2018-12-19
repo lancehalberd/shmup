@@ -7,12 +7,29 @@ const {
     LOOT_LIFE,
 } = require('gameConstants');
 const random = require('random');
-const { PRIORITY_TITLE, PRIORITY_FIELD, createAnimation, r } = require('animations');
+const { PRIORITY_TITLE, createAnimation, r } = require('animations');
 const { getNewSpriteState } = require('sprites');
-const { getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
+const { getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite, setEvent } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
-const { ENEMY_CARGO_BEETLE, ENEMY_EXPLOSIVE_BEETLE } = require('enemies/beetles');
-const { easyFlies, powerup } = require('enemyPatterns');
+const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
+
+const WORLD_FIELD = 'field';
+const FIELD_DURATION = 120000;
+const FIELD_EASY_DURATION = 30000;
+const CHECK_POINT_FIELD_START = 'fieldStart';
+const CHECK_POINT_FIELD_MIDDLE = 'fieldMiddle';
+const CHECK_POINT_FIELD_END = 'fieldEnd';
+const CHECK_POINT_FIELD_BOSS = 'fieldBoss';
+module.exports = {
+    getFieldWorld, getFieldWorldStart,
+    CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
+};
+
+const { spawnEnemy, enemyData } = require('enemies');
+const { transitionToFieldBoss } = require('areas/fieldBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_1 } = require('areas/stars1');
+const { LOOT_HELMET } = require('loot');
 
 const plainsBg = createAnimation('gfx/scene/field/plainsbg.png', r(800, 800), {priority: PRIORITY_TITLE});
 const groundAnimation = createAnimation('gfx/scene/field/groundloop.png', r(200, 60), {priority: PRIORITY_TITLE});
@@ -37,23 +54,6 @@ const thickGrass = createAnimation('gfx/scene/field/plainsmg.png', r(300, 300), 
 const darkGrass = createAnimation('gfx/scene/field/plainsmg2.png', r(300, 300), {priority: PRIORITY_TITLE});
 // const lightGrass = createAnimation('gfx/scene/field/plainsmg3.png', r(300, 300));
 
-const WORLD_FIELD = 'field';
-
-const formidableEnemies = [ENEMY_HORNET, ENEMY_LOCUST, ENEMY_HORNET_SOLDIER, ENEMY_LOCUST_SOLDIER, ENEMY_EXPLOSIVE_BEETLE];
-
-const setEvent = (state, event) => {
-    // FRAME_LENGTH will be added to eventTime before the event is processed next, so we
-    // set it to -FRAME_LENGTH so it will be 0 on the first frame.
-    return {...state, world: {...state.world, eventTime: -FRAME_LENGTH, event}};
-};
-const FIELD_DURATION = 120000;
-const FIELD_EASY_DURATION = 30000;
-
-// Add check points for:
-const CHECK_POINT_FIELD_START = 'fieldStart';
-const CHECK_POINT_FIELD_MIDDLE = 'fieldMiddle';
-const CHECK_POINT_FIELD_END = 'fieldEnd';
-const CHECK_POINT_FIELD_BOSS = 'fieldBoss';
 checkpoints[CHECK_POINT_FIELD_START] = function (state) {
     const world = getFieldWorldStart();
     return {...state, world};
@@ -76,6 +76,13 @@ checkpoints[CHECK_POINT_FIELD_BOSS] = function (state) {
     world.time = 120000;
     return transitionToFieldBoss({...state, world});
 };
+
+const {
+    nothing, easyFlies, powerup,
+    explodingBeetle, lightningBeetle,
+    bossPowerup,
+    singleEnemy, singleEasyHardEnemy,
+} = require('enemyPatterns');
 // start of level 'nothing' getFieldWorldStart
 // sky 40 seconds 'nothing' getFieldWorld
 // groud before boss ~100 seconds 'nothing' getFieldWorld
@@ -88,23 +95,14 @@ allWorlds[WORLD_FIELD] = {
         return enterStarWorld(state, CHECK_POINT_STARS_1, CHECK_POINT_FIELD_END);
     },
     events: {
-        nothing: (state, eventTime) => {
-            if (eventTime === 1000) {
-                if (state.players[0].powerups.length) {
-                    return setEvent(state, 'flies');
-                }
-                return setEvent(state, 'easyFlies');
-            }
-        },
+        nothing: nothing(1000, 'easyFlies'),
         easyFlies: easyFlies('powerup'),
         powerup: powerup('flies'),
         flies: (state, eventTime) => {
-            const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            const baseNumber = 4 - numFormidable;
-            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
+            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1500;
             if (eventTime === 0) {
                 let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
+                for (let i = 0; i < 4; i++) {
                     state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
                 }
                 return state;
@@ -112,7 +110,7 @@ allWorlds[WORLD_FIELD] = {
             eventTime -= spacing;
             if (eventTime === 0) {
                 let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
+                for (let i = 0; i < 4; i++) {
                     state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
                 }
                 return state;
@@ -120,7 +118,7 @@ allWorlds[WORLD_FIELD] = {
             eventTime -= spacing;
             if (eventTime === 0) {
                 const mode = random.range(0, 1);
-                for (let i = 0; i < 2 * baseNumber; i++) {
+                for (let i = 0; i < 8; i++) {
                     let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
                     state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
                 }
@@ -128,7 +126,7 @@ allWorlds[WORLD_FIELD] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['flyingAnts', 'monks']));
+                return setEvent(state, ['flyingAnts', 'monks']);
             }
         },
         monks: (state, eventTime) => {
@@ -143,67 +141,32 @@ allWorlds[WORLD_FIELD] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['flyingAnts']));
+                return setEvent(state, 'flyingAnts');
             }
         },
         flyingAnts: (state, eventTime) => {
-            const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            const baseNumber = 2 - numFormidable;
             let spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {
-                for (let i = 0; i < baseNumber - 1; i++) {
+                for (let i = 0; i < 1; i++) {
                     state = spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
                 }
                 return state;
             }
             eventTime -= spacing
             if (eventTime === 0) {
-                for (let i = 0; i < baseNumber; i++) {
-                    const enemyType = random.element([ENEMY_FLYING_ANT]);
-                    state = spawnEnemy(state, enemyType, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
+                for (let i = 0; i < 2; i++) {
+                    state = spawnEnemy(state, ENEMY_FLYING_ANT, {left: WIDTH + 10 + Math.random() * 30, top: GAME_HEIGHT / 4 + i * GAME_HEIGHT / 2});
                 }
                 return state;
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, random.element(['hornet', 'locust']));
+                return setEvent(state, ['hornet', 'locust']);
             }
         },
-        hornet: (state, eventTime) => {
-            let numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            if (eventTime === 0 && numFormidable === 0) {
-                const enemyType = (state.world.time >= 0.5 * FIELD_DURATION) ? ENEMY_HORNET_SOLDIER : ENEMY_HORNET;
-                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: random.element([GAME_HEIGHT / 3, 2 * GAME_HEIGHT / 3])});
-                return state;
-            }
-            let spacing = state.world.time < FIELD_EASY_DURATION ? 4000 : 2000;
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['flies', 'monks']));
-            }
-        },
-        locust: (state, eventTime) => {
-            let numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            if (eventTime === 0 && numFormidable <= 1) {
-                const enemyType = (state.world.time >= 0.5 * FIELD_DURATION) ? ENEMY_LOCUST_SOLDIER : ENEMY_LOCUST;
-                state = spawnEnemy(state, enemyType, {left: WIDTH + 10, top: GAME_HEIGHT / 3 + Math.random() * GAME_HEIGHT / 3 });
-                return state;
-            }
-            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1000;
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['locust', 'flies', 'monks']));
-            }
-        },
-        bossPrep: (state, eventTime) => {
-            if (eventTime === 3000) {
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
-            }
-            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_FIELD_END);
-                return transitionToFieldBoss(state);
-            }
-        },
+        locust: singleEasyHardEnemy(ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER, FIELD_DURATION / 2, 1500, ['locust', 'flies', 'monks']),
+        hornet: singleEasyHardEnemy(ENEMY_HORNET, ENEMY_HORNET_SOLDIER, FIELD_DURATION / 2, 3000, ['flies', 'monks']),
+        bossPowerup: bossPowerup(CHECK_POINT_FIELD_END, transitionToFieldBoss),
     },
     advanceWorld: (state) => {
         // return transitionToFieldBoss(state);
@@ -222,8 +185,8 @@ allWorlds[WORLD_FIELD] = {
 
         // After 120 seconds, stop spawning enemies, and transition to the boss once all enemies are
         // defeated.
-        if (world.type === WORLD_FIELD && world.time >= FIELD_DURATION && world.event !== 'bossPrep') {
-            return setEvent(state, 'bossPrep');
+        if (world.type === WORLD_FIELD && world.time >= FIELD_DURATION && world.event !== 'bossPowerup') {
+            return setEvent(state, 'bossPowerup');
         }
         if (world.time === 40000) state = setCheckpoint(state, CHECK_POINT_FIELD_MIDDLE);
         if (TEST_ENEMY) {
@@ -241,7 +204,8 @@ allWorlds[WORLD_FIELD] = {
     },
 };
 
-const getFieldWorld = () => ({
+function getFieldWorld() {
+    return {
     type: WORLD_FIELD,
     x: 0,
     y: 0,
@@ -254,9 +218,11 @@ const getFieldWorld = () => ({
     bgm: 'bgm/field.mp3',
     groundHeight: 30,
     ...getFieldLayers(),
-});
+    };
+}
 
-const getFieldLayers = () => ({
+function getFieldLayers() {
+    return {
     background: getNewLayer({
         xFactor: 0, yFactor: 0.2, yOffset: -100, maxY: 0,
         animation: plainsBg,
@@ -313,9 +279,10 @@ const getFieldLayers = () => ({
     mgLayerNames: ['wheat', 'darkGrass', 'thickGrass', 'ground', 'nearground'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: ['foreground'],
-});
+    };
+}
 
-const getFieldWorldStart = () => {
+function getFieldWorldStart() {
     let world = getFieldWorld();
     world.nearground.sprites = [getNewSpriteState({
         ...townAnimation.frames[0],
@@ -326,7 +293,7 @@ const getFieldWorldStart = () => {
         next: ['grassOrBerries'],
     })];
     return world;
-};
+}
 
 const onHitDandy = (state, layerName, spriteIndex) => {
     let world = state.world;
@@ -350,14 +317,4 @@ function speedupAnimation(state, layerName, spriteIndex) {
     return updateLayerSprite(state, layerName, spriteIndex, {animationTime: sprite.animationTime + 2 * FRAME_LENGTH});
 }
 
-module.exports = {
-    getFieldWorld, getFieldWorldStart,
-    CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
-};
-
-const { spawnEnemy, enemyData } = require('enemies');
-const { transitionToFieldBoss } = require('areas/fieldBoss');
-const { enterStarWorld } = require('areas/stars');
-const { CHECK_POINT_STARS_1 } = require('areas/stars1');
-const { LOOT_HELMET } = require('loot');
 

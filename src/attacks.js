@@ -241,6 +241,14 @@ attacks[ATTACK_WATER] = {
         ay: 0.1
     },
 };
+const ATTACK_URCHIN_NEEDLE = 'urchinNeedle';
+attacks[ATTACK_URCHIN_NEEDLE] = {
+    animation: createAnimation('gfx/attacks/urchinattack.png', r(5, 23,
+        // We don't support rotating hitboxes in this game, so we just make the hitboxes
+        // square and centered in the graphic so it works at any rotation.
+        {hitbox: {left:0, top: 9, width: 5, height:5},
+    })),
+};
 
 const createAttack = (type, props) => {
     const frame = (props.animation || attacks[type].animation || {frames: [{}]}).frames[0];
@@ -274,8 +282,14 @@ function getAttackHitbox(state, attack) {
     const frame = getAttackFrame(state, attack);
     const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
     const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
-    if (frame.hitbox) return new Rectangle(frame.hitbox).stretch(scaleX, scaleY).translate(attack.left, attack.top);
-    return new Rectangle(frame).stretch(scaleX, scaleY).moveTo(attack.left, attack.top);
+    let hitbox = frame.hitbox || {...frame, left: 0, top: 0};
+    return new Rectangle(hitbox)
+        .moveCenterTo(0, 0)
+        .stretch(scaleX, scaleY)
+        .translate(
+            attack.left + hitbox.width / 2,
+            attack.top + hitbox.height / 2,
+        );
 }
 function getAttackHitboxes(state, attack) {
     const attackData = attacks[attack.type];
@@ -325,10 +339,16 @@ const renderAttack = (context, state, attack) => {
     const scaleY = attack.scaleY || attack.scale || 1;
     let target = attack;
     context.save();
+    const rotation = attack.rotation || 0;
+    context.translate(attack.left + target.width / 2, attack.top + target.height / 2);
+    target = new Rectangle(attack).moveTo(-target.width / 2, -target.height / 2);
     if (scaleX !== 1 || scaleY !== 1) {
-        context.translate(attack.left, attack.top);
         context.scale(scaleX, scaleY);
-        target = new Rectangle(attack).moveTo(0, 0);
+    }
+    if (rotation !== 0) {
+        //context.translate(-target.width / 2, -target.height / 2);
+        context.rotate(rotation);
+        //context.translate(target.width / 2, target.height / 2);
     }
     if (!amount) drawImage(context, frame.image, frame, target);
     else drawTintedImage(context, frame.image, color, amount, frame, target);
@@ -362,8 +382,8 @@ function default_advanceAttack(state, attack) {
             if (ladybugIndex >= 0) {
                 source = state.players[playerIndex].ladybugs[ladybugIndex];
             }
-            left = source.left + source.vx + source.width + (attack.xOffset || 0);
-            top = source.top + source.vy + Math.round((source.height - height * (attack.scale || 1)) / 2) + (attack.yOffset || 0);
+            left = source.left + source.vx + source.width + (attack.xOffset || 0) + Math.round(width * (attack.scale || 1) / 2);
+            top = source.top + source.vy + Math.round((source.height - attack.height) / 2) + (attack.yOffset || 0);
         }
     }
     if (!(delay > 0)) {
@@ -414,6 +434,7 @@ module.exports = {
     getAttackTint,
     ATTACK_GAS,
     ATTACK_WATER,
+    ATTACK_URCHIN_NEEDLE,
 };
 
 const { enemyIsActive, getEnemyHitbox } = require('enemies');

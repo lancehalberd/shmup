@@ -120,22 +120,24 @@ heroesData[HERO_BEE] = {
                 !state.idMap[targets[i].enemyId].dead
             ) {
                 const hitboxes = getEnemyHitboxes(state, state.idMap[targets[i].enemyId]);
-                let hitbox = hitboxes[0];
-                for (let j = 0; j < hitboxes.length; j++) {
-                    if (Rectangle.collision(hitboxes[j], targets[i])) {
-                        hitbox = hitboxes[j];
-                        break;
+                if (hitboxes.length) {
+                    let hitbox = hitboxes[0];
+                    for (let j = 0; j < hitboxes.length; j++) {
+                        if (Rectangle.collision(hitboxes[j], targets[i])) {
+                            hitbox = hitboxes[j];
+                            break;
+                        }
                     }
+                    targets[i] = {
+                        left: (targets[i].left + hitbox.left + hitbox.width / 2 - targets[i].width / 2) / 2,
+                        top: (targets[i].top + hitbox.top + hitbox.height / 2 - targets[i].height / 2) / 2,
+                        vx: 0, vy: 0,
+                        width: (targets[i].width * 10 + size) / 11,
+                        height: (targets[i].height * 10 + size) / 11,
+                        enemyId: targets[i].enemyId,
+                    };
+                    continue;
                 }
-                targets[i] = {
-                    left: (targets[i].left + hitbox.left + hitbox.width / 2 - targets[i].width / 2) / 2,
-                    top: (targets[i].top + hitbox.top + hitbox.height / 2 - targets[i].height / 2) / 2,
-                    vx: 0, vy: 0,
-                    width: (targets[i].width * 10 + size) / 11,
-                    height: (targets[i].height * 10 + size) / 11,
-                    enemyId: targets[i].enemyId,
-                };
-                continue;
             }
             const x = targets[i].left + targets[i].width / 2, y = targets[i].top + targets[i].height / 2;
             let vx = targets[i].vx * 0.8,
@@ -262,6 +264,6 @@ heroesData[HERO_BEE] = {
 
 const { getAttackTint } = require('attacks');
 const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitbox, getEnemyHitboxes, enemyIsActive, isIntersectingEnemyHitboxes } = require('enemies');
+const { getEnemyHitboxes, enemyIsActive, isIntersectingEnemyHitboxes } = require('enemies');
 const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 

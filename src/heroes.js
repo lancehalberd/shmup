@@ -147,7 +147,7 @@ const useMeleeAttack = (state, playerIndex) => {
         meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 2);
         meleeAttack.damage += 2;
     }
-    meleeAttack.top -= meleeAttack.height * meleeAttack.scale / 2;
+    meleeAttack.left += meleeAttack.width * meleeAttack.scale / 2;
     state = addPlayerAttackToState(state, meleeAttack);
     return updatePlayer(state, playerIndex, {meleeAttackTime: 0, meleeCooldown});
 };

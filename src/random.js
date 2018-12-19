@@ -25,8 +25,7 @@ module.exports = {
         if (collection.constructor == Array) {
             return collection[this.range(0, collection.length - 1)];
         }
-        console.log("Warning @ Random.element: "+ collection + " is neither Array or Object");
-        return null;
+        return collection;
     },
 
     /**

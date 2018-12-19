@@ -1,14 +1,12 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ATTACK_RED_LASER,
 } = require('gameConstants');
 const random = require('random');
-const { createAnimation, a, r, requireImage } = require('animations');
-const { getGroundHeight, getNewLayer, allWorlds,
+const { createAnimation, r, requireImage } = require('animations');
+const { getNewLayer, allWorlds,
     checkpoints, setCheckpoint, getHazardCeilingHeight, getHazardHeight, setEvent,
     advanceWorld,
 } = require('world');
-const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
 
 const WORLD_SEWER = 'sewer';
 const CHECK_POINT_SEWER_START = 'sewerStart';
@@ -60,7 +58,7 @@ checkpoints[CHECK_POINT_SEWER_BOSS] = function (state) {
     return transitionToSewerBoss(advanceWorld({...state, world}));
 };
 
-const { nothing, powerup, easyRoaches, normalRoaches, } = require('enemyPatterns');
+const { nothing, powerup, easyRoaches, normalRoaches, bossPowerup, } = require('enemyPatterns');
 allWorlds[WORLD_SEWER] = {
     initialEvent: 'nothing',
     events: {
@@ -76,7 +74,7 @@ allWorlds[WORLD_SEWER] = {
         easyRoaches: easyRoaches('powerup'),
         powerup: powerup(['rats', 'bugs', 'fish']),
         cockroaches: normalRoaches(SEWER_EASY_DURATION, ['fish', 'bugs']),
-        bugs(state, eventTime) {
+        bugs(state) {
             return setEvent(state, ['randomBugs', 'wallOfBugs']);
         },
         randomBugs(state, eventTime) {
@@ -129,12 +127,7 @@ allWorlds[WORLD_SEWER] = {
                 return setEvent(state, ['cockroaches', 'bugs']);
             }
         },
-        bossPrep: (state) => {
-            if (state.enemies.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_SEWER_END);
-                return transitionToSewerBoss(state);
-            }
-        },
+        bossPowerup: bossPowerup(CHECK_POINT_SEWER_END, transitionToSewerBoss),
     },
     advanceWorld: (state) => {
         state = floatEnemies(state);
@@ -148,8 +141,8 @@ allWorlds[WORLD_SEWER] = {
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        if (world.type === WORLD_SEWER && world.time >= SEWER_DURATION && world.event !== 'bossPrep') {
-            return setEvent(state, 'bossPrep');
+        if (world.type === WORLD_SEWER && world.time >= SEWER_DURATION && world.event !== 'bossPowerup') {
+            return setEvent(state, 'bossPowerup');
         }
         if (world.time === CHECK_POINT_SEWER_MIDDLE_TIME) {
             state = setCheckpoint(state, CHECK_POINT_SEWER_MIDDLE);

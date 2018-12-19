@@ -1,4 +1,4 @@
-/* global state, canvas */
+/* global canvas */
 const Rectangle = require('Rectangle');
 const { drawImage, fillRectangle } = require('draw');
 
@@ -26,7 +26,6 @@ document.onmousedown = function(event) {
     const state = window.state;
     if (!state || !state.hitboxFrame) return;
     state.mousedown = true;
-    const { x, y } = getEventCoords(event);
     if (state.selectedHitbox && state.overEdges) {
         state.selectedEdges = state.overEdges;
         console.log('over edges', Object.keys(state.overEdges));
@@ -125,7 +124,7 @@ function onhover(x, y) {
     }
     state.overHitbox = null;
 }
-document.onmouseup = function (event) {
+document.onmouseup = function () {
     const state = window.state;
     if (!state || !state.hitboxFrame) return;
     state.mousedown = false;

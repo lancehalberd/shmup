@@ -122,6 +122,7 @@ enemyData[ENEMY_HORNET] = {
         modeTime: 0,
         permanent: true,
         doNotFlip: true,
+        difficulty: 10,
     }
 };
 enemyData[ENEMY_HORNET_SOLDIER] = {
@@ -229,6 +230,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         shotCooldownFrames: 50,
         bulletX: 0.9,
         bulletY: 0.15,
+        difficulty: 10,
     }
 };
 const ENEMY_HORNET_CIRCLER = 'hornetCircler';
@@ -263,6 +265,7 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
         permanent: false,
         doNotFlip: true,
         scale: 0.5,
+        difficulty: 10,
     }
 };
 const ENEMY_HORNET_DASHER = 'hornetDasher';
@@ -306,6 +309,7 @@ enemyData[ENEMY_HORNET_DASHER] = {
         permanent: true,
         doNotFlip: true,
         scale: 0.5,
+        difficulty: 10,
     }
 };
 
@@ -358,6 +362,7 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         persist: true,
         doNotFlip: true,
         scale: 0.5,
+        difficulty: 10,
     }
 };
 

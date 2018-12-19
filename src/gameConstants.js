@@ -6,7 +6,7 @@ module.exports = {
 
     CHARGE_FRAMES_FIRST: 25,
     CHARGE_FRAMES_SECOND: 50,
-    //TEST_ENEMY: 'brownSpider',
+    // TEST_ENEMY: 'flea',
 
     WIDTH: 800, HEIGHT: 600, GAME_HEIGHT: 564, HUD_HEIGHT: 36,
     FRAME_LENGTH: 20, OFFSCREEN_PADDING: 40,

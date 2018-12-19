@@ -1,8 +1,6 @@
 const {
     GAME_HEIGHT, WIDTH,
-    ENEMY_FLY, ENEMY_MONK,
-    ENEMY_FLYING_ANT,
-    ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
+    ENEMY_FLY,
     LOOT_LIFE,
 } = require('gameConstants');
 
@@ -117,20 +115,65 @@ function normalRoaches(easyDuration, next) {
     };
 }
 
+function singleEnemy(type, delay, next) {
+    return function (state, eventTime) {
+        if (eventTime === 0) {
+            let top = getTop(state, random.element([1, 2, 3]) / 4);
+            return spawnEnemy(state, type, {left: WIDTH, top});
+        }
+        eventTime -= delay;
+        if (eventTime >= 0) {
+            return setEvent(state, next);
+        }
+    }
+}
+
+function singleEasyHardEnemy(easyEnemies, hardEnemies, easyDuration, delay, next) {
+    return function (state, eventTime) {
+        if (eventTime === 0) {
+            const list = state.world.time <= easyDuration ? easyEnemies : hardEnemies;
+            const type = random.element(list);
+            let top = getTop(state, random.element([1, 2, 3]) / 4);
+            return spawnEnemy(state, type, {left: WIDTH, top});
+        }
+        eventTime -= delay;
+        if (eventTime >= 0) {
+            return setEvent(state, next);
+        }
+    }
+}
+
+// Spawn a cargo beetle with a full life powerup before each boss.
+function bossPowerup(checkpoint, transitionMethod, delay = 3000) {
+    return function (state, eventTime) {
+        if (eventTime === delay) {
+            return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: getTop(state, 0.5), lootType: LOOT_LIFE});
+        }
+        if (eventTime > delay && state.enemies.length === 0 && state.loot.length === 0) {
+            state = setCheckpoint(state, checkpoint);
+            return transitionMethod(state);
+        }
+    }
+}
+
 module.exports = {
     nothing,
     easyFlies,
     easyRoaches,
     normalRoaches,
     powerup,
+    singleEnemy,
+    singleEasyHardEnemy,
     explodingBeetle,
     lightningBeetle,
+    bossPowerup,
 };
 
 const {
     getHazardHeight,
     getHazardCeilingHeight,
     setEvent,
+    setCheckpoint,
 } = require('world');
 
 const { spawnEnemy } = require('enemies');
