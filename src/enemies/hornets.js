@@ -4,11 +4,33 @@ const { PRIORITY_FIELD, requireImage, createAnimation, r } = require('animations
 const {
     WIDTH, GAME_HEIGHT, FRAME_LENGTH,
 } = require('gameConstants');
+const Rectangle = require('Rectangle');
+const random = require('random');
+
+const ENEMY_HORNET = 'hornet';
+const ENEMY_HORNET_SOLDIER = 'hornetSoldier';
+const ENEMY_DEAD_KNIGHT = 'deadKnight';
+const ENEMY_HORNET_KNIGHT = 'hornetKnight';
+const ENEMY_HORNET_CIRCLER = 'hornetCircler';
+const ENEMY_HORNET_DASHER = 'hornetDasher';
+const ENEMY_HORNET_QUEEN = 'hornetQueen';
+
+module.exports = {
+    ENEMY_HORNET,
+    ENEMY_HORNET_SOLDIER,
+    ENEMY_HORNET_KNIGHT,
+    ENEMY_HORNET_CIRCLER,
+    ENEMY_HORNET_DASHER,
+    ENEMY_HORNET_QUEEN,
+};
+
 const {
     enemyData,
-    addEnemyToState, createEnemy, removeEnemy,
-    onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer,
+    addEnemyToState, createEnemy, removeEnemy, updateEnemy,
+    onHitGroundEffect_spawnMonk, shoot_bulletAtPlayer, setMode,
+    getEnemyHitbox
 } = require('enemies');
+const { getHeroHitbox } = require('heroes');
 const { getTargetVector } = require('sprites');
 const { getHazardCeilingHeight, getHazardHeight } = require('world');
 
@@ -42,8 +64,6 @@ const hornetSoldierDeathAnimation = createAnimation('gfx/enemies/hornets/mhornet
     {priority: PRIORITY_FIELD}
 );
 
-const ENEMY_HORNET = 'hornet';
-const ENEMY_HORNET_SOLDIER = 'hornetSoldier';
 enemyData[ENEMY_HORNET] = {
     animation: hornetAnimation,
     deathAnimation: hornetDeathAnimation,
@@ -233,7 +253,143 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         difficulty: 10,
     }
 };
-const ENEMY_HORNET_CIRCLER = 'hornetCircler';
+const knightGeometry = r(120, 120, {
+    hitbox: { width: 100, height: 100, top: 12, left: 10},
+});
+// This is only used for the mount falling off of the hornet knight.
+enemyData[ENEMY_DEAD_KNIGHT] = {
+    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {x: 4}),
+    props: {
+        life: 0,
+    },
+};
+enemyData[ENEMY_HORNET_KNIGHT] = {
+    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {cols: 3}),
+    // This is the mask falling from the hornet when the mount falls off.
+    deathAnimation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {x: 3}),
+    deathSound: 'sfx/hit.mp3',
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        state = updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
+        enemy = state.idMap[enemy.id];
+        let {vx, vy, targetX, targetY} = enemy;
+        // Retreat if the player is using the finisher on the nest.
+        if (state.players[0].usingFinisher) {
+            vx = 8;
+            vy = 0;
+            return {...enemy, vx, vy, doNotFlip: false, persist: false, permanent: false};
+        }
+        const theta = Math.PI / 2 + Math.PI * 4 * enemy.modeTime / 8000;
+        const radius = 1;
+        const playerCenter = new Rectangle(getHeroHitbox(state.players[0])).getCenter();
+        const enemyCenter = new Rectangle(getEnemyHitbox(state, enemy)).getCenter();
+        if (enemy.mode === 'enter') {
+            vx = -3;
+            if (enemyCenter[1] < 150) vy++;
+            else if (enemyCenter[1] > GAME_HEIGHT - 150) vy--;
+            else if (vy < 0) vy--;
+            else vy++;
+            vy = Math.max(-enemy.speed * 0.6, Math.min(enemy.speed * 0.6, vy));
+            if (enemy.left <= WIDTH - 150) return setMode(state, enemy, 'pace');
+        } else if (enemy.mode === 'pause') {
+            vx *= 0.8;
+            vy *= 0.8;
+            if (enemy.modeTime >= 400) {
+                return setMode(state, enemy, random.element(['strike', 'shoot']));
+            }
+        } else if (enemy.mode === 'pace') {
+            // Pace up and down, roughly tracking the player and staying on screen.
+            if (enemyCenter[0] >= WIDTH - 160) {
+                if (enemyCenter[1] < 150) vy++;
+                else if (enemyCenter[1] > GAME_HEIGHT - 150) vy--;
+                else if (vy < 0) vy--;
+                else vy++;
+                vy = Math.max(-enemy.speed * 0.6, Math.min(enemy.speed * 0.6, vy));
+            } else {
+                vy *= 0.9;
+            }
+            if (enemyCenter[0] < WIDTH - 150) vx++;
+            vx *= 0.9;
+            if (enemy.modeTime >= 3000) {
+                return setMode(state, enemy, 'pause');
+            }
+        } else if (enemy.mode === 'strike') {
+            if (enemy.modeTime === FRAME_LENGTH) {
+                const dx = playerCenter[0] - enemyCenter[0];
+                const dy = playerCenter[1] - enemyCenter[1];
+                targetX = Math.max(150, playerCenter[0]);
+                targetY = Math.max(100, Math.min(GAME_HEIGHT - 100), playerCenter[1]);
+                const theta = Math.atan2(dy, dx);
+                vx = enemy.speed * Math.cos(theta);
+                vy = enemy.speed * Math.sin(theta);
+            } else {
+                const dx = targetX - enemyCenter[0];
+                if (dx * vx < 0) {
+                    return setMode(state, enemy, 'pause');
+                }
+            }
+        } else if (enemy.mode === 'shoot') {
+            vx *= 0.8;
+            vy *= 0.8;
+            if (enemy.modeTime >= 3000) {
+                return setMode(state, enemy, 'pace');
+            }
+        }
+        return updateEnemy(state, enemy, {targetX, targetY, vx, vy});
+    },
+    shoot(state, enemy) {
+        if (enemy.mode !== 'shoot') {
+            if (enemy.shotCooldown > 0) {
+                return updateEnemy(state, enemy, {shotCooldown: 0});
+            }
+            return state;
+        }
+        return shoot_bulletAtPlayer(state, enemy);
+    },
+    onDeathEffect(state, enemy) {
+        const hornet = createEnemy(state, ENEMY_HORNET, {
+            life: 20,
+            score: enemyData[ENEMY_HORNET].props.score / 2,
+            left: enemy.left,
+            top: enemy.top,
+            vx: 0,
+            vy: 0,
+            mode: 'retreat',
+        });
+        // Delete the current enemy from the state so it can be
+        // added on top of the mount enemy.
+        state = removeEnemy(state, enemy);
+        state = addEnemyToState(state, hornet);
+        // Add the falling knight.
+        const knight = createEnemy(state, ENEMY_DEAD_KNIGHT, {
+            life: 0,
+            dead: true,
+            left: enemy.left,
+            top: enemy.top,
+            vx: 0,
+            vy: 0,
+        });
+        state = addEnemyToState(state, knight);
+        return addEnemyToState(state, enemy);
+    },
+    props: {
+        life: 50,
+        score: 500,
+        speed: 12,
+        bulletSpeed: 10,
+        mode: 'enter',
+        modeTime: 0,
+        permanent: true,
+        doNotFlip: true,
+        shootFrames: [120, 100, 80, 60, 40, 20],
+        attackCooldownFrames: 121,
+        shotCooldown: 0, //No delay for firing first shot.
+        shotCooldownFrames: 150,
+        bulletX: 0.9,
+        bulletY: 0.15,
+        difficulty: 20,
+    }
+};
 enemyData[ENEMY_HORNET_CIRCLER] = {
     ...enemyData[ENEMY_HORNET],
     accelerate(state, enemy) {
@@ -268,7 +424,6 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
         difficulty: 10,
     }
 };
-const ENEMY_HORNET_DASHER = 'hornetDasher';
 enemyData[ENEMY_HORNET_DASHER] = {
     ...enemyData[ENEMY_HORNET],
     accelerate(state, enemy) {
@@ -313,7 +468,6 @@ enemyData[ENEMY_HORNET_DASHER] = {
     }
 };
 
-const ENEMY_HORNET_QUEEN = 'hornetQueen';
 const queenRectangle = r(150, 150, {hitbox: {left: 14, top: 54, width: 125, height: 85}});
 enemyData[ENEMY_HORNET_QUEEN] = {
     ...enemyData[ENEMY_HORNET],
@@ -364,13 +518,4 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         scale: 0.5,
         difficulty: 10,
     }
-};
-
-
-module.exports = {
-    ENEMY_HORNET,
-    ENEMY_HORNET_SOLDIER,
-    ENEMY_HORNET_CIRCLER,
-    ENEMY_HORNET_DASHER,
-    ENEMY_HORNET_QUEEN,
 };

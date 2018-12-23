@@ -14,15 +14,6 @@ function transitionToBeachBoss(state) {
     const world = {
         ...state.world,
         type: WORLD_BEACH_BOSS,
-        // Remove the moon layer.
-        mgLayerNames: ['background', 'clouds', 'fastClouds'],
-        // Set the next background image to the sunrise graphics
-        background: getNewLayer({
-            xFactor: 0.1, yFactor: 0.5, yOffset: 0, maxY: 0,
-            spriteData: {
-                sky: {animation: createAnimation('gfx/scene/sky/sky.png', r(400, 400)), scale: 2},
-            },
-        }),
         time: 0,
         targetFrames: 50 * 5,
     };

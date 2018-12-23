@@ -78,7 +78,7 @@ checkpoints[CHECK_POINT_FIELD_BOSS] = function (state) {
 };
 
 const {
-    nothing, easyFlies, powerup,
+    nothing, easyFlies, normalFlies, powerup,
     explodingBeetle, lightningBeetle,
     bossPowerup,
     singleEnemy, singleEasyHardEnemy,
@@ -98,37 +98,7 @@ allWorlds[WORLD_FIELD] = {
         nothing: nothing(1000, 'easyFlies'),
         easyFlies: easyFlies('powerup'),
         powerup: powerup('flies'),
-        flies: (state, eventTime) => {
-            let spacing = state.world.time < FIELD_EASY_DURATION ? 2000 : 1500;
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < 4; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < 4; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                const mode = random.range(0, 1);
-                for (let i = 0; i < 8; i++) {
-                    let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, ['flyingAnts', 'monks']);
-            }
-        },
+        flies: normalFlies(FIELD_EASY_DURATION, ['flyingAnts', 'monks']),
         monks: (state, eventTime) => {
             let spacing = state.world.time < FIELD_EASY_DURATION ? 3000 : 1000;
             if (eventTime === 0) {

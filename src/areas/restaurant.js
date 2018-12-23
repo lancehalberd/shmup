@@ -1,13 +1,9 @@
 const {
-    FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ATTACK_RED_LASER,
-    LOOT_LIFE,
-    ENEMY_FLY,
+    FRAME_LENGTH, WIDTH,
 } = require('gameConstants');
 const random = require('random');
-const { createAnimation, a, r, requireImage } = require('animations');
-const { advanceWorld, getGroundHeight, getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite } = require('world');
-const { ENEMY_CARGO_BEETLE, ENEMY_LIGHTNING_BEETLE } = require('enemies/beetles');
+const { createAnimation, r } = require('animations');
+const { advanceWorld, getNewLayer, allWorlds, checkpoints, updateLayerSprite } = require('world');
 const { ENEMY_BROWN_SPIDER, ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 /*
 
@@ -37,6 +33,18 @@ const setEvent = (state, event) => {
 const CHECK_POINT_RESTAURANT_START = 'restaurantStart';
 const CHECK_POINT_RESTAURANT_END = 'restaurantEnd';
 const CHECK_POINT_RESTAURANT_BOSS = 'restaurantBoss';
+const WORLD_RESTAURANT = 'restaurant';
+
+module.exports = {
+    CHECK_POINT_RESTAURANT_START,
+    WORLD_RESTAURANT,
+    getRestaurantWorld,
+};
+
+const { spawnEnemy, addEnemyToState, createEnemy, ENEMY_FLEA } = require('enemies');
+
+const { transitionToRestaurantBoss } = require('areas/restaurantBoss');
+
 checkpoints[CHECK_POINT_RESTAURANT_START] = function (state) {
     const world = getRestaurantWorld();
     world.time = RESTAURANT_START_TIME;
@@ -86,8 +94,6 @@ function bossPrepTransition(state) {
 const RESTAURANT_START_TIME = 95000;
 const RESTAURANT_DURATION = 150000;
 
-const SAFE_HEIGHT = GAME_HEIGHT;
-
 function checkToSpawnSpiders(state, eventTime) {
     if (eventTime !== 0) return state;
     if (Math.random() > (state.world.time - RESTAURANT_START_TIME) / (RESTAURANT_DURATION - RESTAURANT_START_TIME)) {
@@ -118,56 +124,18 @@ function checkToSpawnSpiders(state, eventTime) {
     return addEnemyToState(state, spider);
 }
 
-const WORLD_RESTAURANT = 'restaurant';
+const {
+    nothing, easyRoaches, normalRoaches,
+    powerup, normalFlies,
+    lightningBeetle, bossPowerup,
+} = require('enemyPatterns');
 allWorlds[WORLD_RESTAURANT] = {
     initialEvent: 'nothing',
     events: {
-        nothing: (state, eventTime) => {
-            if (eventTime === 2000) {
-                return setEvent(state, 'easyRoaches');
-            }
-        },
-        easyRoaches: (state, eventTime) => {
-            if (eventTime === 0) {
-                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: 100});
-                state = spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 200, top: 300});
-                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH + 400, top: 500});
-            }
-            eventTime -= 4000;
-            if (eventTime >= 0) {
-                return setEvent(state, 'powerup');
-            }
-        },
-        powerup: (state, eventTime) => {
-            if (eventTime === 0) {
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: SAFE_HEIGHT / 2});
-            }
-            eventTime -= 3000;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['cockroaches']));
-            }
-        },
-        cockroaches: (state, eventTime) => {
-            const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            const baseNumber = 5 - numFormidable;
-            const spacing = 800;
-            const tops = [100, 200, 300];
-            if (eventTime === 0) {
-                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: random.element(tops)});
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                return spawnEnemy(state, ENEMY_COCKROACH, {left: WIDTH, top: random.element(tops)});
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                return spawnEnemy(state, ENEMY_COCKROACH_SOLDIER, {left: WIDTH, top: random.element(tops)});
-            }
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['fleas', 'flies']));
-            }
-        },
+        nothing: nothing(2000, 'easyRoaches'),
+        easyRoaches: easyRoaches('powerup'),
+        powerup: powerup('cockroaches'),
+        cockroaches: normalRoaches(0, ['fleas', 'flies']),
         fleas(state, eventTime) {
             if (eventTime === 0) {
                 return spawnEnemy(state, ENEMY_FLEA, {left: WIDTH});
@@ -181,60 +149,13 @@ allWorlds[WORLD_RESTAURANT] = {
                 return setEvent(state, random.element(['flies', 'lightningBeetle']));
             }
         },
-        flies: (state, eventTime) => {
-            const baseNumber = 4;
-            let spacing = 1500;
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                const mode = random.range(0, 1);
-                for (let i = 0; i < 2 * baseNumber; i++) {
-                    let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['fleas', 'lightningBeetle']));
-            }
-        },
-        lightningBeetle: (state, eventTime) => {
-            if (eventTime === 0) {
-                let top = random.element([1, 2, 3]) * SAFE_HEIGHT / 4;
-                return spawnEnemy(state, ENEMY_LIGHTNING_BEETLE, {left: WIDTH, top});
-            }
-            eventTime -= 3000;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['cockroaches', 'flies']));
-            }
-        },
+        flies: normalFlies(0, ['fleas', 'lightningBeetle']),
+        lightningBeetle: lightningBeetle(['cockroaches', 'flies']),
         bossPrep: (state, eventTime) => {
-            if (eventTime === 0) {
-                return bossPrepTransition(state);
-            }
-            if (eventTime === 3000) {
-                return spawnEnemy(state, ENEMY_CARGO_BEETLE, {left: WIDTH, top: GAME_HEIGHT / 2, lootType: LOOT_LIFE});
-            }
-            if (eventTime > 3000 && state.enemies.length === 0 && state.loot.length === 0) {
-                state = setCheckpoint(state, CHECK_POINT_RESTAURANT_END);
-                return transitionToRestaurantBoss(state);
-            }
+            if (eventTime === 0) return bossPrepTransition(state);
+            return setEvent(state, 'bossPowerup');
         },
+        bossPowerup: bossPowerup(CHECK_POINT_RESTAURANT_END, transitionToRestaurantBoss),
     },
     advanceWorld: (state) => {
         let world = state.world;
@@ -248,7 +169,9 @@ allWorlds[WORLD_RESTAURANT] = {
         world = {...world, targetX, targetY, targetFrames, time};
         state = {...state, world};
 
-        if (world.type === WORLD_RESTAURANT && world.time >= RESTAURANT_DURATION && world.event !== 'bossPrep') {
+        if (world.type === WORLD_RESTAURANT && world.time >= RESTAURANT_DURATION &&
+            world.event !== 'bossPrep' && world.event !== 'bossPowerup'
+        ) {
             return setEvent(state, 'bossPrep');
         }
 
@@ -259,20 +182,22 @@ allWorlds[WORLD_RESTAURANT] = {
     },
 };
 
-const getRestaurantWorld = () => ({
-    type: WORLD_RESTAURANT,
-    x: 0,
-    y: 200,
-    vx: 0,
-    vy: 0,
-    targetX: 1000,
-    targetY: 200,
-    targetFrames: 50 * 10,
-    time: 0,
-    bgm: 'bgm/alley.mp3',
-    groundHeight: 243,
-    ...getRestaurantLayers(),
-});
+function getRestaurantWorld() {
+    return {
+        type: WORLD_RESTAURANT,
+        x: 0,
+        y: 200,
+        vx: 0,
+        vy: 0,
+        targetX: 1000,
+        targetY: 200,
+        targetFrames: 50 * 10,
+        time: 0,
+        bgm: 'bgm/alley.mp3',
+        groundHeight: 243,
+        ...getRestaurantLayers(),
+    };
+}
 
 /*
 
@@ -300,7 +225,8 @@ function onHitFlame(state, layerName, spriteIndex, attack) {
     if (animation === sprite.animation) return state;
     return updateLayerSprite(state, layerName, spriteIndex, {animation, animationTime: 0});
 }
-const getRestaurantLayers = () => ({
+function getRestaurantLayers() {
+    return {
     background: getNewLayer({
         xFactor: 0, yFactor: 0, yOffset: 0, maxY: 0, unique: true,
         spriteData: {
@@ -343,19 +269,6 @@ const getRestaurantLayers = () => ({
     mgLayerNames: ['background', 'ground', 'candles'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: [],
-});
+    };
+}
 
-
-module.exports = {
-    CHECK_POINT_RESTAURANT_START,
-    WORLD_RESTAURANT,
-    getRestaurantWorld,
-};
-
-const { updatePlayer } = require('heroes');
-const { spawnEnemy, addEnemyToState, createEnemy, ENEMY_FLEA } = require('enemies');
-const { ENEMY_COCKROACH, ENEMY_COCKROACH_SOLDIER } = require('areas/city');
-
-const formidableEnemies = [];
-
-const { transitionToRestaurantBoss } = require('areas/restaurantBoss');

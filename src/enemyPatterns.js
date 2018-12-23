@@ -43,6 +43,39 @@ function easyFlies(next) {
         }
     };
 }
+function normalFlies(easyDuration, next) {
+    return (state, eventTime) => {
+        let spacing = state.world.time < easyDuration ? 2000 : 1500;
+        if (eventTime === 0) {
+            let top = getTop(state, random.element([1, 2, 3]) / 4);
+            for (let i = 0; i < 4; i++) {
+                state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+            }
+            return state;
+        }
+        eventTime -= spacing;
+        if (eventTime === 0) {
+            let top = getTop(state, random.element([1, 2, 3]) / 4);
+            for (let i = 0; i < 4; i++) {
+                state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
+            }
+            return state;
+        }
+        eventTime -= spacing;
+        if (eventTime === 0) {
+            const mode = random.range(0, 1);
+            for (let i = 0; i < 8; i++) {
+                let top = getTop(state, [1 / 6 + i / 10, 5 / 6 - i /10][mode]);
+                state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
+            }
+            return state;
+        }
+        eventTime -= spacing;
+        if (eventTime >= 0) {
+            return setEvent(state, next);
+        }
+    };
+}
 function powerup(next) {
     return function (state, eventTime) {
         if (eventTime === 0) {
@@ -159,6 +192,7 @@ function bossPowerup(checkpoint, transitionMethod, delay = 3000) {
 module.exports = {
     nothing,
     easyFlies,
+    normalFlies,
     easyRoaches,
     normalRoaches,
     powerup,

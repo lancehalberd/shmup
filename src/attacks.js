@@ -280,8 +280,6 @@ function getAttackHitbox(state, attack) {
     const attackData = attacks[attack.type];
     if (attackData.getHitbox) return attackData.getHitbox(state, attack);
     const frame = getAttackFrame(state, attack);
-    const scaleX = (attack.scaleX || attack.scale || 1) * (frame.scaleX || 1);
-    const scaleY = (attack.scaleY || attack.scale || 1) * (frame.scaleY || 1);
     let hitbox = frame.hitbox || {...frame, left: 0, top: 0};
     return attackHitboxToGlobalHitbox(state, attack, hitbox);
 }

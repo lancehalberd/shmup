@@ -62,7 +62,7 @@ const SAFE_HEIGHT = GAME_HEIGHT - THORN_HEIGHT;
 
 const WORLD_FOREST_LOWER = 'forestLower';
 
-const { nothing, easyFlies, powerup, explodingBeetle, } = require('enemyPatterns');
+const { nothing, easyFlies, powerup, explodingBeetle, normalFlies, } = require('enemyPatterns');
 allWorlds[WORLD_FOREST_LOWER] = {
     initialEvent: 'nothing',
     isPortalAvailable(state) {
@@ -83,39 +83,7 @@ allWorlds[WORLD_FOREST_LOWER] = {
         nothing: nothing(1000, 'easyFlies'),
         easyFlies: easyFlies('powerup'),
         powerup: powerup(['jumpingSpider', 'shield']),
-        flies: (state, eventTime) => {
-            const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
-            const baseNumber = 4 - numFormidable;
-            let spacing = state.world.time < FOREST_LOWER_EASY_DURATION ? 2000 : 1000;
-            if (eventTime === 0) {
-                let top = random.element([1,2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                let top = random.element([1, 2, 3]) * GAME_HEIGHT / 4;
-                for (let i = 0; i < baseNumber; i++) {
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top});
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime === 0) {
-                const mode = random.range(0, 1);
-                for (let i = 0; i < 2 * baseNumber; i++) {
-                    let top = [GAME_HEIGHT / 6 + i * 30, 5 * GAME_HEIGHT / 6 - i * 30][mode];
-                    state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
-                }
-                return state;
-            }
-            eventTime -= spacing;
-            if (eventTime >= 0) {
-                return setEvent(state, random.element(['jumpingSpider', 'flyingAnts', 'shield']));
-            }
-        },
+        flies: normalFlies(FOREST_LOWER_EASY_DURATION, ['jumpingSpider', 'flyingAnts', 'shield']),
         flyingAnts: (state, eventTime) => {
             const numFormidable = state.enemies.filter(enemy => formidableEnemies.includes(enemy.type)).length;
             const baseNumber = 2 - numFormidable;

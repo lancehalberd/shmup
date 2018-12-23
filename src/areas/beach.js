@@ -2,6 +2,7 @@ const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
     ATTACK_BULLET, ENEMY_MONK,
 } = require('gameConstants');
+const { ENEMY_HORNET, ENEMY_HORNET_KNIGHT } = require('enemies/hornets');
 const random = require('random');
 const { createAnimation, a, r, requireImage } = require('animations');
 const {
@@ -18,6 +19,11 @@ const CHECK_POINT_BEACH_BOSS = 'beachBoss'
 const BEACH_DURATION = 120000;
 const BEACH_EASY_DURATION = 30000;
 const SAFE_HEIGHT = GAME_HEIGHT;
+const ENEMY_SHELL_MONK = 'shellMonk';
+const ENEMY_URCHIN = 'urchin';
+const ENEMY_SHORT_SAND_TURRET = 'shortSandTurret';
+const ENEMY_TALL_SAND_TURRET = 'tallSandTurret';
+const ENEMY_BURROW_MONK = 'burrowMonk';
 
 module.exports = {
     CHECK_POINT_BEACH_START,
@@ -62,7 +68,7 @@ checkpoints[CHECK_POINT_BEACH_BOSS] = function (state) {
 };
 
 const {
-    nothing, easyFlies, powerup,
+    nothing, easyFlies, normalFlies, powerup,
     explodingBeetle, lightningBeetle,
     bossPowerup,
     singleEnemy, singleEasyHardEnemy,
@@ -97,7 +103,10 @@ allWorlds[WORLD_BEACH] = {
                 return setEvent(state, 'shellMonk');
             }
         },
-        shellMonk: singleEnemy('shellMonk', 2000, ['explodingBeetle', 'lightningBeetle']),
+        flies: normalFlies(BEACH_EASY_DURATION, ['urchin', 'burrowMonk']),
+        hornet: singleEasyHardEnemy(ENEMY_HORNET, ENEMY_HORNET_KNIGHT, BEACH_EASY_DURATION, 1000, ['flies']),
+        burrowMonk: singleEnemy(ENEMY_BURROW_MONK, 1000, ['burrowMonk', 'sandTurret']),
+        shellMonk: singleEnemy(ENEMY_SHELL_MONK, 2000, ['explodingBeetle', 'lightningBeetle']),
         sandTurret: (state, eventTime) => {
             if (eventTime === 0) {
                 if (state.world.time < BEACH_EASY_DURATION) {
@@ -117,8 +126,8 @@ allWorlds[WORLD_BEACH] = {
                 return setEvent(state, random.element(['urchin', 'shellMonk']));
             }
         },
-        explodingBeetle: explodingBeetle(['urchin', 'sandTurret']),
-        lightningBeetle: lightningBeetle(['urchin', 'sandTurret']),
+        explodingBeetle: explodingBeetle(['urchin', 'sandTurret', 'hornet']),
+        lightningBeetle: lightningBeetle(['urchin', 'sandTurret', 'hornet']),
         bossPowerup: bossPowerup(CHECK_POINT_BEACH_END, transitionToBeachBoss),
     },
     advanceWorld: (state) => {
@@ -191,7 +200,7 @@ function getBeachLayers() {
         },
     }),
     detritus: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -48,
+        xFactor: 1, yFactor: 1, yOffset: -56,
         spriteData: {
             rock1: { animation: rock1Animation, scale: 2, next: ['rock2', 'shell2'], offset: [-10, 100, 150], yOffset: [-1, 2, 4] },
             rock2: { animation: rock2Animation, scale: 2, next: ['rock1', 'shell1'], offset: [90, 180], yOffset: [-1, 2, 4] },
@@ -211,7 +220,6 @@ function getBeachLayers() {
 
 
 const shellMonkGeometry = r(100, 100);
-const ENEMY_SHELL_MONK = 'shellMonk';
 enemyData[ENEMY_SHELL_MONK] = {
     animation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
     deathAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
@@ -230,8 +238,8 @@ enemyData[ENEMY_SHELL_MONK] = {
         grounded: true,
         vx: 0,
         bulletSpeed: 5,
-        attackCooldownFrames: 60,
-        shotCooldownFrames: [80, 100],
+        attackCooldownFrames: 84,
+        shotCooldownFrames: [100, 120],
         bulletX: 0.8,
         bulletY: 0.74,
         shootFrames: [33, 22, 14],
@@ -241,7 +249,6 @@ enemyData[ENEMY_SHELL_MONK] = {
 const urchinGeometry = r(100, 100, {
     hitbox: {left: 22, top: 44, width: 62, height: 56},
 });
-const ENEMY_URCHIN = 'urchin';
 enemyData[ENEMY_URCHIN] = {
     animation: createAnimation('gfx/enemies/urchin.png', urchinGeometry),
     deathSound: 'sfx/throwhit.mp3',
@@ -287,7 +294,6 @@ const turretGeometry = r(200, 250, {
 const monkAnimation = createAnimation('gfx/enemies/turrets.png', r(200, 250), {cols: 4, frameMap: [1, 2], duration: 12});
 monkAnimation.frames[1].hitbox = {left: 45, top: 180, width: 40, height: 10};
 monkAnimation.frames[0].hitbox = {left: 45, top: 160, width: 40, height: 30};
-const ENEMY_SHORT_SAND_TURRET = 'shortSandTurret';
 enemyData[ENEMY_SHORT_SAND_TURRET] = {
     animation: createAnimation('gfx/enemies/turrets.png', turretGeometry, {x: 4}),
     monkAnimation,
@@ -374,7 +380,6 @@ enemyData[ENEMY_SHORT_SAND_TURRET] = {
     },
 };
 
-
 const tallTurretGeometry = r(200, 250, {
     hitbox: {left: 48, top: -94, width: 45, height: 344},
     hitboxes: [],
@@ -382,7 +387,6 @@ const tallTurretGeometry = r(200, 250, {
 const tallMonkAnimation = createAnimation('gfx/enemies/turrets.png', r(200, 250), {cols: 4, frameMap: [0, 3], duration: 12});
 tallMonkAnimation.frames[1].hitbox = {left: 45, top: 80, width: 40, height: 10};
 tallMonkAnimation.frames[0].hitbox = {left: 45, top: 60, width: 40, height: 30};
-const ENEMY_TALL_SAND_TURRET = 'tallSandTurret';
 enemyData[ENEMY_TALL_SAND_TURRET] = {
     ...enemyData[ENEMY_SHORT_SAND_TURRET],
     animation: createAnimation('gfx/enemies/turrets.png', tallTurretGeometry, {x: 5}),
@@ -394,10 +398,48 @@ enemyData[ENEMY_TALL_SAND_TURRET] = {
         bulletY: 0.45,
     },
 };
-/*
 
-Add burrowed robes in the sand and dig out to shoot
-Add sand tower turrets
+const burrowMonkGeometry = r(36, 50, {
+    hitboxes: [],
+});
+const burrowMonkShootAnimation = createAnimation('gfx/enemies/monks/burrowrobe.png', burrowMonkGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 0, 0, 1], duration: 12});
+burrowMonkShootAnimation.frames[0].hitboxes = [{ left:0, top: 22, width: 36, height: 20}];
+burrowMonkShootAnimation.frames[1].hitboxes = [{ left:0, top: 0, width: 36, height: 32}];
+enemyData[ENEMY_BURROW_MONK] = {
+    animation: createAnimation('gfx/enemies/monks/burrowrobe.png', burrowMonkGeometry, {x: 2, cols: 2, duration: 6}),
+    deathAnimation: createAnimation('gfx/enemies/monks/robeded.png', r(46, 41)),
+    attackAnimation: burrowMonkShootAnimation,
+    deathSound: 'sfx/robedeath1.mp3',
+    shoot: shoot_bulletAtPlayer,
+    accelerate(state, enemy) {
+        if (enemy.attackCooldownFramesLeft > 0) {
+            return {...enemy, vx: 0};
+        }
+        const playerHitbox = getHeroHitbox(state.players[0]);
+        const enemyHitbox = getEnemyHitbox(state, enemy);
+        if (enemy.animationTime < 5000 && enemyHitbox.left + enemyHitbox.width / 2 < playerHitbox.left + playerHitbox.width / 2) {
+            return {...enemy, vx: Math.min(enemy.speed + 1, enemy.vx + 1)};
+        } else {
+            return {...enemy, vx: Math.max(-enemy.speed + 1, enemy.vx - 1)};
+        }
+    },
+    onDeathEffect(state, enemy) {
+        return updateEnemy(state, enemy, {ttl: 600});
+    },
+    props: {
+        life: 4,
+        score: 40,
+        grounded: true,
+        speed: 4,
+        bulletSpeed: 5,
+        attackCooldownFrames: 84,
+        shotCooldownFrames: [160, 200],
+        bulletX: 0.5,
+        bulletY: 0.2,
+        shootFrames: [64, 20],
+    },
+};
+/*
 Add hornet knights
 */
 
