@@ -487,7 +487,7 @@ const damageEnemy = (state, enemyId, attack = {}) => {
         explosion.top = hitbox.top + (hitbox.height - explosion.height ) / 2;
         updatedState = addEffectToState(updatedState, explosion);
 
-        if (attack.melee && !enemy.stationary) {
+        if (attack.melee && !enemy.stationary && !enemy.doNotFling) {
             const player = updatedState.players[attack.playerIndex];
             // Make sure to use the hitbox from the enemy when it was still alive.
             const {dx, dy} = getTargetVector(getHeroHitbox(player), getEnemyHitbox(state, {...enemy, dead: false}));

@@ -1,17 +1,14 @@
 
 const {
     TEST_ENEMY, FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ENEMY_FLY, ENEMY_MONK,
-    ENEMY_FLYING_ANT,
+    ENEMY_MONK, ENEMY_FLYING_ANT,
     ENEMY_LOCUST, ENEMY_LOCUST_SOLDIER,
-    LOOT_LIFE,
 } = require('gameConstants');
 const random = require('random');
 const { PRIORITY_TITLE, createAnimation, r } = require('animations');
 const { getNewSpriteState } = require('sprites');
 const { getNewLayer, allWorlds, checkpoints, setCheckpoint, updateLayerSprite, setEvent } = require('world');
 const { ENEMY_HORNET, ENEMY_HORNET_SOLDIER } = require('enemies/hornets');
-const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
 
 const WORLD_FIELD = 'field';
 const FIELD_DURATION = 120000;
@@ -79,13 +76,9 @@ checkpoints[CHECK_POINT_FIELD_BOSS] = function (state) {
 
 const {
     nothing, easyFlies, normalFlies, powerup,
-    explodingBeetle, lightningBeetle,
     bossPowerup,
-    singleEnemy, singleEasyHardEnemy,
+    singleEasyHardEnemy,
 } = require('enemyPatterns');
-// start of level 'nothing' getFieldWorldStart
-// sky 40 seconds 'nothing' getFieldWorld
-// groud before boss ~100 seconds 'nothing' getFieldWorld
 allWorlds[WORLD_FIELD] = {
     initialEvent: 'nothing',
     isPortalAvailable(state) {
