@@ -65,7 +65,7 @@ function normalFlies(easyDuration, next) {
         if (eventTime === 0) {
             const mode = random.range(0, 1);
             for (let i = 0; i < 8; i++) {
-                let top = getTop(state, [1 / 6 + i / 10, 5 / 6 - i /10][mode]);
+                let top = getTop(state, [1 / 6 + i / 20, 5 / 6 - i / 20][mode]);
                 state = spawnEnemy(state, ENEMY_FLY, {left: WIDTH + i * 80, top });
             }
             return state;

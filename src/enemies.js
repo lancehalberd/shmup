@@ -407,6 +407,9 @@ function getEnemyHitboxes(state, enemy, getDamageBoxes) {
         if (getDamageBoxes && frame.damageBoxes) {
             hitboxes = [...hitboxes, ...frame.damageBoxes];
         }
+        if (enemyData[enemy.type].getExtraHitboxes) {
+            hitboxes = [...hitboxes, ...enemyData[enemy.type].getExtraHitboxes(state, enemy, getDamageBoxes)];
+        }
     }
     return enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes);
 }

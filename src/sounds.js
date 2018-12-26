@@ -169,6 +169,8 @@ const preloadSounds = () => {
         {key: 'seagullScreech', source: 'sfx/birds/seagullscreech.mp3', offset: 50, volume: 5},
         {key: 'meow', source: 'sfx/meow.mp3', offset: 200, volume: 5},
         {key: 'squeek', source: 'sfx/rat.mp3', offset: 0, volume: 10},
+        {key: 'blowBubbles', source: 'sfx/bubbles.mp3', offset: 0, volume: 2},
+        {key: 'bubblePop', source: 'sfx/bubblepop.mp3', offset: 0, volume: 2},
         // See credits.html for: mobbrobb.
         'bgm/title.mp3+0+2',
         'bgm/field.mp3+0+1',
@@ -246,7 +248,7 @@ function playBeeps(frequencies, volume, duration, {smooth=false, swell=false, ta
 
 sounds.set('reflect', {
     play() {
-        playBeeps([2000, 8000, 4000], .01, .1, {});
+        playBeeps([2000, 8000, 4000], .002, .1, {});
     }
 });
 sounds.set('wand', {
