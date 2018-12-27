@@ -2,6 +2,7 @@
 const {
     FRAME_LENGTH, HEIGHT, WIDTH,
     HERO_BEE,
+    ATTACK_STAB, ATTACK_SLASH,
     ATTACK_BULLET,
 } = require('gameConstants');
 const { drawImage } = require('draw');
@@ -590,8 +591,10 @@ enemyData[ENEMY_BUBBLE] = {
     },
     props: {
         life: 20,
+        weakness: {[ATTACK_SLASH]: {fullyCharged: 20}, [ATTACK_STAB]: {fullyCharged: 20}},
         noCollisionDamage: true,
         attached: false,
+        doNotFling: true,
     },
 };
 
@@ -660,6 +663,7 @@ enemyData[ENEMY_BUBBLE_SHOT] = {
     },
     props: {
         life: 1,
+        doNotFling: true,
         noCollisionDamage: true,
     },
 }

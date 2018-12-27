@@ -458,7 +458,18 @@ const damageEnemy = (state, enemyId, attack = {}) => {
     if (!enemy || enemy.dead) return updatedState;
     let damage = attack.damage || 1;
     if (attack.type && enemy.weakness && enemy.weakness[attack.type]) {
-        damage = enemy.weakness[attack.type];
+        // Damage values for normal, charged + fullyCharged attacks can be specified for
+        // melee attacks.
+        if (typeof(enemy.weakness[attack.type]) === 'number' ) {
+            damage = enemy.weakness[attack.type];
+        } else if (enemy.weakness[attack.type].fullyCharged && attack.fullyCharged) {
+            damage = enemy.weakness[attack.type].fullyCharged
+        } else if (enemy.weakness[attack.type].charged && attack.charged) {
+            damage = enemy.weakness[attack.type].charged
+        } else {
+            // Normal may not be specified at all, so fall back to original damage in that case.
+            damage = enemy.weakness[attack.type].normal || damage;
+        }
         attack = {...attack, damage};
     }
     const enemyIsInvulnerable =

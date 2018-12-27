@@ -143,9 +143,12 @@ const useMeleeAttack = (state, playerIndex) => {
     if (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) {
         meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 3);
         meleeAttack.damage += 5;
+        meleeAttack.fullyCharged = true;
+        meleeAttack.charged = true;
     } else if (player.chargeAttackFrames >= CHARGE_FRAMES_FIRST) {
         meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 2);
         meleeAttack.damage += 2;
+        meleeAttack.charged = true;
     }
     meleeAttack.left += meleeAttack.width * meleeAttack.scale / 2;
     state = addPlayerAttackToState(state, meleeAttack);
