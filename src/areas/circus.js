@@ -218,7 +218,7 @@ allWorlds[WORLD_CIRCUS] = {
         }
         let sunrise = state.world.sunrise.sprites[0];
         if (!sunrise) return state;
-        const start = 0, end = GAME_HEIGHT - sunrise.height;
+        const start = GAME_HEIGHT, end = GAME_HEIGHT - sunrise.height;
         const top = Math.max(end, start - state.world.time / 50);
         // This will fade from 1 to 0 as sunrise.top moves from start to end.
         const alpha = Math.min(1, (sunrise.top - end) / (-1400 - end));
