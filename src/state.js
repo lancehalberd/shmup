@@ -6,6 +6,7 @@ const {
     EFFECT_DAMAGE, EFFECT_BLOCK_ATTACK,
 } = require('gameConstants');
 const {
+    clearSprites,
     applyCheckpointToState,
     setCheckpoint,
     checkpoints,
@@ -70,7 +71,7 @@ const advanceState = (state) => {
                 updatedState = {...updatedState, title: false};
                 const checkpoint = checkpointKeys[stageSelectIndex];
                 updatedState = setCheckpoint(updatedState, checkpoint);
-                return applyCheckpointToState(updatedState);
+                return applyCheckpointToState(updatedState, state.checkpoint, false);
             }
             return {...updatedState, title: false, world, bgm: world.bgm};
         }
@@ -103,7 +104,7 @@ const advanceState = (state) => {
             }
             if (continueIndex === 0) { // Continue
                 updatedState = updatePlayerOnContinue({...updatedState, gameover: false}, 0);
-                return applyCheckpointToState(updatedState);
+                return applyCheckpointToState(updatedState, updatedState.checkpoint, false);
             } else { // Do not continue, back to title
                 return {...getNewState(), interacted: true};
             }
@@ -119,7 +120,7 @@ const advanceState = (state) => {
     if (updatedState.deathCooldown > 0) {
         updatedState.deathCooldown -= FRAME_LENGTH;
         if (updatedState.deathCooldown <= 0) {
-            return { ...updatedState, gameover: true, gameOverTime: 0, continueIndex: 0, };
+            return clearSprites({ ...updatedState, gameover: true, gameOverTime: 0, continueIndex: 0, slowTimeFor: 0});
         }
     }
     let { paused } = updatedState;

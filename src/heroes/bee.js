@@ -1,4 +1,5 @@
 const {
+    WIDTH, GAME_HEIGHT,
     FRAME_LENGTH, SHOT_COOLDOWN,
     ATTACK_OFFSET,
     ATTACK_STAB,
@@ -128,14 +129,27 @@ heroesData[HERO_BEE] = {
                             break;
                         }
                     }
-                    targets[i] = {
-                        left: (targets[i].left + hitbox.left + hitbox.width / 2 - targets[i].width / 2) / 2,
-                        top: (targets[i].top + hitbox.top + hitbox.height / 2 - targets[i].height / 2) / 2,
-                        vx: 0, vy: 0,
-                        width: (targets[i].width * 10 + size) / 11,
-                        height: (targets[i].height * 10 + size) / 11,
-                        enemyId: targets[i].enemyId,
-                    };
+                    let left = hitbox.left + hitbox.width / 2;
+                    let top = hitbox.top + hitbox.height / 2;
+                    if (left < 0 || left > WIDTH || top < 0 || top > GAME_HEIGHT) {
+                        // Return target to the bee if the target is offscreen
+                        targets[i] = {
+                            left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET - 2,
+                            top: player.sprite.top + player.sprite.vy + player.sprite.height / 2 - 2,
+                            vx: player.sprite.vx,
+                            vy: player.sprite.vy,
+                            width: 2, height: 2,
+                        };
+                    } else {
+                        targets[i] = {
+                            left: (targets[i].left + left - targets[i].width / 2) / 2,
+                            top: (targets[i].top + top - targets[i].height / 2) / 2,
+                            vx: 0, vy: 0,
+                            width: (targets[i].width * 10 + size) / 11,
+                            height: (targets[i].height * 10 + size) / 11,
+                            enemyId: targets[i].enemyId,
+                        };
+                    }
                     continue;
                 }
             }

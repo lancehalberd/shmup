@@ -27,7 +27,7 @@ const clearSprites = (state) => {
 
 const addElementToLayer = (state, layerName) => {
     let world = state.world;
-    const layer = {...world[layerName]};
+    let layer = {...world[layerName]};
     if (!layer.spriteData) {
         return state;
     }
@@ -86,6 +86,11 @@ const addElementToLayer = (state, layerName) => {
         layer.sprites = [...layer.sprites, newSprite];
         world = {...world, [layerName]: layer};
         state = {...state, world};
+        if (spriteData.onAdded) {
+            state = spriteData.onAdded(state, newSprite);
+            world = state.world;
+            layer = {...world[layerName]};
+        }
         //if (layerName === 'ground') console.log(layer.sprites);
         //console.log(newSprite.left, newSprite.top, newSprite.width, newSprite.height);
         lastSprite = newSprite;
@@ -169,7 +174,7 @@ const advanceLayer = (state, layerName) => {
     return {...state, world: {...state.world, [layerName]: {...state.world[layerName], sprites}}};
 };
 
-const advanceWorld = (state) => {
+function advanceWorld(state) {
     let world = state.world;
     world = {...world, x: world.x + world.vx, y: Math.max(0, world.y + world.vy)};
     state = {...state, world};
@@ -205,7 +210,7 @@ const advanceWorld = (state) => {
     for (const layerName of state.world.mgLayerNames) state = advanceLayer(state, layerName);
     for (const layerName of state.world.fgLayerNames) state = advanceLayer(state, layerName);
     return state;
-};
+}
 
 const getHazardHeight = (state) => {
     if (!state.world.hazardHeight) return 10000;

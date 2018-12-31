@@ -179,6 +179,8 @@ const preloadSounds = () => {
         'bgm/alley.mp3+0+3',
         'bgm/boss.mp3+0+2',
         'bgm/space.mp3+0+2',
+        'bgm/circus.mp3+0+2',
+        'bgm/ocean.mp3+0+2',
     ].forEach(requireSound);
 };
 

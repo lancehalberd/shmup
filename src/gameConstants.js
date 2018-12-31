@@ -49,7 +49,7 @@ module.exports = {
     EFFECT_NEEDLE_FLIP: 'needleFlip',
     EFFECT_RATE_UP: 'rateUp', EFFECT_SIZE_UP: 'sizeUp', EFFECT_SPEED_UP: 'speedUp',
     EFFECT_DEFLECT_BULLET: 'deflect', EFFECT_BLOCK_ATTACK: 'blockAttack',
-    LOOT_COIN: 'coin',
+    LOOT_COIN: 'coin', LOOT_FLAME_COIN: 'flameCoin',
     LOOT_LIFE: 'life',
     LOOT_NORMAL_LADYBUG: 'normalLadybug',
     LOOT_LIGHTNING_LADYBUG: 'lightningLadybug',

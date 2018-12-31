@@ -82,8 +82,10 @@ const render = (state) => {
         state.players.map(hero => renderHero(context, hero));
         state.effects.map(effect => renderEffect(context, effect));
         state.neutralAttacks.map(attack => renderAttack(context, state, attack));
-        // Thinking an attack shuold display on top of other effects so it can be avoided.
+        // Thinking an attack should display on top of other effects so it can be avoided.
         state.enemyAttacks.map(attack => renderAttack(context, state, attack));
+        state.enemies.filter(enemy => enemy.hasForeground).map(enemy => renderEnemyForeground(context, state, enemy));
+
         context.restore();
 
         renderForeground(context, state);
@@ -446,7 +448,7 @@ const {
     shieldAnimation,
 } = require('loot');
 
-const { renderEnemy } = require('enemies');
+const { renderEnemy, renderEnemyForeground } = require('enemies');
 
 const {
     renderEffect

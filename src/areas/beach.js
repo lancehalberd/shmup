@@ -166,7 +166,7 @@ function getBeachWorld() {
         targetY: 0,
         targetFrames: 50 * 10,
         time: 0,
-        bgm: 'bgm/title.mp3',
+        bgm: 'bgm/field.mp3',
         groundHeight: 30,
         ...getBeachLayers(),
     };
@@ -217,7 +217,6 @@ function getBeachLayers() {
     fgLayerNames: [],
     };
 }
-
 
 const shellMonkGeometry = r(100, 100);
 enemyData[ENEMY_SHELL_MONK] = {
@@ -285,7 +284,6 @@ enemyData[ENEMY_URCHIN] = {
         vx: 0,
     },
 };
-
 
 const turretGeometry = r(200, 250, {
     hitbox: {left: 45, top: 124, width: 40, height: 126},
@@ -439,8 +437,3 @@ enemyData[ENEMY_BURROW_MONK] = {
         shootFrames: [64, 20],
     },
 };
-/*
-Add hornet knights
-*/
-
-

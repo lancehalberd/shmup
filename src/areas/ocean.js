@@ -147,7 +147,7 @@ const getOceanWorld = () => ({
     targetY: 0,
     targetFrames: 50 * 10,
     time: 0,
-    bgm: 'bgm/title.mp3',
+    bgm: 'bgm/ocean.mp3',
     ...getOceanLayers(),
 });
 

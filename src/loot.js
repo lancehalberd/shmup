@@ -8,7 +8,7 @@ const {
     FRAME_LENGTH, WIDTH, GAME_HEIGHT,
     MAX_ENERGY,
     HERO_BEE, HERO_DRAGONFLY, HERO_MOTH,
-    LOOT_COIN, LOOT_LIFE,
+    LOOT_COIN, LOOT_FLAME_COIN, LOOT_LIFE,
     LOOT_NORMAL_LADYBUG, LOOT_LIGHTNING_LADYBUG, LOOT_PENETRATING_LADYBUG,
     LOOT_SPEED, LOOT_ATTACK_POWER, LOOT_ATTACK_SPEED,
     LOOT_TRIPLE_SPEED, LOOT_TRIPLE_POWER, LOOT_TRIPLE_RATE,
@@ -211,6 +211,23 @@ const lootData = {
             scale: 2,
             comboPoints: 20,
             points: 50,
+        },
+    },
+    [LOOT_FLAME_COIN]: {
+        animation: coinAnimation,
+        collect(state, playerIndex, loot) {
+            let comboScore = Math.min(1000, state.players[playerIndex].comboScore + loot.comboPoints);
+            state = updatePlayer(state, playerIndex, { comboScore });
+            return gainPoints(state, playerIndex, loot.points);
+        },
+        draw(context, state, loot) {
+            // flame coin is invisible
+        },
+        collectSfx: 'sfx/coin.mp3',
+        props: {
+            scale: 3,
+            comboPoints: 40,
+            points: 100,
         },
     },
     [LOOT_LIFE]: {

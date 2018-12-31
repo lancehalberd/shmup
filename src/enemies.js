@@ -332,14 +332,16 @@ function createEnemy(state, type, props) {
     });
 }
 function spawnEnemy(state, enemyType, props) {
-    const difficulty = state.enemies.filter(e => !e.dead).reduce((sum, e) => sum + (e.difficulty || 1), 0);
+    const difficulty = state.enemies.filter(e => !e.dead).reduce((sum, e) => sum + (e.difficulty || 0), 0);
     // Don't add new enemies if the difficult is too high for the current level time.
-    if (difficulty >= Math.min(20, 5 + state.world.time / 5000)) {
+    if (!props.important && difficulty >= Math.min(20, 5 + state.world.time / 5000)) {
         return state;
     }
     const newEnemy = createEnemy(state, enemyType, props);
-    newEnemy.left = Math.max(newEnemy.left, WIDTH);
-    newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
+    if (!props.exactCoords) {
+        newEnemy.left = Math.max(newEnemy.left, WIDTH);
+        newEnemy.top = newEnemy.grounded ? getGroundHeight(state) - newEnemy.height : newEnemy.top - newEnemy.height / 2;
+    }
     return addEnemyToState(state, newEnemy);
 }
 
@@ -357,7 +359,7 @@ function addEnemyToState(state, enemy) {
     return {...state, newEnemies: [...(state.newEnemies || []), enemy], sfx };
 }
 
-function removeEnemy(state, enemy) {
+function removeEnemy(state, enemy, reason = 'unknown') {
     const idMap = {...state.idMap};
     delete idMap[enemy.id];
     return {...state, idMap};
@@ -377,8 +379,8 @@ const getDefaultEnemyAnimation = (state, enemy) => {
 
 function getEnemyHitbox(state, enemy) {
     let animation = getEnemyAnimation(state, enemy);
-    const scaleX = enemy.scaleX || 1;
-    const scaleY = enemy.scaleY || 1;
+    const scaleX = (enemy.scaleX || 1) * (enemy.scale || 1);
+    const scaleY = (enemy.scaleY || 1) * (enemy.scale || 1);
     return new Rectangle(getHitbox(animation, enemy.animationTime))
         .stretch(scaleX, scaleY)
         .translate(enemy.left, enemy.top);
@@ -426,8 +428,8 @@ function enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes) {
     }
     const globalHitboxes = [];
     for (let hitbox of hitboxes) {
-        const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
-        const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
+        const scaleX = (enemy.scale || 1) * (enemy.scaleX || 1) * (frame.scaleX || 1);
+        const scaleY = (enemy.scale || 1) * (enemy.scaleY || 1) * (frame.scaleY || 1);
         if (isFlipped) {
             hitbox = new Rectangle(hitbox).translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
         }
@@ -439,8 +441,8 @@ function enemyHitboxesToGlobalHitboxes(state, enemy, hitboxes) {
 
 function getEnemyDrawBox(state, enemy) {
     const frame = getFrame(getEnemyAnimation(state, enemy), enemy.animationTime);
-    const scaleX = (enemy.scaleX || 1) * (frame.scaleX || 1);
-    const scaleY = (enemy.scaleY || 1) * (frame.scaleY || 1);
+    const scaleX = (enemy.scale || 1) * (enemy.scaleX || 1) * (frame.scaleX || 1);
+    const scaleY = (enemy.scale || 1) * (enemy.scaleY || 1) * (frame.scaleY || 1);
     return new Rectangle(frame).stretch(scaleX, scaleY).moveTo(enemy.left, enemy.top);
 }
 
@@ -450,7 +452,7 @@ function enemyIsActive(state, enemy) {
         !(enemyData[enemy.type].spawnAnimation && !enemy.spawned);
 }
 
-const damageEnemy = (state, enemyId, attack = {}) => {
+function damageEnemy(state, enemyId, attack = {}) {
     let updatedState = {...state};
     updatedState.idMap = {...updatedState.idMap};
     let enemy = updatedState.idMap[enemyId];
@@ -592,7 +594,7 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
     context.restore();
 }
 
-const renderEnemy = (context, state, enemy) => {
+function renderEnemy(context, state, enemy) {
     if (enemy.delay > 0) return;
     if (enemyData[enemy.type].drawUnder) {
         enemyData[enemy.type].drawUnder(context, state, enemy);
@@ -600,27 +602,6 @@ const renderEnemy = (context, state, enemy) => {
     let animation = getEnemyAnimation(state, enemy);
     const frame = getFrame(animation, enemy.animationTime);
     renderEnemyFrame(context, state, enemy, frame);
-   // context.translate(x, y - hitbox.height * yScale / 2);
-   // if (rotation) context.rotate(rotation * Math.PI/180);
-   // if (xScale !== 1 || yScale !== 1) context.scale(xScale, yScale);
-
-    /*if (isKeyDown(KEY_SHIFT)) {
-        const geometryBox = frame.hitbox || new Rectangle(frame).moveTo(0, 0);
-        const reflectX = geometryBox.left + geometryBox.width / 2;
-        const hitboxes = frame.hitboxes || [geometryBox];
-        for (let hitbox of hitboxes) {
-            hitbox = new Rectangle(hitbox)
-            if (enemy.vx > 0 && !enemy.doNotFlip) {
-                hitbox = hitbox.translate(2 * (reflectX - hitbox.left) - hitbox.width, 0);
-            }
-            hitbox = hitbox.translate(enemy.left, enemy.top);
-            context.save();
-            context.globalAlpha = .6;
-            context.fillStyle = 'red';
-            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
-            context.restore();
-        }
-    }*/
     if (isKeyDown(KEY_SHIFT)) {
         context.save();
         context.globalAlpha = .6;
@@ -638,7 +619,14 @@ const renderEnemy = (context, state, enemy) => {
     }
 };
 
-const advanceEnemy = (state, enemy) => {
+function renderEnemyForeground(context, state, enemy) {
+    if (enemy.delay > 0) return;
+    if (enemyData[enemy.type].renderForeground) {
+        enemyData[enemy.type].renderForeground(context, state, enemy);
+    }
+}
+
+function advanceEnemy(state, enemy) {
     if (enemy.delay > 0) {
         return updateEnemy(state, enemy, {delay: enemy.delay - 1});
     }
@@ -787,11 +775,11 @@ const advanceEnemy = (state, enemy) => {
                 (enemy.vy > 0 && drawBox.top > GAME_HEIGHT + OFFSCREEN_PADDING)
             );
         if (done) {
-            return removeEnemy(state, enemy);
+            return removeEnemy(state, enemy, 'dead enemy fell offscreen or was not permanent');
         }
     }
     return updateEnemy(state, enemy, {ttl, attackCooldownFramesLeft, pendingDamage: 0});
-};
+}
 
 
 const ENEMY_DEMO_EMPRESS = 'demoEmpress';
@@ -962,8 +950,8 @@ enemyData[ENEMY_FLEA] = {
     }
 }
 
-function setMode(state, enemy, mode) {
-    return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0});
+function setMode(state, enemy, mode, props = {}) {
+    return updateEnemy(state, enemy, {mode, modeTime: 0, animationTime: 0, ...props});
 };
 
 module.exports = {
@@ -976,6 +964,7 @@ module.exports = {
     advanceEnemy,
     renderEnemy,
     renderEnemyFrame,
+    renderEnemyForeground,
     getEnemyHitbox,
     getEnemyHitboxes,
     enemyHitboxesToGlobalHitboxes,

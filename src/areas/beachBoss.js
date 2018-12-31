@@ -12,8 +12,12 @@ const { createAnimation, r, getFrame } = require('animations');
 const { allWorlds } = require('world');
 
 const WORLD_BEACH_BOSS = 'beachBoss';
+const ENEMY_BUBBLE = 'bubble';
+const ENEMY_BUBBLE_SHOT = 'bubbleShot';
 module.exports = {
     transitionToBeachBoss,
+    ENEMY_BUBBLE,
+    ENEMY_BUBBLE_SHOT,
 };
 const { transitionToOcean } = require('areas/beachToOcean');
 
@@ -519,12 +523,10 @@ const attachedBubbleGeometry = r(50, 50, {
     scaleX: 2, scaleY: 2,
     hitbox: {left: -1000, top: -1000, width: 2050, height: 2050},
 });
-const ENEMY_BUBBLE = 'bubble';
-const ENEMY_BUBBLE_SHOT = 'bubbleShot';
 enemyData[ENEMY_BUBBLE] = {
     animation: createAnimation('gfx/enemies/crab/bubble.png', bubbleGeometry, {cols: 3}),
     attachedAnimation: createAnimation('gfx/enemies/crab/bubble.png', attachedBubbleGeometry, {cols: 3}),
-    deathAnimation: createAnimation('gfx/enemies/crab/bubblepop.png', r(75, 75)),
+    deathAnimation: createAnimation('gfx/enemies/crab/bubblepop.png', r(75, 75, {scaleX: 2, scaleY: 2})),
     deathSound: 'bubblePop',
     getAnimation(state, enemy) {
         if (enemy.dead) return this.deathAnimation;
@@ -578,7 +580,7 @@ enemyData[ENEMY_BUBBLE] = {
                 vy += 0.1 * dy / m;
             }
         } else {
-            vx -= 0.1;
+            vx *= 1.02;
         }
         if (center[1] < 50) vy += 0.1;
         else vy -= 0.05;
@@ -589,19 +591,32 @@ enemyData[ENEMY_BUBBLE] = {
     onDamageEffect(state, enemy) {
         return updateEnemy(state, enemy, {vx: enemy.vx * 0.8, vy: enemy.vy * 0.8});
     },
+    renderForeground(context, state, enemy) {
+        if (enemy.dead) return;
+        let frame = getFrame(this.animation, enemy.animationTime);
+        //context.save();
+        //context.globalAlpha = 0.5;
+        renderEnemyFrame(context, state, enemy, frame);
+        //context.restore();
+    },
     props: {
         life: 20,
+        difficulty: 0,
         weakness: {[ATTACK_SLASH]: {fullyCharged: 20}, [ATTACK_STAB]: {fullyCharged: 20}},
         noCollisionDamage: true,
         attached: false,
         doNotFling: true,
+        hasForeground: true, // Allow us to draw the bubble over the player.
     },
 };
 
 enemyData[ENEMY_BUBBLE_SHOT] = {
+    ...enemyData[ENEMY_BUBBLE],
     animation: createAnimation('gfx/enemies/crab/bubble.png', bubbleGeometry, {x: 3, cols: 3}),
-    deathAnimation: createAnimation('gfx/enemies/crab/bubblepop.png', r(75, 75)),
-    deathSound: 'bubblePop',
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.deathAnimation;
+        return this.animation;
+    },
     updateState(state, enemy) {
         if (enemy.dead) {
             if (enemy.animationTime > 200) return removeEnemy(state, enemy);
@@ -632,7 +647,7 @@ enemyData[ENEMY_BUBBLE_SHOT] = {
                 vy += 0.1 * dy / m;
             }
         } else {
-            vx -= 0.1;
+            vx *= 1.02;
         }
         if (center[1] < 80) vy += 0.1;
         else if (center[1] > 500) vy -= 0.1;
@@ -640,9 +655,6 @@ enemyData[ENEMY_BUBBLE_SHOT] = {
         vx *= 0.99;
         vy *= 0.99;
         return updateEnemy(state, enemy, {vx, vy});
-    },
-    onDamageEffect(state, enemy) {
-        return updateEnemy(state, enemy, {vx: enemy.vx * 0.8, vy: enemy.vy * 0.8});
     },
     onDeathEffect(state, enemy) {
         const center = new Rectangle(getEnemyHitbox(state, enemy)).getCenter();
@@ -663,7 +675,9 @@ enemyData[ENEMY_BUBBLE_SHOT] = {
     },
     props: {
         life: 1,
+        difficulty: 0,
         doNotFling: true,
         noCollisionDamage: true,
+        hasForeground: true, // Allow us to draw the bubble over the player.
     },
 }
