@@ -34,6 +34,11 @@ module.exports = {
     ENEMY_ARCHER_FISH_SOLDIER,
 };
 
+const { updatePlayer, getHeroHitbox } = require('heroes');
+const { spawnEnemy, enemyData, getEnemyHitbox, updateEnemy } = require('enemies');
+const { transitionToSewerBoss } = require('areas/sewerBoss');
+const { createAttack, addEnemyAttackToState, ATTACK_GAS, ATTACK_WATER } = require('attacks');
+
 checkpoints[CHECK_POINT_SEWER_START] = function (state) {
     const world = getSewerWorld();
     return {...state, world};
@@ -242,11 +247,6 @@ function getSewerWorld() {
         ...getSewerLayers(),
     };
 }
-
-const { updatePlayer, getHeroHitbox } = require('heroes');
-const { spawnEnemy, enemyData, getEnemyHitbox, updateEnemy } = require('enemies');
-const { transitionToSewerBoss } = require('areas/sewerBoss');
-const { createAttack, addEnemyAttackToState, ATTACK_GAS, ATTACK_WATER } = require('attacks');
 
 const ratGeometry = r(120, 120, {
     hitbox: {left: 50, top: 2, width: 25, height: 85}
