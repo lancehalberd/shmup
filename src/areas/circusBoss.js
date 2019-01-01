@@ -109,32 +109,6 @@ const {
 const { createAttack, addEnemyAttackToState } = require('attacks');
 const { getHeroHitbox } = require('heroes');
 
-/*
-I will likely revise some of these lines in the future, as currently some of the edges are rather
-sloppy - lines at certain angles are difficult to capture in pixels, and I felt I should make sure
- everything works first before spending the time on minute lines.
-The idea is this: The entire of 4B takes place above ground. When approaching the Ferris Wheel,
-the circus background scrolls over to the second part of the roller coaster, then eventually past
-is so the background is only the sky. As the Knight continues to "fly downward" after the circus
-pans away, the ocean scrolls upward a little, and eventually the panel "dock" ground loop comes in.
- The Ferris Wheel fight happens on this dock, to signify it is close to the water you eventually go
- into.
-So the ferris wheel has 8 cars. When one dies, the car has a "broken off" sprite and just falls down
-the bottom of the screen, leaving only the little nub left. Each car is connected to the specific
- spokes. The spokes themselves have 6 frames of animations, representing a quarter of a turn - so
- there is a lot of room to speed it up if you feel.
-The wheel itself only has 3 frames of animation - just a minor lighting effect at the top to help
-show it too is spinning, but I left it mostly alone, so the visualization of the spin comes mainly
-from the changing positions of the cars.
-When the cars get hit, they can rock back and forth.
-The center of the ferris wheel is non-moving - it can flash red either when hit, or flash red faster
-when low health. Sort of up to you - we have a health bar, so it may as well be a "hurt" animation.
-When it dies, the heart cracks, and any remaining ferris wheel cars can fall off.
-I imagine the screen would have robes walking and robes floating in on balloons to help out when the
-cars begin to die, as if the player does manage to knock out the robes in the cars, there isn't much
-threat left.
-*/
-
 const ENEMY_FERRIS_WHEEL = 'ferrisWheel';
 const ferrisWheelGeometry = r(300, 300, {
     scaleX: 3, scaleY: 3,
@@ -190,29 +164,18 @@ enemyData[ENEMY_FERRIS_WHEEL] = {
 
 const ENEMY_CART = 'cart';
 const ENEMY_BOSS_CART = 'bossCart';
-const cartGeometry = r(54, 40, {
-    image: requireImage('gfx/scene/circus/ferriscarsheartsheet.png'),
+const cartGeometry = r(53, 40, {
     scaleX: 2, scaleY: 2,
     hitboxes: [
-        {left: 21, top: 0, width: 8, height: 15},
-        {left: 0, top: 15, width: 50, height: 24},
+        {left: 22, top: 0, width: 9, height: 15},
+        {left: 2, top: 15, width: 49, height: 23},
     ],
 });
-const cartAnimation = {
-    frames: [
-        {...cartGeometry, left: 0, top: 18, width: 54, height: 38},
-        {...cartGeometry, left: 0, top: 99, width: 54, height: 40},
-        {...cartGeometry, left: 0, top: 18, width: 54, height: 38},
-        {...cartGeometry, left: 0, top: 139, width: 54, height: 40},
-    ],
-    frameDuration: 20,
-};
-const cartDeathAnimation = {
-    frames: [
-        {...cartGeometry, left: 0, top: 56, width: 54, height: 43},
-    ],
-    frameDuration: 20,
-};
+const cartAnimation = createAnimation('gfx/scene/circus/cartferris.png', cartGeometry,
+    {cols:3, frameMap: [0,2,1,2], duration: 24}
+);
+const cartDeathAnimation = createAnimation('gfx/scene/circus/cartferris.png', cartGeometry, {x:3});
+
 enemyData[ENEMY_CART] = {
     animation: cartAnimation,
     deathAnimation: cartDeathAnimation,
