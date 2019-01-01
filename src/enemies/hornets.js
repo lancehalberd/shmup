@@ -262,7 +262,7 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         initialShotCooldownFrames: 5,
         shotCooldownFrames: 50,
         bulletX: 0.9,
-        bulletY: 0.15,
+        bulletY: 0.25,
         difficulty: 10,
     }
 };
