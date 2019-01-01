@@ -29,6 +29,11 @@ module.exports = {
     CHECK_POINT_BEACH_START,
     WORLD_BEACH,
     getBeachWorld,
+    ENEMY_SHELL_MONK,
+    ENEMY_URCHIN,
+    ENEMY_SHORT_SAND_TURRET,
+    ENEMY_TALL_SAND_TURRET,
+    ENEMY_BURROW_MONK,
 };
 
 const { updatePlayer, getHeroHitbox } = require('heroes');
@@ -304,7 +309,7 @@ enemyData[ENEMY_SHORT_SAND_TURRET] = {
             if (enemy.modeTime >= 3000) {
                 return this.setMode(state, enemy, 'spawn');
             }
-            if (enemy.modeTime === 2000 && Math.random() <= 0.6) {
+            if (enemy.modeTime === 2000 && (enemy.cannotSpawn || Math.random() <= 0.6)) {
                 return this.setMode(state, enemy, 'shoot');
             }
         } else if (enemy.mode === 'shoot') {

@@ -281,13 +281,13 @@ const advanceHero = (state, playerIndex) => {
     }
 
     let {top, left, vx, vy, animationTime, targetLeft, targetTop} = player.sprite;
-    const playerHitbox = getHeroHitbox(player);
+    const playerHitboxes = getHeroHitboxes(player);
     animationTime += FRAME_LENGTH;
     if (invulnerableFor > 0) {
         invulnerableFor -= FRAME_LENGTH;
-    } else if (targetLeft === false && playerHitbox.top + playerHitbox.height > getHazardHeight(state)) {
+    } else if (targetLeft === false && playerHitboxes.some(box => box.top + box.height > getHazardHeight(state))) {
         return damageHero(state, playerIndex);
-    } else if (targetLeft === false && playerHitbox.top < getHazardCeilingHeight(state)) {
+    } else if (targetLeft === false && playerHitboxes.some(box => box.top < getHazardCeilingHeight(state))) {
         return damageHero(state, playerIndex);
     }
     if (targetLeft !== false) {
@@ -312,19 +312,19 @@ const advanceHero = (state, playerIndex) => {
     }
     const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
     const tripleSpeedPowerups = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO).length;
-    const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups;
-    const accleration = ACCELERATION + speedPowerups / 2 + tripleSpeedPowerups;
+    const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups  * 2 + speedPowerups / 2;
+    const accleration = ACCELERATION + speedPowerups / 3 + tripleSpeedPowerups;
     // Accelerate player based on their input.
     if (!isHeroSwapping(player)) {
-        if (player.actions.up) vy -= accleration;
-        if (player.actions.down) vy += accleration;
-        if (player.actions.left) vx -= accleration;
-        if (player.actions.right) vx += accleration;
-        vy *= (.9 - tripleSpeedPowerups * .01);
-        vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
-        vx *= (.9 - tripleSpeedPowerups * .01);
-        vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
-
+        let dy = 0, dx = 0;
+        if (player.actions.up) dy -= accleration;
+        if (player.actions.down) dy += accleration;
+        if (player.actions.left) dx -= accleration;
+        if (player.actions.right) dx += accleration;
+        if (!dx) vx *= 0.8;
+        else vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx + dx));
+        if (!dy) vy *= 0.8;
+        else vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy + dy));
         // Update player position based on their
         left += vx;
         top +=  vy;
@@ -485,7 +485,7 @@ const switchHeroes = (updatedState, playerIndex) => {
     const dx = left - targetLeft, dy = targetTop - top;
     const spawnSpeed = Math.sqrt(dx * dx + dy * dy) / 25;
     updatedState = updatePlayer(updatedState, playerIndex, {
-            invulnerableFor: 25 * FRAME_LENGTH,
+            invulnerableFor: 30 * FRAME_LENGTH,
             chargeAttackFrames: 0,
             spawning: true,
             chasingNeedle: true,
@@ -502,10 +502,14 @@ const switchHeroes = (updatedState, playerIndex) => {
     return {...updatedState, sfx};
 };
 
-const damageHero = (updatedState, playerIndex) => {
+function damageHero(updatedState, playerIndex) {
     // Don't damage a hero if they are invulnerable.
     if (isPlayerInvulnerable(updatedState, playerIndex)) {
         return updatedState;
+    }
+    const bubbleShield = updatedState.enemies.filter(e => !e.dead && e.type === ENEMY_BUBBLE_SHIELD)[0];
+    if (bubbleShield) {
+        updatedState = damageEnemy(updatedState, bubbleShield.id, {damage: 1});
     }
     let deathCooldown = updatedState.deathCooldown
     let player = updatedState.players[playerIndex];
@@ -552,7 +556,7 @@ const damageHero = (updatedState, playerIndex) => {
         heroes,
         usingSpecial: false,
         done,
-        invulnerableFor: 2000,
+        invulnerableFor: 2500,
         spawning: true,
         chasingNeedle: true,
         chargeAttackFrames: 0,
@@ -583,12 +587,19 @@ const damageHero = (updatedState, playerIndex) => {
         sfx['sfx/needledropflip.mp3'] = true;
     }
     return {...updatedState, deathCooldown, sfx};
-};
+}
 
 function getHeroHitbox(player) {
     const {animationTime, left, top} = player.sprite;
     const animation = heroesData[player.heroes[0]].animation;
     return new Rectangle(getHitbox(animation, animationTime)).translate(left, top);
+}
+function getHeroHitboxes(player) {
+    const {animationTime, left, top} = player.sprite;
+    const animation = heroesData[player.heroes[0]].animation;
+    const frame = getFrame(animation, animationTime);
+    const hitboxes = frame.hitboxes || [frame.hitbox || new Rectangle(frame).moveTo(0, 0)];
+    return hitboxes.map(box => new Rectangle(box).translate(left, top));
 }
 function getHeroCenter(player) {
     return getHeroHitbox(player).getCenter();
@@ -661,11 +672,16 @@ const renderHero = (context, player) => {
         context.restore();
     }
     if (isKeyDown(KEY_SHIFT)) {
-        const hitbox = getHeroHitbox(player);
+        let hitbox = getHeroHitbox(player);
         context.save();
+        context.globalAlpha = .1;
+        context.fillStyle = 'blue';
+        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
         context.globalAlpha = .6;
         context.fillStyle = 'green';
-        context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
+        for (hitbox of getHeroHitboxes(player)) {
+            context.fillRect(hitbox.left, hitbox.top, hitbox.width, hitbox.height);
+        }
         context.restore();
     }
     if (heroData.render) {
@@ -689,6 +705,7 @@ module.exports = {
     getNewPlayerState,
     advanceHero,
     getHeroHitbox,
+    getHeroHitboxes,
     getHeroCenter,
     damageHero,
     renderHero,
@@ -702,6 +719,8 @@ module.exports = {
     switchHeroes,
 };
 
+const { ENEMY_BUBBLE_SHIELD } = require('areas/beachBoss');
+
 const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
 
 const { createAttack, addPlayerAttackToState } = require('attacks');
@@ -712,7 +731,7 @@ const {
     updateEffect,
 } = require('effects');
 const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
-const { updateEnemy } = require('enemies');
+const { updateEnemy, damageEnemy } = require('enemies');
 const { advanceFinisher, startFinisher, EFFECT_FINISHER } = require('effects/finisher');
 const { LOOT_GAUNTLET } = require('loot');
 

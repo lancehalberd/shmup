@@ -14,7 +14,14 @@ const {
 const { heroesData, updatePlayer } = require('heroes');
 
 const dragonflyHitbox = {left: 10, top: 15, width: 70, height: 30};
-const dragonflyRectangle = r(88, 56, {hitbox: dragonflyHitbox});
+const dragonflyRectangle = r(88, 56, {
+    hitbox: dragonflyHitbox,
+    hitboxes: [
+        {"left":61,"width":14,"top":18,"height":16},
+        {"left":13,"width":50,"top":30,"height":7},
+        {"left":40,"width":35,"top":34,"height":10},
+    ]
+});
 const dragonflyAnimation = {
     frames: [
         {...dragonflyRectangle, image: requireImage('gfx/heroes/dragonfly/dragonfly1.png', PRIORITY_HEROES)},

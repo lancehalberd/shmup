@@ -22,7 +22,15 @@ const {
 const { heroesData, updatePlayer, isHeroSwapping } = require('heroes');
 
 const beeHitbox = {left: 10, top: 12, width: 60, height: 40};
-const beeRectangle = r(88, 56, {hitbox: beeHitbox});
+const beeRectangle = r(88, 56, {
+    hitbox: beeHitbox,
+    hitboxes: [
+        {"left":53,"width":11,"top":7,"height":29},
+        {"left":19,"width":41,"top":23,"height":26},
+        {"left":19,"width":1,"top":38,"height":0},
+        {"left":11,"width":9,"top":26,"height":15},
+    ],
+});
 
 const crosshairAnimation = createAnimation('gfx/heroes/bee/crosshair1.png', r(30, 30), {priority: PRIORITY_HEROES});
 const crosshairLockedAnimation = {

@@ -161,7 +161,7 @@ const {
     getEnemyHitbox, getEnemyCenter, renderEnemyFrame, updateEnemy, removeEnemy,
 } = require('enemies');
 const {
-    getHeroHitbox,
+    getHeroHitbox, getHeroHitboxes,
     damageHero,
 } = require('heroes');
 
@@ -544,7 +544,7 @@ enemyData[ENEMY_FROG] = {
     updateTongues(state, enemy) {
         if (!enemy.tongues || enemy.tongues.length < 3) return state;
         const points = enemy.tongues.map(t => ({x: enemy.left + t[0], y: enemy.top + t[1]}));
-        const heroHitbox = getHeroHitbox(state.players[0]);
+        const heroHitboxes = getHeroHitboxes(state.players[0]);
         // Check if the frog caught a flying ant (the tip of its tongue hits an ant).
         if (enemy.mode === 'swimmingAttacking') {
             const ants = state.enemies.filter(enemy => enemy.type === ENEMY_FLYING_ANT);
@@ -564,10 +564,9 @@ enemyData[ENEMY_FROG] = {
         for (let i = 2; i < points.length; i++) {
             // This hitbox is a crude estimation for the tongues actual position.
             const sectionBox = Rectangle.defineFromPoints(points[i], points[i - 1]);
-            if (sectionBox.overlapsRectangle(heroHitbox)) {
+            if (Rectangle.collisionArrays(heroHitboxes, [sectionBox])) {
                 return damageHero(state, 0);
             }
-
         }
         return state;
     },

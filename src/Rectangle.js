@@ -32,6 +32,13 @@ class Rectangle {
         );
     }
 
+    static collisionArrays(As, Bs) {
+        for (const A of As)
+            for (const B of Bs)
+                if (Rectangle.collision(A, B)) return [A, B];
+        return false;
+    }
+
     constructor(left = 0, top = 0, width = 0, height = 0) {
         if (typeof(left) === 'object') {
             top = left.top || 0;

@@ -208,7 +208,7 @@ module.exports = {
 const { transitionToBeach } = require('areas/restaurantToBeach');
 const { transitionToCircus } = require('areas/restaurantToCircus');
 
-const { damageHero, getHeroHitbox } = require('heroes');
+const { damageHero, getHeroHitbox, getHeroHitboxes } = require('heroes');
 const {
     enemyData, createEnemy, addEnemyToState, updateEnemy,
     getEnemyDrawBox, renderEnemyFrame
@@ -272,13 +272,13 @@ enemyData[ENEMY_SPIDER] = {
         let { webs, webDx, webDy } = enemy;
         if (!webs || !webs.length) return state;
         // Check if the player is hitting any of the web sections.
-        const heroHitbox = getHeroHitbox(state.players[0]);
+        const heroHitboxes = getHeroHitboxes(state.players[0]);
         for (let i = 1; i < webs.length; i++) {
             // This hitbox is a crude estimation for the webs position.
             const sectionBox = Rectangle.defineFromPoints(webs[i], webs[i - 1]);
-            if (sectionBox.overlapsRectangle(heroHitbox)) {
+            if (Rectangle.collisionArrays(heroHitboxes, [sectionBox])) {
                 state = damageHero(state, 0);
-                break;
+                break
             }
         }
         const lastWeb = webs[0];

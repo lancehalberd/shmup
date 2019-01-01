@@ -6,7 +6,7 @@ const {
     PRIORITY_PRELOADER, PRIORITY_TITLE,
     PRIORITY_HEROES, PRIORITY_FIELD,
     priorityCounts,
-    createAnimation, r,
+    createAnimation, r, requireImage,
 } = require('animations');
 const { preloadSounds } = require('sounds');
 

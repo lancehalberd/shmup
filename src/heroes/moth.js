@@ -14,7 +14,14 @@ const {
 const { heroesData, updatePlayer } = require('heroes');
 
 const mothHitbox = {left: 27, top: 10, width: 48, height: 40};
-const mothRectangle = r(88, 56, {hitbox: mothHitbox});
+const mothRectangle = r(88, 56, {
+    hitbox: mothHitbox,
+    hitboxes: [
+        {"left":59,"width":10,"top":11,"height":26},
+        {"left":38,"width":23,"top":36,"height":15},
+        {"left":62,"width":11,"top":28,"height":14},
+    ],
+});
 const mothAnimation = {
     frames: [
         {...mothRectangle, image: requireImage('gfx/heroes/moth/moth1.png', PRIORITY_HEROES)},

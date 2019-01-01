@@ -14,10 +14,12 @@ const { allWorlds } = require('world');
 const WORLD_BEACH_BOSS = 'beachBoss';
 const ENEMY_BUBBLE = 'bubble';
 const ENEMY_BUBBLE_SHOT = 'bubbleShot';
+const ENEMY_BUBBLE_SHIELD = 'bubbleShield';
 module.exports = {
     transitionToBeachBoss,
     ENEMY_BUBBLE,
     ENEMY_BUBBLE_SHOT,
+    ENEMY_BUBBLE_SHIELD,
 };
 const { transitionToOcean } = require('areas/beachToOcean');
 
@@ -605,6 +607,35 @@ enemyData[ENEMY_BUBBLE] = {
         weakness: {[ATTACK_SLASH]: {fullyCharged: 20}, [ATTACK_STAB]: {fullyCharged: 20}},
         noCollisionDamage: true,
         attached: false,
+        doNotFling: true,
+        hasForeground: true, // Allow us to draw the bubble over the player.
+    },
+};
+enemyData[ENEMY_BUBBLE_SHIELD] = {
+    ...enemyData[ENEMY_BUBBLE],
+    animation: createAnimation('gfx/enemies/crab/bubble.png', {...bubbleGeometry, hitboxes: []}, {cols: 3}),
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.deathAnimation;
+        return this.animation;
+    },
+    updateState(state, enemy) {
+        if (enemy.dead) {
+            if (enemy.animationTime > 200) return removeEnemy(state, enemy);
+            return state;
+        }
+        const heroHitbox = getHeroHitbox(state.players[0]);
+        const heroCenter = new Rectangle(heroHitbox).getCenter();
+        const center = new Rectangle(getEnemyHitbox(state, enemy)).getCenter();
+        return updateEnemy(state, enemy, {
+            vx: 0, vy: 0,
+            left: enemy.left + heroCenter[0] - center[0],
+            top: enemy.top + heroCenter[1] - center[1],
+        });
+    },
+    props: {
+        life: 1,
+        difficulty: 0,
+        noCollisionDamage: true,
         doNotFling: true,
         hasForeground: true, // Allow us to draw the bubble over the player.
     },

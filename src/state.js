@@ -1,3 +1,9 @@
+module.exports = {
+    getNewState,
+    advanceState,
+    applyPlayerActions,
+};
+
 const Rectangle = require('Rectangle');
 
 const {
@@ -14,41 +20,52 @@ const {
     advanceWorld,
 } = require('world');
 
-const getNewState = () => (advanceWorld({
-    idMap: {},
-    players: [getNewPlayerState()],
-    deathCooldown: 0,
-    enemies: [],
-    loot: [],
-    effects: [],
-    enemyCooldown: 0,
-    playerAttacks: [],
-    neutralAttacks: [],
-    enemyAttacks: [],
-    sfx: {},
-    title: true,
-    titleTime: 0,
-    titleIndex: 0,
-    stageSelectIndex: -1,
-    paused: false,
-    gameover: false,
-    gameOverTime: 0,
-    continueIndex: 0,
-    world: getNewWorld(),
-    bgm: 'bgm/title.mp3',
-    interacted: false,
-    checkpoint: null,
-    debug: false,
-    uniqueEnemyIdCounter: 0,
-}));
+const {
+    attacks, advanceAttack, getAttackHitbox, getAttackHitboxes,
+} = require('attacks');
+const {
+    getNewPlayerState, advanceHero, getHeroHitbox, getHeroHitboxes,
+    damageHero, isPlayerInvulnerable, updatePlayerOnContinue
+} = require('heroes');
+const {
+    enemyData, damageEnemy, advanceEnemy, getEnemyHitboxes,
+    isIntersectingEnemyHitboxes, enemyIsActive,
+} = require('enemies');
+const { advanceAllLoot } = require('loot');
+const { createEffect, addEffectToState, advanceAllEffects } = require('effects');
 
-const TEST_TIME = 0;
+function getNewState() {
+    return advanceWorld({
+        idMap: {},
+        players: [getNewPlayerState()],
+        deathCooldown: 0,
+        enemies: [],
+        loot: [],
+        effects: [],
+        enemyCooldown: 0,
+        playerAttacks: [],
+        neutralAttacks: [],
+        enemyAttacks: [],
+        sfx: {},
+        title: true,
+        titleTime: 0,
+        titleIndex: 0,
+        stageSelectIndex: -1,
+        paused: false,
+        gameover: false,
+        gameOverTime: 0,
+        continueIndex: 0,
+        world: getNewWorld(),
+        bgm: 'bgm/title.mp3',
+        interacted: false,
+        checkpoint: null,
+        debug: false,
+        uniqueEnemyIdCounter: 0,
+    });
+}
 
-const advanceState = (state) => {
+function advanceState(state) {
     let updatedState = {...state};
-    if (updatedState.world.time < TEST_TIME) {
-        updatedState.world.time = TEST_TIME;
-    }
     if (updatedState.players[0].actions.toggleDebug) {
         updatedState = {...updatedState, debug: !updatedState.debug};
     }
@@ -203,10 +220,11 @@ const advanceState = (state) => {
                 enemy = updatedState.idMap[updatedState.enemies[i].id];
             }
         }
+        if (!enemyIsActive(updatedState, enemy) || enemy.noCollisionDamage) continue;
+        const enemyHitboxes = getEnemyHitboxes(updatedState, enemy, true);
         for (let j = 0; j < updatedState.players.length; j++) {
-            if (enemyIsActive(updatedState, enemy) && !enemy.noCollisionDamage &&
-                isIntersectingEnemyHitboxes(updatedState, enemy, getHeroHitbox(updatedState.players[j]), true)
-            ) {
+            const heroHitboxes = getHeroHitboxes(updatedState.players[j]);
+            if (Rectangle.collisionArrays(enemyHitboxes, heroHitboxes)) {
                 updatedState = damageHero(updatedState, j);
             }
         }
@@ -221,11 +239,11 @@ const advanceState = (state) => {
     }
     for (let i = 0; i < updatedState.players.length; i++) {
         if (isPlayerInvulnerable(updatedState, i)) continue;
-        const playerHitbox = getHeroHitbox(updatedState.players[i]);
+        const playerHitboxes = getHeroHitboxes(updatedState.players[i]);
         for (let j = 0; j < currentEnemyAttacks.length && !updatedState.players[i].done; j++) {
             const attack = currentEnemyAttacks[j];
             const attackHitboxes = getAttackHitboxes(state, attack);
-            if (attackHitboxes.some(attackHitbox => Rectangle.collision(playerHitbox, attackHitbox))) {
+            if (Rectangle.collisionArrays(attackHitboxes, playerHitboxes)) {
                 // Explicit onHitEffect overrides the default attack behavior
                 if (attacks[attack.type] && attacks[attack.type].onHitHero) {
                     updatedState = attacks[attack.type].onHitHero(updatedState, j, i);
@@ -277,8 +295,8 @@ const advanceState = (state) => {
             const player = updatedState.players[j];
             const playerKey = `player${j}`;
             if (isPlayerInvulnerable(updatedState, j) || attack.hitIds[playerKey]) continue;
-            const playerHitbox = getHeroHitbox(player);
-            if (Rectangle.collision(playerHitbox, attackHitbox)) {
+            const playerHitboxes = getHeroHitboxes(player);
+            if (playerHitboxes.some(box => Rectangle.collision(box, attackHitbox))) {
                 updatedState = damageHero(updatedState, j);
                 currentNeutralAttacks[i] = {...attack,
                     damage: attack.piercing ? attack.damage : attack.damage - 1,
@@ -322,9 +340,9 @@ const advanceState = (state) => {
     updatedState.loot = [...updatedState.loot, ...updatedState.newLoot];
 
     return {...updatedState, idMap};
-};
+}
 
-const applyPlayerActions = (state, playerIndex, actions) => {
+function applyPlayerActions(state, playerIndex, actions) {
     const players = [...state.players];
     actions.confirm = actions.start || actions.melee || actions.special || actions.switch;
     players[playerIndex] = {...players[playerIndex], actions};
@@ -334,21 +352,4 @@ const applyPlayerActions = (state, playerIndex, actions) => {
         }
     }
     return {...state, players};
-};
-
-module.exports = {
-    getNewState,
-    advanceState,
-    applyPlayerActions,
-};
-
-const {
-    attacks, advanceAttack, getAttackHitbox, getAttackHitboxes,
-} = require('attacks');
-const { getNewPlayerState, advanceHero, getHeroHitbox, damageHero, isPlayerInvulnerable, updatePlayerOnContinue } = require('heroes');
-const {
-    enemyData, damageEnemy, advanceEnemy,
-    isIntersectingEnemyHitboxes, enemyIsActive,
-} = require('enemies');
-const { advanceAllLoot } = require('loot');
-const { createEffect, addEffectToState, advanceAllEffects } = require('effects');
+}

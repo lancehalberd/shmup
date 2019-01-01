@@ -762,7 +762,7 @@ function advanceEnemy(state, enemy) {
     } else {
         // cleanup dead enemies or non permanent enemies when they go off the edge of the screen.
         let effectiveVx = enemy.vx;
-        if (enemy.grounded || enemy.hanging) {
+        if (enemy.grounded || enemy.hanging || enemy.stationary) {
             effectiveVx -= xFactor * state.world.vx;
         }
         const drawBox = getEnemyDrawBox(state, enemy);

@@ -34,33 +34,46 @@ const { getHeroHitbox } = require('heroes');
 const { getTargetVector } = require('sprites');
 const { getHazardCeilingHeight, getHazardHeight } = require('world');
 
-const hornetRectangle = r(120, 120);
-const hornetHitbox = {left: 0, top: 33, width: 110, height: 87};
+const hornetGeometry = r(120, 120, {
+    hitboxes: [
+        {"left":12,"width":54,"top":45,"height":28},
+        {"left":31,"width":74,"top":72,"height":25},
+        {"left":96,"width":5,"top":80,"height":39},
+        {"left":102,"width":6,"top":78,"height":27},
+    ]
+});
 const hornetAnimation = {
     frames: [
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/hornet1.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/hornet2.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/hornet3.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/hornet4.png', PRIORITY_FIELD)},
+        {...hornetGeometry, image: requireImage('gfx/enemies/hornets/hornet1.png', PRIORITY_FIELD)},
+        {...hornetGeometry, image: requireImage('gfx/enemies/hornets/hornet2.png', PRIORITY_FIELD)},
+        {...hornetGeometry, image: requireImage('gfx/enemies/hornets/hornet3.png', PRIORITY_FIELD)},
+        {...hornetGeometry, image: requireImage('gfx/enemies/hornets/hornet4.png', PRIORITY_FIELD)},
     ],
     frameDuration: 3,
 };
 const hornetDeathAnimation = createAnimation('gfx/enemies/hornets/hornetded.png',
-    hornetRectangle,
+    hornetGeometry,
     {priority: PRIORITY_FIELD}
 );
+const hornetSoldierGeometry = r(120, 120, {
+    hitboxes: [
+        ...hornetGeometry.hitboxes,
+        {"left":28,"width":15,"top":22,"height":32},
+    ],
+});
+
 const hornetSoldierAnimation = {
     frames: [
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/mhornet1.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/mhornet2.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/mhornet3.png', PRIORITY_FIELD)},
-        {...hornetRectangle, hitbox: hornetHitbox, image: requireImage('gfx/enemies/hornets/mhornet4.png', PRIORITY_FIELD)},
+        {...hornetSoldierGeometry, image: requireImage('gfx/enemies/hornets/mhornet1.png', PRIORITY_FIELD)},
+        {...hornetSoldierGeometry, image: requireImage('gfx/enemies/hornets/mhornet2.png', PRIORITY_FIELD)},
+        {...hornetSoldierGeometry, image: requireImage('gfx/enemies/hornets/mhornet3.png', PRIORITY_FIELD)},
+        {...hornetSoldierGeometry, image: requireImage('gfx/enemies/hornets/mhornet4.png', PRIORITY_FIELD)},
     ],
     frameDuration: 3,
 };
 const fallingHornetSoldierHitbox = {left: 46, top: 48, width: 40, height: 40};
 const hornetSoldierDeathAnimation = createAnimation('gfx/enemies/hornets/mhornetded.png',
-    {...hornetRectangle, hitbox: fallingHornetSoldierHitbox},
+    {...hornetSoldierGeometry, hitbox: fallingHornetSoldierHitbox},
     {priority: PRIORITY_FIELD}
 );
 
@@ -253,20 +266,17 @@ enemyData[ENEMY_HORNET_SOLDIER] = {
         difficulty: 10,
     }
 };
-const knightGeometry = r(120, 120, {
-    hitbox: { width: 100, height: 100, top: 12, left: 10},
-});
 // This is only used for the mount falling off of the hornet knight.
 enemyData[ENEMY_DEAD_KNIGHT] = {
-    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {x: 4}),
+    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', hornetSoldierGeometry, {x: 4}),
     props: {
         life: 0,
     },
 };
 enemyData[ENEMY_HORNET_KNIGHT] = {
-    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {cols: 3}),
+    animation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', hornetSoldierGeometry, {cols: 3}),
     // This is the mask falling from the hornet when the mount falls off.
-    deathAnimation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', knightGeometry, {x: 3}),
+    deathAnimation: createAnimation('gfx/enemies/hornets/ehornetsheet.png', hornetSoldierGeometry, {x: 3}),
     deathSound: 'sfx/hit.mp3',
     updateState(state, enemy) {
         if (enemy.dead) return state;
@@ -420,7 +430,7 @@ enemyData[ENEMY_HORNET_CIRCLER] = {
         modeTime: 0,
         permanent: false,
         doNotFlip: true,
-        scale: 0.5,
+        scale: 0.8,
         difficulty: 10,
     }
 };
@@ -463,23 +473,31 @@ enemyData[ENEMY_HORNET_DASHER] = {
         // Permanent until it starts dashing.
         permanent: true,
         doNotFlip: true,
-        scale: 0.5,
+        scale: 0.8,
         difficulty: 10,
     }
 };
 
-const queenRectangle = r(150, 150, {hitbox: {left: 14, top: 54, width: 125, height: 85}});
+const queenGeometry = r(150, 150, {
+    hitboxes: [
+        {"left":19,"width":64,"top":58,"height":37},
+        {"left":69,"width":53,"top":82,"height":28},
+        {"left":121,"width":5,"top":87,"height":64},
+        {"left":125,"width":10,"top":95,"height":35},
+        {"left":29,"width":10,"top":49,"height":21},
+    ]
+});
 enemyData[ENEMY_HORNET_QUEEN] = {
     ...enemyData[ENEMY_HORNET],
     animation: {
         frames: [
-            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen1.png')},
-            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen2.png')},
-            {...queenRectangle, image: requireImage('gfx/enemies/hornets/hqueen3.png')},
+            {...queenGeometry, image: requireImage('gfx/enemies/hornets/hqueen1.png')},
+            {...queenGeometry, image: requireImage('gfx/enemies/hornets/hqueen2.png')},
+            {...queenGeometry, image: requireImage('gfx/enemies/hornets/hqueen3.png')},
         ],
         frameDuration: 3,
     },
-    deathAnimation: createAnimation('gfx/enemies/hornets/hqueen4.png', queenRectangle),
+    deathAnimation: createAnimation('gfx/enemies/hornets/hqueen4.png', queenGeometry),
     accelerate(state, enemy) {
         let {vx, vy} = enemy;
         // Retreat if the player is using the finisher on the nest.
@@ -515,7 +533,7 @@ enemyData[ENEMY_HORNET_QUEEN] = {
         // This will be cleared when transitioning to the next area.
         persist: true,
         doNotFlip: true,
-        scale: 0.5,
+        scale: 1.2,
         difficulty: 10,
     }
 };
