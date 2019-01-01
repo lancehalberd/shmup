@@ -77,14 +77,14 @@ allWorlds[WORLD_FIELD_BOSS] = {
             state = addEnemyToState(state, newEnemy);
             newEnemy = createEnemy(state, ENEMY_LARGE_TURRET, {
                 left: treeSprite.left + treeSprite.width - 90,
-                top: treeSprite.top + 70,
+                top: treeSprite.top + 160,
             });
             newEnemy.left -= newEnemy.width / 2;
             newEnemy.top -= newEnemy.height / 2;
             state = addEnemyToState(state, newEnemy);
             const smallTurrets = [
-                [-125, 110], [-35, 130], [-130, 160],
-                [-40, 200], [-125, 240], [-35, 245],
+                [-125, 60], [-35, 80], [-130, 110],
+                [-40, 200], [-125, 220], [-35, 245],
             ];
             for (const coords of smallTurrets) {
                 newEnemy = createEnemy(state, ENEMY_SMALL_TURRET, {
@@ -118,7 +118,7 @@ allWorlds[WORLD_FIELD_BOSS] = {
             }
             const treeSprite = world.nearground.sprites[0];
             world = {...world, rightEdge: treeSprite.left + 630, spawnsDisabled: true};
-            const minMonkTime = 4000 + 1000 * turrets.length;
+            const minMonkTime = 5000 + 1000 * turrets.length;
             if (turrets.length <= 4 && time - (world.lastMonkTime || 0) >= minMonkTime && Math.random() > 0.9) {
                 const treeSprite = world.nearground.sprites[0];
                 const newEnemy = createEnemy(state, ENEMY_GROUND_MONK, {
@@ -165,7 +165,7 @@ function spawnStick(state, {x, delay = 0}) {
     leaf.left -= leaf.width / 2;
     state = addEffectToState(state, leaf);
 
-    let stick = createEnemy(state, random.element([ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3]), {
+    let stick = createEnemy(state, random.element(stickTypes), {
         left: x,
         top: -100,
         vy: 0,
@@ -199,7 +199,7 @@ const { enemyData, createEnemy, addEnemyToState, updateEnemy } = require('enemie
 const smallTurretRectangle = r(41, 41);
 const ENEMY_SMALL_TURRET = 'smallTurret';
 enemyData[ENEMY_SMALL_TURRET] = {
-    animation: createAnimation('gfx/enemies/plainsboss/sweetspot.png', smallTurretRectangle, {priority}),
+    animation: createAnimation('gfx/enemies/plainsboss/sweetspot.png', {...smallTurretRectangle, hitboxes: []}, {priority}),
     deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspot4.png', smallTurretRectangle, {priority}),
     attackAnimation: {
         frames: [
@@ -271,7 +271,7 @@ function addTurretShot(state, enemy, {tdx = 0, sdx = 0, sdy = 0, speedFactor = 1
 const largeTurretRectangle = r(41, 41);
 const ENEMY_LARGE_TURRET = 'largeTurret';
 enemyData[ENEMY_LARGE_TURRET] = {
-    animation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge1.png', largeTurretRectangle, {priority}),
+    animation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge1.png', {...largeTurretRectangle, hitboxes: []}, {priority}),
     deathAnimation: createAnimation('gfx/enemies/plainsboss/sweetspotlarge4.png', largeTurretRectangle, {priority}),
     attackAnimation: {
         frames: [
@@ -315,9 +315,9 @@ enemyData[ENEMY_LARGE_TURRET] = {
         if (!this.ready(state, enemy)) return state;
         // This turret shoots four different times during its attack animation.
         if (enemy.attackCooldownFramesLeft === 54 || enemy.attackCooldownFramesLeft === 36) {
-            state = addTurretShot(state, enemy, {tdx: 40 - Math.random() * 80, sdx: 10, sdy: enemy.height / 2});
+            state = addTurretShot(state, enemy, {tdx: 40 - Math.random() * 80, sdx: 10, sdy: enemy.height / 2, speedFactor: 1.2});
         } else if (enemy.attackCooldownFramesLeft === 18 || enemy.attackCooldownFramesLeft === 72) {
-            state = addTurretShot(state, enemy, {sdx: 10, sdy: enemy.height / 2, speedFactor: 1.4});
+            state = addTurretShot(state, enemy, {sdx: 10, sdy: enemy.height / 2, speedFactor: 1.2});
         }
         let shotCooldown = enemy.shotCooldown;
         if (shotCooldown === undefined) shotCooldown = random.element(enemy.shotCooldownFrames);
@@ -404,7 +404,9 @@ enemyData[ENEMY_DOOR] = {
                 delay += 5;
             }
         } else if (Math.floor(enemy.life / 10) > Math.floor((enemy.life - attack.damage) / 10)) {
-            state = spawnStick(state, {x: treeSprite.left + random.range(50, 600)});
+            if (state.enemies.filter(e => stickTypes.includes(e.type)).length < 2) {
+                state = spawnStick(state, {x: treeSprite.left + random.range(50, 600)});
+            }
         }
         if (Math.floor(enemy.life / 5) > Math.floor((enemy.life - attack.damage) / 5)) {
             for (let i = 0; i < 2; i++) {
@@ -431,6 +433,7 @@ enemyData[ENEMY_DOOR] = {
 const ENEMY_STICK_1 = 'stick1';
 const ENEMY_STICK_2 = 'stick2';
 const ENEMY_STICK_3 = 'stick3';
+const stickTypes = [ENEMY_STICK_1, ENEMY_STICK_2, ENEMY_STICK_3];
 enemyData[ENEMY_STICK_1] = {
     animation: createAnimation('gfx/enemies/plainsboss/branch1.png', r(80, 40), {priority}),
     deathAnimation: createAnimation('gfx/enemies/plainsboss/branch4.png', r(80, 40), {priority}),
