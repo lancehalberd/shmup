@@ -57,7 +57,6 @@ function getNewState() {
         continueIndex: 0,
         world: getNewWorld(),
         bgm: 'bgm/title.mp3',
-        interacted: false,
         checkpoint: null,
         debug: false,
         uniqueEnemyIdCounter: 0,
@@ -117,13 +116,13 @@ function advanceState(state) {
             // This gets set when a player dies at the end of the demo, and is not given
             // an option to continue.
             if (updatedState.finished) {
-                return {...getNewState(), interacted: true, finished: false};
+                return {...getNewState(), finished: false};
             }
             if (continueIndex === 0) { // Continue
                 updatedState = updatePlayerOnContinue({...updatedState, gameover: false}, 0);
                 return applyCheckpointToState(updatedState, updatedState.checkpoint, false);
             } else { // Do not continue, back to title
-                return {...getNewState(), interacted: true};
+                return {...getNewState()};
             }
         }
         if (updatedState.players[0].actions.up) {
@@ -149,7 +148,7 @@ function advanceState(state) {
         }
     }
     if (paused) {
-        return {...updatedState, paused};
+        return {...updatedState, paused, bgm: false};
     }
     updatedState.newEffects = [];
     updatedState.newLoot = [];
@@ -346,10 +345,5 @@ function applyPlayerActions(state, playerIndex, actions) {
     const players = [...state.players];
     actions.confirm = actions.start || actions.melee || actions.special || actions.switch;
     players[playerIndex] = {...players[playerIndex], actions};
-    if (!state.interacted) {
-        for (var i in actions) {
-            if (actions[i]) return {...state, interacted: true, players};
-        }
-    }
     return {...state, players};
 }

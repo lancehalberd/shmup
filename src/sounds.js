@@ -71,11 +71,14 @@ const playSound = (key) => {
             newInstance.onended = null;
             clearTimeout(timeoutId);
         }
+    }).catch((reason) => {
+
     });
 };
 
-let previousTrack = null;
+let previousTrack = null, currentTrackSource = null;
 const playTrack = (source, timeOffset) => {
+    let originalSource = source;
     let offset, volume, duration;
     [source, offset, volume] = source.split('+');
     if (previousTrack) {
@@ -90,10 +93,12 @@ const playTrack = (source, timeOffset) => {
     if (soundsMuted) {
         sound.volume = 0;
     }
+    currentTrackSource = originalSource;
     function startTrack(offset) {
         // console.log({source, offset, actual: startOffset + offset, customDuration});
         sound.currentTime = startOffset + offset;
         sound.play().then(() => {
+            currentTrackSource = originalSource;
             // If a custom duration is set, restart the song at that point.
             if (customDuration) {
                 sound.timeoutId = setTimeout(() => {
@@ -103,8 +108,11 @@ const playTrack = (source, timeOffset) => {
             }
             sound.onended = () => {
                 if (sound.timeoutId) clearTimeout(sound.timeoutId);
+                currentTrackSource = null;
                 startTrack(0);
             }
+        }).catch(() => {
+            currentTrackSource = null;
         });
     }
     startTrack((timeOffset / 1000) % (customDuration || sound.duration || 10000000));
@@ -112,11 +120,15 @@ const playTrack = (source, timeOffset) => {
 };
 
 const stopTrack = () => {
+    currentTrackSource = null;
     if (previousTrack) {
         previousTrack.pause();
         if (previousTrack.timeoutId) clearTimeout(previousTrack.timeoutId);
     }
 };
+function getCurrentTrackSource() {
+    return currentTrackSource;
+}
 
 // This hasn't been tested yet, not sure if it works.
 const muteSounds = () => {
@@ -179,7 +191,7 @@ const preloadSounds = () => {
         'bgm/alley.mp3+0+3',
         'bgm/boss.mp3+0+2',
         'bgm/space.mp3+0+2',
-        'bgm/circus.mp3+0+2',
+        'bgm/circus.mp3+0+1',
         'bgm/ocean.mp3+0+2',
     ].forEach(requireSound);
 };
@@ -267,4 +279,5 @@ module.exports = {
     playTrack,
     stopTrack,
     preloadSounds,
+    getCurrentTrackSource,
 };

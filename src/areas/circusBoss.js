@@ -216,7 +216,7 @@ enemyData[ENEMY_CART] = {
             const theta = base - spread / 2 + i * spread / numBullets;
             state = this.shootBullet(state, enemy, theta);
         }
-        return updateEnemy(state, enemy, {shotCooldown: 2000});
+        return updateEnemy(state, enemy, {shotCooldown: 4000});
     },
     shootBullet(state, enemy, theta) {
         const hitbox = getEnemyHitbox(state, enemy);
@@ -238,7 +238,7 @@ enemyData[ENEMY_CART] = {
     },
     props: {
         life: 50,
-        shotCooldown: 2000,
+        shotCooldown: 4000,
         vx: 0,
         hanging: true,
         permanent: true,

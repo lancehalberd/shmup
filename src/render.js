@@ -17,6 +17,7 @@ const {
     playSound,
     playTrack,
     stopTrack,
+    getCurrentTrackSource,
 } = require('sounds');
 
 const { renderHitboxes } = require('editHitboxes');
@@ -50,9 +51,8 @@ const render = (state) => {
         renderHitboxes(context, state);
         return;
     }
-    if (state.interacted && state.bgm) {
+    if (state.bgm && getCurrentTrackSource() !== state.bgm) {
         playTrack(state.bgm, state.world.time);
-        state.bgm = false;
     }
     if (state.title) return renderTitle(context, state);
     if (state.gameover) return renderGameOver(context, state);
@@ -131,10 +131,8 @@ const render = (state) => {
         context.fillRect(0, hudImage.height, WIDTH, GAME_HEIGHT);
         context.restore();
     }
-    if (state.interacted) {
-        for (const sfx in state.sfx) {
-            playSound(sfx);
-        }
+    for (const sfx in state.sfx) {
+        playSound(sfx);
     }
     state.sfx = {};
 };
