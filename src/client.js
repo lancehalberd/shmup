@@ -70,7 +70,7 @@ const update = () => {
         up: isKeyDown(KEY_UP, releaseThreshold), down: isKeyDown(KEY_DOWN, releaseThreshold),
         left: isKeyDown(KEY_LEFT, releaseThreshold), right: isKeyDown(KEY_RIGHT, releaseThreshold),
         melee: isKeyDown(KEY_SPACE, releaseThreshold),
-        special: isKeyDown(KEY_C, releaseThreshold),
+        special: isKeyDown(KEY_C, thresholdTime),
         switch: isKeyDown(KEY_X, releaseThreshold),
         toggleDebug: isKeyDown(KEY_T, thresholdTime),
         start: isKeyDown(KEY_ENTER, thresholdTime),

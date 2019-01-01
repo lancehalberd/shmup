@@ -351,8 +351,8 @@ enemyData[ENEMY_SEA_URCHIN] = {
     },
     onDeathEffect(state, enemy) {
         const enemyHitbox = getEnemyHitbox(state, enemy);
-        for (let i = 0; i >= -12; i--) {
-            const theta = 2 * Math.PI * i / 8;
+        for (let i = 0; i > -6; i--) {
+            const theta = 2 * Math.PI * i / 6;
             const vx = Math.cos(theta) * 5;
             const vy = Math.sin(theta) * 5;
             const needle = createAttack(ATTACK_URCHIN_NEEDLE, {

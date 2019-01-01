@@ -49,16 +49,19 @@ const checkToAddLightning = (state, {left, top, charges = 8, damage = 5, branchC
     for (let i = 0; i < state.enemies.length; i++) {
         const enemy = state.idMap[state.enemies[i].id];
         if (!enemyIsActive(state, enemy)) continue;
-        const hitbox = getEnemyHitbox(state, enemy);
-        // The large lightning attack can only hit enemies in front of each bolt.
-        if (type === EFFECT_LIGHTNING && hitbox.left + hitbox.width / 2 <= left) continue;
-        const dx = hitbox.left + hitbox.width / 2 - left,
-            dy = hitbox.top + hitbox.height / 2 - top;
-        const radius = Math.sqrt(hitbox.width * hitbox.width + hitbox.height * hitbox.height) / 2;
-        if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
-            targetRotations.push(Math.atan2(dy, dx));
-            state = damageEnemy(state, enemy.id, {playerIndex: 0, damage});
-            state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
+        const hitboxes = getEnemyHitboxes(state, enemy);
+        for (const hitbox of hitboxes) {
+            // The large lightning attack can only hit enemies in front of each bolt.
+            if (type === EFFECT_LIGHTNING && hitbox.left + hitbox.width / 2 <= left) continue;
+            const dx = hitbox.left + hitbox.width / 2 - left,
+                dy = hitbox.top + hitbox.height / 2 - top;
+            const radius = Math.sqrt(hitbox.width * hitbox.width + hitbox.height * hitbox.height) / 2;
+            if (Math.sqrt(dx * dx + dy * dy) <= 50 * scale + radius) {
+                targetRotations.push(Math.atan2(dy, dx));
+                state = damageEnemy(state, enemy.id, {playerIndex: 0, damage});
+                state = {...state, sfx: {...state.sfx, 'sfx/hit.mp3': true}};
+                break;
+            }
         }
     }
     if (targetRotations.length) {
@@ -84,7 +87,7 @@ module.exports = {
 };
 
 const { effects, createEffect, addEffectToState, updateEffect } = require('effects');
-const { enemyData, getEnemyHitbox, damageEnemy, enemyIsActive } = require('enemies');
+const { enemyData, getEnemyHitboxes, damageEnemy, enemyIsActive } = require('enemies');
 effects[EFFECT_LIGHTNING] = {
     animation: {
         frames: lightningFrames,
