@@ -119,9 +119,11 @@ const wheelScale = wheelAnimation.frames[0].scaleX;
 enemyData[ENEMY_FERRIS_WHEEL] = {
     animation: createAnimation('gfx/scene/circus/ferrissheet.png', ferrisWheelGeometry),
     updateState(state, enemy) {
+        // Set a cap on how fast the wheel can rotate.
+        const vRotation = Math.max(-0.15, Math.min(0.15, enemy.vRotation * 0.995));
         return updateEnemy(state, enemy, {
-            vRotation: enemy.vRotation * 0.995,
-            wheelRotation: enemy.wheelRotation + enemy.vRotation,
+            vRotation,
+            wheelRotation: enemy.wheelRotation + vRotation,
         });
     },
     drawUnder(context, state, enemy) {

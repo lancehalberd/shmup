@@ -198,10 +198,12 @@ allWorlds[WORLD_CIRCUS] = {
             state = setCheckpoint(state, CHECK_POINT_CIRCUS_MIDDLE);
         }
         if (world.time === CIRCUS_DURATION - 19000) {
-            console.log('ending');
             state = clearLayers(state, ['stands', 'smallTents']);
             world = state.world;
-            state.enemies.filter(e => e.type === ENEMY_CLAW && e.left > WIDTH).forEach(enemy => {
+            const standSprites = state.world.stands.sprites;
+            const lastStand = standSprites[standSprites.length - 1];
+            const limit = lastStand ? lastStand.left + lastStand.width : WIDTH;
+            state.enemies.filter(e => e.type === ENEMY_CLAW && e.left > limit).forEach(enemy => {
                 state = removeEnemy(state, enemy);
             });
         }
@@ -292,7 +294,9 @@ function getCircusLayers() {
     balloons: getNewLayer({
         xFactor: 0.1, yFactor: 0.1, yOffset: 50,
         spriteData: {
-            balloons: { animation: balloonAnimation, scale: 2, vy: -0.5, next: ['balloons'], offset: [50, 200, 300], yOffset: [0, 10, 20] },
+            tinyBalloons: { animation: balloonAnimation, scale: 1, vy: -0.3, next: ['balloons', 'bigBalloons'], offset: [25, 100, 150], yOffset: [-200, -300, -400] },
+            balloons: { animation: balloonAnimation, scale: 2, vy: -0.5, next: ['tinyBalloons', 'bigBalloons'], offset: [50, 100, 150], yOffset: [-100, -160, -240] },
+            bigBalloons: { animation: balloonAnimation, scale: 3, vy: -0.5, next: ['tinyBalloons', 'ballons'], offset: [50, 100, 150], yOffset: [0, -40, -80] },
         },
     }),
     closeBalloons: getNewLayer({
