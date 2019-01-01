@@ -136,7 +136,10 @@ function advanceState(state) {
     if (updatedState.deathCooldown > 0) {
         updatedState.deathCooldown -= FRAME_LENGTH;
         if (updatedState.deathCooldown <= 0) {
-            return clearSprites({ ...updatedState, gameover: true, gameOverTime: 0, continueIndex: 0, slowTimeFor: 0});
+            return clearSprites({
+                ...updatedState, gameover: true, gameOverTime: 0, bgm: false,
+                continueIndex: 0, slowTimeFor: 0,
+            });
         }
     }
     let { paused } = updatedState;

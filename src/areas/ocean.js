@@ -256,9 +256,9 @@ function getOceanLayers() {
     groundStuff: getNewLayer({
         xFactor: 1, yFactor: 1, yOffset: -56,
         spriteData: {
-            seaweed: { animation: seaweedAnimation, scale: 2, offset: [-10, 100, 150], yOffset: [-1, 2, 4] },
-            coral1: { animation: coral1Animation, scale: 1, offset: [20, 120], yOffset: [-1, 2, 4] },
-            coral2: { animation: coral2Animation, scale: 1, offset: [100], yOffset: [-1, 2, 4] },
+            seaweed: { animation: seaweedAnimation, scale: 2, offset: [-10, 50, 80], yOffset: [-1, 2, 4] },
+            coral1: { animation: coral1Animation, scale: 1, offset: [20, 60], next: 'seaweed', yOffset: [-1, 2, 4] },
+            coral2: { animation: coral2Animation, scale: 1, offset: [50], next: 'seaweed', yOffset: [-1, 2, 4] },
         },
     }),
     // Background layers start at the top left corner of the screen.

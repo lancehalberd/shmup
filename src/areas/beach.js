@@ -223,11 +223,25 @@ function getBeachLayers() {
     };
 }
 
-const shellMonkGeometry = r(100, 100);
+const shellMonkGeometry = r(100, 100, {
+    hitboxes:[
+        {"left":20,"width":49,"top":44,"height":52},
+        {"left":29,"width":37,"top":29,"height":15},
+    ]
+});
+const shellMonkAttackGeometry = r(100, 100, {
+    hitboxes:[
+        {"left":24,"width":33,"top":61,"height":35},
+    ],
+    damageBoxes: [
+        {"left":28,"width":56,"top":31,"height":52},
+        {"left":64,"width":8,"top":5,"height":27},
+    ]
+});
 enemyData[ENEMY_SHELL_MONK] = {
     animation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
     deathAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {x: 2}),
-    attackAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 0, 0, 1], duration: 12}),
+    attackAnimation: createAnimation('gfx/enemies/monks/shellrobes.png', shellMonkAttackGeometry, {cols: 2, frameMap: [1, 0, 0, 0, 0, 0, 1], duration: 12}),
     deathSound: 'sfx/robedeath1.mp3',
     isInvulnerable(state, enemy) {
         return !(enemy.attackCooldownFramesLeft > 0);

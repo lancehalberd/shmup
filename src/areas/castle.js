@@ -65,16 +65,8 @@ const {
     singleEnemy, singleEasyHardEnemy,
 } = require('enemyPatterns');
 allWorlds[WORLD_CASTLE] = {
-    initialEvent: 'seaUrchins',
+    initialEvent: 'nothing',
     events: {
-        transition: (state, eventTime) => {
-            state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
-            if (eventTime === 1000) {
-                state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 400});
-                return setEvent(state, 'nothing');
-            }
-            return state;
-        },
         nothing: nothing(1000, 'piranha'),
         piranha: (state, eventTime) => {
             if (eventTime === 0) {
@@ -165,6 +157,7 @@ function getCastleWorld() {
     };
 }
 
+const groundStartLoop = createAnimation('gfx/scene/castle/groundend.png', r(200, 60));
 const groundLoop = createAnimation('gfx/scene/castle/groundloop.png', r(200, 60));
 const backLoop = createAnimation('gfx/scene/castle/backloop.png', r(40, 40));
 const bubbles1Animation = createAnimation('gfx/scene/ocean/coral.png', r(120, 120));
@@ -176,6 +169,12 @@ const deepWaterAnimation = createAnimation('gfx/scene/ocean/under.png', r(400, 9
 
 function getCastleLayers() {
     return {
+    deepWaterback: getNewLayer({
+        xFactor: 0, yFactor: 1, yOffset: 0, xOffset: 0, unique: true,
+        spriteData: {
+            sky: {animation: deepWaterAnimation, scale: 2},
+        },
+    }),
     deepWater: getNewLayer({
         xFactor: 0, yFactor: 0, yOffset: 0, xOffset: 0, unique: true,
         spriteData: {
@@ -183,27 +182,28 @@ function getCastleLayers() {
         },
     }),
     backgroundLow: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -120,
+        xFactor: 1, yFactor: 1, yOffset: -120, xOffset: 160,
         spriteData: {
             ground: {animation: backLoop, scale: 4},
         },
     }),
     backgroundMedium: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -275, xOffset: -30,
+        xFactor: 1, yFactor: 1, yOffset: -275, xOffset: 250,
         spriteData: {
             ground: {animation: backLoop, scale: 4},
         },
     }),
     backgroundHigh: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: -430,
+        xFactor: 1, yFactor: 1, yOffset: -430, xOffset: 200,
         spriteData: {
             ground: {animation: backLoop, scale: 4},
         },
     }),
     ground: getNewLayer({
-        xFactor: 1, yFactor: 1, yOffset: 0,
+        xFactor: 1, yFactor: 1, yOffset: 0, firstElements: ['ground'],
         spriteData: {
-            ground: {animation: groundLoop, scale: 2},
+            groundStart: {animation: groundStartLoop, scale: 2, next: 'ground'},
+            ground: {animation: groundLoop, scale: 2, next: 'ground'},
         },
     }),
     midStuff: getNewLayer({
@@ -225,7 +225,7 @@ function getCastleLayers() {
     bgLayerNames: [],
     // Midground layers use the bottom of the HUD as the top of the screen,
     // which is consistent with all non background sprites, making hit detection simple.
-    mgLayerNames: ['backgroundHigh', 'backgroundMedium', 'backgroundLow', 'ground', 'midStuff', 'groundStuff'],
+    mgLayerNames: ['deepWaterback', 'backgroundHigh', 'backgroundMedium', 'backgroundLow', 'ground', 'midStuff', 'groundStuff'],
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: ['deepWater'],
     };
