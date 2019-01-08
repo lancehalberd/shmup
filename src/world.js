@@ -1,7 +1,7 @@
 const { FRAME_LENGTH, GAME_HEIGHT, WIDTH, HEIGHT, HUD_HEIGHT } = require('gameConstants');
 const Rectangle = require('Rectangle');
 const random = require('random');
-const { drawImage } = require('draw');
+const { drawImage, fillRectangle } = require('draw');
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 const { getFrame, r, createAnimation } = require('animations');
 const { getNewSpriteState } = require('sprites');
@@ -116,6 +116,7 @@ function updateLayerSprites(state, layer, callback) {
 function clearLayers(state, layerNames) {
     const world = {...state.world};
     for (const layerName of layerNames) {
+        if (!world[layerName]) continue;
         const sprites = world[layerName].sprites.filter(sprite => sprite.left < WIDTH);
         world[layerName] = {...world[layerName], spriteData: false, sprites};
     }

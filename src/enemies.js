@@ -49,16 +49,17 @@ function accelerate_followPlayer(state, enemy) {
     const speed = enemy.speed;
     const {dx, dy} = getTargetVector(enemy, state.players[0].sprite);
     const theta = Math.atan2(dy + (enemy.followYOffset || 0), dx + (enemy.followXOffset || 0));
-    if (enemy.animationTime === 0) {
+    const weight = enemy.weight || 20;
+    if (enemy.animationTime === 0 && !vx && !vy) {
         vx = speed * Math.cos(theta);
         vy = speed * Math.sin(theta);
     } else if (enemy.animationTime < (enemy.followPlayerFor || 3000)) {
-        vx = (vx * 20 + speed * Math.cos(theta)) / 21;
-        vy = (vy * 20 + speed * Math.sin(theta)) / 21;
+        vx = (vx * weight + speed * Math.cos(theta)) / (weight + 1);
+        vy = (vy * weight + speed * Math.sin(theta)) / (weight + 1);
     } else {
         const tvx = 6 * Math.abs(vx) / vx;
-        vx = (vx * 20 + tvx) / 21;
-        vy = (vy * 20 + 0) / 21;
+        vx = (vx * weight + tvx) / (weight + 1);
+        vy = (vy * weight + 0) / (weight + 1);
     }
     return {...enemy, vx, vy};
 }
@@ -360,6 +361,7 @@ function addEnemyToState(state, enemy) {
 }
 
 function removeEnemy(state, enemy, reason = 'unknown') {
+    //console.log(new Error('removed' + reason));
     const idMap = {...state.idMap};
     delete idMap[enemy.id];
     return {...state, idMap};
@@ -572,6 +574,7 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
         context.save();
         context.translate(hitbox.left + hitbox.width / 2, hitbox.top + hitbox.height / 2);
         context.scale(-1, 1);
+        if (enemy.rotation) context.rotate(enemy.rotation);
         // This draws the image frame so that the center is exactly at the origin.
         const target = drawBox.moveTo(
             -hitbox.width / 2 - hitbox.left + enemy.left,
@@ -583,6 +586,7 @@ function renderEnemyFrame(context, state, enemy, frame, drawBox = undefined) {
     } else {
         context.save();
         context.translate(hitbox.left + hitbox.width / 2, hitbox.top + hitbox.height / 2);
+        if (enemy.rotation) context.rotate(enemy.rotation);
         const target = drawBox.moveTo(
             -hitbox.width / 2 - hitbox.left + enemy.left,
             -hitbox.height / 2 - hitbox.top + enemy.top,
@@ -781,93 +785,6 @@ function advanceEnemy(state, enemy) {
     return updateEnemy(state, enemy, {ttl, attackCooldownFramesLeft, pendingDamage: 0});
 }
 
-
-const ENEMY_DEMO_EMPRESS = 'demoEmpress';
-const demoEmpressGeometry = r(90, 93,
-    {hitbox: {left: 47, top: 3, width: 20, height: 71}, scaleX: 3, scaleY: 3},
-);
-const thanksImage = r(298, 88, {image: requireImage('gfx/thanksyouw.png')});
-
-enemyData[ENEMY_DEMO_EMPRESS] = {
-    swoopAnimation: createAnimation('gfx/enemies/empress.png', demoEmpressGeometry, {cols: 2}),
-    animation: createAnimation('gfx/enemies/empress.png', demoEmpressGeometry, {x: 2, cols: 2}),
-    getAnimation(state, enemy) {
-        if (enemy.mode === 'enter') {
-            return this.swoopAnimation;
-        }
-        return this.animation;
-    },
-    accelerate(state, enemy) {
-        let {vx, vy, mode, modeTime, top, left, tint} = enemy;
-        switch (mode) {
-            // Swoop onto the right side of the screen.
-            case 'enter':
-                if (top < 0) vy = 20;
-                else vy *= 0.9;
-                if (left > 4 * WIDTH / 5) vx = -40;
-                else vx *= 0.9;
-                if (top >= GAME_HEIGHT / 4 && left <=  3 * WIDTH / 4) {
-                    mode = 'float';
-                    modeTime = 0;
-                }
-                break;
-            // Float for a few seconds before summoning fatal lightning.
-            case 'float':
-                vx = Math.cos(modeTime / 300);
-                vy = Math.sin(modeTime / 300);
-                if (modeTime > 3000) {
-                    mode = 'lightning';
-                    modeTime = 0;
-                }
-                tint = null;
-                break;
-            case 'lightning':
-                vx = vy = 0;
-                tint = {color: modeTime % 400 < 200 ? 'white' : 'black', amount: 0.9};
-                if (modeTime > 3500) {
-                    mode = 'float';
-                    modeTime = 0;
-                }
-                break;
-        }
-        modeTime += FRAME_LENGTH;
-        return {...enemy, vx, vy, mode, modeTime, top, left, tint};
-    },
-    drawUnder(context, state, enemy) {
-        if (enemy.mode === 'enter') return;
-        drawImage(context, thanksImage.image, thanksImage,
-            new Rectangle(thanksImage).scale(2).moveCenterTo(WIDTH / 2, GAME_HEIGHT / 4)
-        );
-    },
-    shoot(state, enemy) {
-        // Rapidly summon lightning bolts until the player is defeated.
-        if (enemy.mode === 'lightning' && enemy.modeTime % 300 === 0 && enemy.modeTime < 3000) {
-            let left = (enemy.modeTime + Math.floor(Math.random() * 50)) % WIDTH - 40;
-            for (let i = 0; i < 3; i ++) {
-                const lightning = createAttack(ATTACK_LIGHTNING_BOLT, {
-                    left,
-                    top: 0,
-                    delay: 10,
-                    vy: 30,
-                });
-                left += 60
-                state = addEnemyAttackToState(state, lightning);
-            }
-        }
-        return state;
-    },
-    props: {
-        life: 100000,
-        speed: 20,
-        boss: true,
-        permanent: true,
-        mode: 'enter',
-        doNotFlip: true,
-        left: 1000,
-        top: -100,
-    },
-};
-
 const ENEMY_FLEA = 'flea';
 const fleaGeometry = r(15, 15);
 
@@ -974,7 +891,6 @@ module.exports = {
     updateEnemy,
     getDefaultEnemyAnimation,
     enemyIsActive,
-    ENEMY_DEMO_EMPRESS,
     ENEMY_FLEA,
     ENEMY_SHIELD_MONK,
     accelerate_followPlayer,

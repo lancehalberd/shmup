@@ -327,11 +327,23 @@ enemyData[ENEMY_STINK_BUG] = {
     animation: createAnimation('gfx/enemies/stinkbugsheet.png', stinkBugGeometry, {cols: 3}),
     deathAnimation: createAnimation('gfx/enemies/stinkbugsheet.png', stinkBugGeometry, {x: 3}),
     deathSound: 'sfx/flydeath.mp3',
+    updateState(state, enemy) {
+        if (enemy.dead) return state;
+        // This is used for the "throwing" logic by the castle boss portals.
+        if (enemy.targetX) {
+            if (enemy.left < enemy.targetX) {
+                return updateEnemy(state, enemy, {ax: 0, ay: 0, vx: 0, vy: 0, targetX: 0});
+            }
+            return updateEnemy(state, enemy, {vy: enemy.vy + enemy.ay});
+        }
+        return state;
+    },
     onDeathEffect(state, enemy) {
         const enemyHitbox = getEnemyHitbox(state, enemy);
         const gas = createAttack(ATTACK_GAS, {
             left: enemyHitbox.left + enemyHitbox.width / 2,
             top: enemyHitbox.top + enemyHitbox.height / 2,
+            ttl: enemy.gasTTL,
         });
         gas.left -= gas.width / 2;
         gas.top -= gas.height / 2;
@@ -340,10 +352,10 @@ enemyData[ENEMY_STINK_BUG] = {
     props: {
         life: 2,
         vx: 0,
-        verticalSpeed: 6,
         hanging: true,
         bounceSpeed: 4,
         score: 20,
+        gasTTL: 3000 / FRAME_LENGTH,
     },
 };
 

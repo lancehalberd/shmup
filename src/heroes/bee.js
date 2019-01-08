@@ -82,6 +82,7 @@ heroesData[HERO_BEE] = {
     baseSpeed: 7,
     meleePower: 2,
     meleeScaling: 0.25,
+    meleeOffset: -20,
     chargeXOffset: -30,
     hudColor: '#603820',
     // hudColor: '#E85038'

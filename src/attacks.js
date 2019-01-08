@@ -17,9 +17,8 @@ const {
     getFrame,
     blastStartAnimation,
     blastLoopAnimation,
-    slashAnimation,
-    stabAnimation,
     hugeExplosionAnimation,
+    PRIORITY_HEROES,
 } = require('animations');
 const { isKeyDown, KEY_SHIFT } = require('keyboard');
 
@@ -41,6 +40,33 @@ const sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(9, 9));
 const sprayAnimationUp = createAnimation('gfx/attacks/s3.png', r(9, 9));
 const sprayAnimationRight = createAnimation('gfx/attacks/s2.png', r(9, 9));
 const sprayAnimationDown = createAnimation('gfx/attacks/s4.png', r(9, 9));
+
+
+const slashGeometry = r(30, 50, {
+    hitbox: {left: -20, top: 0, width: 50, height: 50},
+});
+const slashAnimation = {
+    frames: [
+        {...slashGeometry, image: requireImage('gfx/attacks/slash1.png', PRIORITY_HEROES)},
+        {...slashGeometry, image: requireImage('gfx/attacks/slash2.png', PRIORITY_HEROES)},
+        {...slashGeometry, image: requireImage('gfx/attacks/slash3.png', PRIORITY_HEROES)},
+        {...slashGeometry, image: requireImage('gfx/attacks/slash4.png', PRIORITY_HEROES)},
+    ],
+    frameDuration: 3,
+};
+
+const stabGeometry = r(45, 45, {
+    hitbox: {left: -20, top: 0, width: 65, height: 45},
+});
+const stabAnimation = {
+    frames: [
+        {...stabGeometry, image: requireImage('gfx/attacks/stab1.png', PRIORITY_HEROES)},
+        {...stabGeometry, image: requireImage('gfx/attacks/stab2.png', PRIORITY_HEROES)},
+        {...stabGeometry, image: requireImage('gfx/attacks/stab3.png', PRIORITY_HEROES)},
+        {...stabGeometry, image: requireImage('gfx/attacks/stab4.png', PRIORITY_HEROES)},
+    ],
+    frameDuration: 3,
+};
 
 const attacks = {
     [ATTACK_SPRAY_UP]: {

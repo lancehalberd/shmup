@@ -136,7 +136,9 @@ const useMeleeAttack = (state, playerIndex) => {
     const meleeAttack = createAttack(heroData.meleeAttack, {
         damage: heroData.meleePower + triplePowers + powers / 3,
         top: player.sprite.top + player.sprite.vy + player.sprite.height / 2,
-        left: player.sprite.left + player.sprite.vx + player.sprite.width + ATTACK_OFFSET,
+        left: player.sprite.left + player.sprite.vx + player.sprite.width +
+            ATTACK_OFFSET + (heroData.meleeOffset || 0),
+        xOffset: ATTACK_OFFSET + (heroData.meleeOffset || 0),
         playerIndex,
         scale,
     });

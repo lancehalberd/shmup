@@ -33,6 +33,7 @@ const ENEMY_BALLOON_MONK = 'balloonMonk';
 module.exports = {
     CHECK_POINT_CIRCUS_START,
     WORLD_CIRCUS,
+    ENEMY_GRASSHOPPER,
     getCircusWorld,
 };
 

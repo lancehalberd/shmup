@@ -64,7 +64,7 @@ enemyData[ENEMY_JUMPING_SPIDER] = {
                     return enemy;
                 }
                 if (jumps >= 3) {
-                    return {...enemy, vx: enemy.vx * 1.3, vy: -Math.abs(2 * vx)};
+                    return {...enemy, vx: enemy.vx * 1.3, vy: enemy.jumpVelocity || -Math.abs(2 * vx)};
                 }
 
                 //set base speed to world velocity

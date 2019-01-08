@@ -36,8 +36,13 @@ let stateQueue = [];
 let state = {};
 
 let frameToEdit = null;
-//frameToEdit = splashAnimation.frames[0];
-
+/*frameToEdit = createAnimation('gfx/enemies/empress/empress.png', r(90, 93, {
+    hitboxes: [
+        {"left":53,"width":12,"top":9,"height":64},
+        {"left":65,"width":4,"top":18,"height":56},
+        {"left":46,"width":7,"top":30,"height":34},
+    ]
+}), {x: 2}).frames[0]*/
 
 const update = () => {
     if (!state.world) {

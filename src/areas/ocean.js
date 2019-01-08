@@ -13,7 +13,7 @@ const {
 const WORLD_OCEAN = 'ocean';
 const CHECK_POINT_OCEAN_START = 'oceanStart';
 const CHECK_POINT_OCEAN_END = 'oceanEnd'
-const OCEAN_DURATION = 40000;
+const OCEAN_DURATION = 30000;
 const ENEMY_PIRANHA = 'piranha';
 const ENEMY_PIRANHA_RIDER = 'piranhaRider';
 const ENEMY_SEA_URCHIN = 'seaUrchin';
@@ -96,7 +96,7 @@ allWorlds[WORLD_OCEAN] = {
             }
             eventTime -= spacing;
             if (eventTime >= 0) {
-                return setEvent(state, ['urchin', 'shellMonk']);
+                return setEvent(state, ['shellMonk']);
             }
         },
         seaUrchins: (state, eventTime) => {
@@ -145,7 +145,6 @@ allWorlds[WORLD_OCEAN] = {
         },
     },
     advanceWorld(state) {
-        //state = this.updateWater(state);
         state = this.floatEnemies(state);
         let world = state.world;
         // For now just set the targetFrame and destination constantly ahead.
@@ -166,20 +165,11 @@ allWorlds[WORLD_OCEAN] = {
         state = {...state, world};
         return allWorlds[world.type].events[world.event](state, state.world.eventTime || 0) || state;
     },
-    // Scroll the deep water up at the beginning of the level.
-    updateWater(state) {
-        let water = state.world.deepWater.sprites[0];
-        if (!water) return state;
-        const start = 0, end = GAME_HEIGHT - water.height;
-        const top = Math.max(end, start - state.world.time / 50);
-        state = updateLayerSprite(state, 'deepWater', 0, {left: 0, top});
-        return updateLayerSprite(state, 'deepWaterback', 0, {left: 0, top});
-    },
     floatEnemies(state) {
         for (const enemy of state.enemies) {
             if (!enemy.dead || enemy.grounded) continue;
             const enemyHitbox = getEnemyHitbox(state, enemy);
-            state = updateEnemy(state, enemy, {vx: enemy.vx * 0.99, vy: enemy.vy * 0.85 - 1.2 });
+            state = updateEnemy(state, enemy, {vx: enemy.vx * 0.99, vy: enemy.vy * 0.85 - 2 });
         }
         return state;
     }
@@ -215,9 +205,10 @@ const deepWaterAnimation = createAnimation('gfx/scene/ocean/under.png', r(400, 9
 function getOceanLayers() {
     return {
     deepWaterback: getNewLayer({
+        backgroundColor: 'blue',
         xFactor: 0, yFactor: 1, yOffset: 0, xOffset: 0, unique: true,
         spriteData: {
-            sky: {animation: deepWaterAnimation, scale: 2},
+            sky: {animation: deepWaterAnimation, scale: 2, alpha: 0.5},
         },
     }),
     deepWater: getNewLayer({

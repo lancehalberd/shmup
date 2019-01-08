@@ -24,6 +24,7 @@ allWorlds[OCEAN_TO_CASTLE] = {
         //
         let castleWorld = getCastleWorld();
         for (const key of castleWorld.mgLayerNames) {
+            if (key === 'deepWaterback') continue;
             castleWorld[key].xOffset = (castleWorld[key].xOffset || 0) + WIDTH + 380;
         }
         // Stop spawning sprites in the ocean world.
@@ -31,6 +32,7 @@ allWorlds[OCEAN_TO_CASTLE] = {
         for (const key of oceanWorld.mgLayerNames) {
             oceanWorld[key] = {...oceanWorld[key], spriteData: null};
         }
+        castleWorld.ground.xOffset -= 300;
         // These names collide with names from the castle world, so reassign them here.
         castleWorld.oceanground = oceanWorld.ground;
         castleWorld.oceanMidstuff = oceanWorld.midStuff;
@@ -38,13 +40,20 @@ allWorlds[OCEAN_TO_CASTLE] = {
         // This is the final combined layers for transitioning from the ocean to the castle.
         castleWorld.mgLayerNames = [
             'deepWaterback', 'oceanground', 'highStuff', 'oceanMidstuff', 'lowStuff', 'oceanGroundStuff',
-            'backgroundHigh', 'backgroundMedium', 'backgroundLow', 'ground', 'midStuff', 'groundStuff'
+            'backgroundHigh', 'backgroundMedium', 'backgroundLow',
+            'wallDecorations', 'torchHolders',
+            'ground', 'midStuff', 'groundStuff'
         ];
         // show the ground start element initially, which is not normally displayed in this layer.
         castleWorld.ground.firstElements = ['groundStart'];
         state = setCheckpoint(state, CHECK_POINT_CASTLE_START);
         // Use fade transition for now.
-        return {...state, world: {...oceanWorld, ...castleWorld, event: 'nothing'}};
+        return {...state, world: {
+                ...oceanWorld, ...castleWorld,
+                time: oceanWorld.time,
+                event: 'nothing'
+            }
+        };
     },
 };
 

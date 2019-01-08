@@ -363,7 +363,13 @@ const { attacks, createAttack, addEnemyAttackToState } = require('attacks');
 const ATTACK_FEATHER = 'feather';
 
 attacks[ATTACK_FEATHER] = {
-    animation: createAnimation('gfx/enemies/birds/feather.png', r(50, 47)),
+    animation: createAnimation('gfx/enemies/birds/feather.png', r(50, 47, {
+        hitboxes: [
+            {"left":31,"width":10,"top":12,"height":11},
+            {"left":18,"width":12,"top":24,"height":8},
+            {"left":8,"width":11,"top":32,"height":5},
+        ]
+    })),
     props: {
         sfx: 'sfx/throwhit.mp3',
     },

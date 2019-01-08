@@ -132,28 +132,6 @@ const blastLoopAnimation = {
     frameDuration: 2,
 };
 
-const slashRectangle = r(30, 50);
-const slashAnimation = {
-    frames: [
-        {...slashRectangle, image: requireImage('gfx/attacks/slash1.png', PRIORITY_HEROES)},
-        {...slashRectangle, image: requireImage('gfx/attacks/slash2.png', PRIORITY_HEROES)},
-        {...slashRectangle, image: requireImage('gfx/attacks/slash3.png', PRIORITY_HEROES)},
-        {...slashRectangle, image: requireImage('gfx/attacks/slash4.png', PRIORITY_HEROES)},
-    ],
-    frameDuration: 3,
-};
-
-const stabRectangle = r(45, 45);
-const stabAnimation = {
-    frames: [
-        {...stabRectangle, image: requireImage('gfx/attacks/stab1.png', PRIORITY_HEROES)},
-        {...stabRectangle, image: requireImage('gfx/attacks/stab2.png', PRIORITY_HEROES)},
-        {...stabRectangle, image: requireImage('gfx/attacks/stab3.png', PRIORITY_HEROES)},
-        {...stabRectangle, image: requireImage('gfx/attacks/stab4.png', PRIORITY_HEROES)},
-    ],
-    frameDuration: 3,
-};
-
 const deflectAnimation = {
     frames: [
         {...r(14, 15), image: requireImage('gfx/attacks/deflect1.png', PRIORITY_FIELD)},
@@ -434,8 +412,6 @@ module.exports = {
     needleFlipAnimation,
     blastStartAnimation,
     blastLoopAnimation,
-    slashAnimation,
-    stabAnimation,
     deflectAnimation,
     damageAnimation,
     explosionAnimation,

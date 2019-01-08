@@ -16,6 +16,7 @@ function transitionToCircusBoss(state) {
     const world = {
         ...state.world,
         y: 400,
+        spawnsDisabled: true,
         type: WORLD_CIRCUS_BOSS,
         time: 0,
         targetFrames: 50 * 5,
