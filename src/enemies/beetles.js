@@ -106,7 +106,9 @@ enemyData[ENEMY_LIGHTNING_BEETLE] = {
 };
 
 attacks[ATTACK_LIGHTNING_BOLT] = {
-    animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600), {duration: 72}),
+    animation: createAnimation('gfx/attacks/lightningstrike.png', r(15, 600, {
+        hitbox: {left: 4, top: 0, width: 7, height: 600}
+    }), {duration: 72}),
     advance(state, attack) {
         const neargroundKey = state.world.mgLayerNames[state.world.mgLayerNames.length - 1];
         return default_advanceAttack(state, {

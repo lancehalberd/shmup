@@ -306,13 +306,8 @@ enemyData[ENEMY_EMPRESS] = {
                 vy: 2 * Math.sin(enemy.modeTime / 100),
             });
         } else if (enemy.mode === 'preparingThunder') {
-            if (enemy.animationTime % 400 === 0){
-                state = updateEnemy(state, enemy, {tint: {color: 'black', amount: 0.8}});
-                enemy = state.idMap[enemy.id];
-            } else if (enemy.animationTime % 400 === 200) {
-                state = updateEnemy(state, enemy, {tint: {color: 'white', amount: 0.8}});
-                enemy = state.idMap[enemy.id];
-            }
+            state = flashEnemy(state, enemy);
+            enemy = state.idMap[enemy.id];
             return moveToTarget(state, enemy, enemy.speed / 3, enemy.targetX, enemy.targetY, 'summonThunder', 600);
         } else if (enemy.mode === 'summonThunder') {
             if (enemy.modeTime === 20) {
@@ -411,7 +406,13 @@ enemyData[ENEMY_EMPRESS] = {
         bulletWaveChance: 1,
     },
 };
-
+function flashEnemy(state, enemy) {
+    if (enemy.animationTime % 280 === 0)
+        return updateEnemy(state, enemy, {tint: {color: 'black', amount: 0.8}});
+    if (enemy.animationTime % 280 === 140)
+        return updateEnemy(state, enemy, {tint: {color: 'white', amount: 0.8}});
+    return state;
+}
 function moveToTarget(state, enemy, speed, targetX, targetY, mode, delay = 0) {
     const center = new Rectangle(getEnemyHitbox(state, enemy)).getCenter();
     const dx = targetX - center[0];
@@ -452,7 +453,12 @@ const portalAnimation = createAnimation('gfx/scene/portal/portal.png', portalGeo
 const startTime = 2000;
 enemyData[ENEMY_FLYING_ANT_PORTAL] = {
     animation: portalAnimation,
-    deathAnimation: createAnimation('gfx/scene/portal/portal.png', portalGeometry, {rows: 2, duration: 8, frameMap: [1, 0]}),
+    deathAnimation: createAnimation('gfx/scene/portal/portal.png', portalGeometry, {rows: 3, y: -1, duration: 8, frameMap: [2, 1, 0]}, {loop: false}),
+    getAnimation(state, enemy) {
+        if (enemy.dead) return this.deathAnimation;
+        if (enemy.modTime >= startTime + this.number * this.interval) return this.deathAnimation;
+        return this.animation;
+    },
     updateState(state, enemy) {
         if (!enemy.dead && (state.players[0].usingFinisher || state.enemies[0].dead)) {
             return updateEnemy(state, enemy, {life: 0, dead: true});
@@ -466,11 +472,25 @@ enemyData[ENEMY_FLYING_ANT_PORTAL] = {
         return this.checkToSpawn(state, enemy);
     },
     checkToSpawn(state, enemy) {
-        const modTime = enemy.animationTime % 15000;
-        const number = 10, interval = 300;
-        if (modTime % interval || modTime < startTime || modTime > startTime + number * interval) return state;
-        const index = (modTime - startTime) / interval;
-        const flyingAnt = createEnemy(state, ENEMY_FLYING_ANT, {
+        state = updateEnemy(state, enemy, {modTime: (enemy.modTime + FRAME_LENGTH) % this.period});
+        enemy = state.idMap[enemy.id];
+        const modTime = enemy.modTime;
+        if (modTime === 0 || modTime === startTime + this.number * this.interval) {
+            state = updateEnemy(state, enemy, {animationTime: 0});
+        }
+        //if (modTime >= startTime - 1000 && modTime < startTime) return flashEnemy(state, enemy);
+        //if (modTime === startTime) return updateEnemy(state, enemy, {tint: null});
+        if (modTime % this.interval !== 0 ||
+            modTime < startTime ||
+            modTime > startTime + this.number * this.interval
+        ) {
+            return state;
+        }
+        const index = (modTime - startTime) / this.interval;
+        return addEnemyToState(state, this.spawnEnemy(state, enemy, index));
+    },
+    spawnEnemy(state, enemy, index) {
+        return createEnemy(state, ENEMY_FLYING_ANT, {
             top: enemy.top + 10 + 4 * index,
             left: enemy.left - 5,
             vx: -5,
@@ -478,23 +498,22 @@ enemyData[ENEMY_FLYING_ANT_PORTAL] = {
             followPlayerFor: 1800,
             weight: 30, // This is the weight of the current velocity over the tracking velocity.
         });
-        return addEnemyToState(state, flyingAnt);
     },
+    interval: 300,
+    number: 10,
+    period: 15000,
     props: {
         life: 1,
         stationary: true,
         alpha: 0.8,
+        modTime: 0,
     }
 };
 
 enemyData[ENEMY_JUMPING_SPIDER_PORTAL] = {
     ...enemyData[ENEMY_FLYING_ANT_PORTAL],
-    checkToSpawn(state, enemy) {
-        const modTime = enemy.animationTime % 20000;
-        const number = 5, interval = 500;
-        if (modTime % interval || modTime < startTime || modTime > startTime + number * interval) return state;
-        const index = (modTime - startTime) / interval;
-        const jumpingSpider = createEnemy(state, ENEMY_JUMPING_SPIDER, {
+    spawnEnemy(state, enemy, index) {
+        return createEnemy(state, ENEMY_JUMPING_SPIDER, {
             top: enemy.top + 20,
             left: enemy.left - 10 + Math.random() * 40,
             vx: -2 - Math.random(),
@@ -504,19 +523,17 @@ enemyData[ENEMY_JUMPING_SPIDER_PORTAL] = {
             jumpVelocity: random.element([-16, -22, -28]),
             mode: 'jumping',
         });
-        return addEnemyToState(state, jumpingSpider);
     },
+    interval: 500,
+    number: 5,
+    period: 20000,
 };
 
 enemyData[ENEMY_STINK_BUG_PORTAL] = {
     ...enemyData[ENEMY_FLYING_ANT_PORTAL],
-    checkToSpawn(state, enemy) {
-        const modTime = enemy.animationTime % 25000;
-        const endTime = startTime + 160, interval = 20;
-        if (modTime % interval || modTime < startTime || modTime > endTime) return state;
-        const index = (modTime - startTime) / interval;
+    spawnEnemy(state, enemy, index) {
         const sourceOffset = [20, 40]
-        const stinkBug = createEnemy(state, ENEMY_STINK_BUG, {
+        return createEnemy(state, ENEMY_STINK_BUG, {
             left: enemy.left + sourceOffset[0],
             top: enemy.top + sourceOffset[1],
             vx: -5 - index * 2,
@@ -526,19 +543,17 @@ enemyData[ENEMY_STINK_BUG_PORTAL] = {
             noCollisionDamage: true,
             gasTTL: 16000 / FRAME_LENGTH,
         });
-        return addEnemyToState(state, stinkBug);
     },
+    interval: 20,
+    number: 8,
+    period: 25000,
 };
 
 enemyData[ENEMY_BUBBLE_SHOT_PORTAL] = {
     ...enemyData[ENEMY_FLYING_ANT_PORTAL],
-    checkToSpawn(state, enemy) {
-        const modTime = enemy.animationTime % 30000;
-        const number = 6, interval = 400;
-        if (modTime % interval || modTime < startTime || modTime > startTime + number * interval) return state;
-        const index = (modTime - startTime) / interval;
+    spawnEnemy(state, enemy, index) {
         const sourceOffset = [20, 40]
-        const bubbleShot = createEnemy(state, ENEMY_BUBBLE_SHOT, {
+        return createEnemy(state, ENEMY_BUBBLE_SHOT, {
             left: enemy.left + sourceOffset[0],
             top: enemy.top + sourceOffset[1],
             vx: -4 - Math.random() * 5,
@@ -548,8 +563,10 @@ enemyData[ENEMY_BUBBLE_SHOT_PORTAL] = {
             sourceId: enemy.id,
             sourceOffset,
         });
-        return addEnemyToState(state, bubbleShot);
     },
+    interval: 400,
+    number: 6,
+    period: 30000,
 };
 
 
