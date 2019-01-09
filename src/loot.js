@@ -218,6 +218,7 @@ const lootData = {
         collect(state, playerIndex, loot) {
             let comboScore = Math.min(1000, state.players[playerIndex].comboScore + loot.comboPoints);
             state = updatePlayer(state, playerIndex, { comboScore });
+            state = updateEnemy(state, state.idMap[loot.sourceId], {collected: true});
             return gainPoints(state, playerIndex, loot.points);
         },
         draw(context, state, loot) {
@@ -477,7 +478,7 @@ module.exports = {
 
 // Move possible circular imports to after exports.
 const { allWorlds, getHazardHeight, getHazardCeilingHeight } = require('world');
-const { addEnemyToState, createEnemy } = require('enemies');
+const { addEnemyToState, createEnemy, updateEnemy } = require('enemies');
 const { ENEMY_CARGO_BEETLE } = require('enemies/beetles');
 
 const { updatePlayer, getHeroHitbox, ladybugAnimation, } = require('heroes');

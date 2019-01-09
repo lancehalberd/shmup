@@ -85,13 +85,17 @@ const {
 } = require('enemyPatterns');
 function spawnRing(state, top, left) {
     const scale = Math.max(1.2, 2.5 - state.world.time / 100000);
+
+    const ring = createEnemy(state, ENEMY_FIRE_RING, {top, left, scale});
+    state = addEnemyToState(state, ring);
+
     const loot = createLoot(LOOT_FLAME_COIN);
     loot.width = 2;
     loot.left = left + scale * 50 - 1;
     loot.top = top + 5 * scale;
     loot.height = 90 * scale;
-    state = addLootToState(state, loot);
-    return spawnEnemy(state, ENEMY_FIRE_RING, {top, left, important: true, scale})
+    loot.sourceId = ring.id;
+    return addLootToState(state, loot);
 }
 allWorlds[WORLD_CIRCUS] = {
     initialEvent: 'nothing',
@@ -376,6 +380,17 @@ enemyData[ENEMY_FIRE_RING] = {
             enemy.left + scaleX * (enemy.width / 2 - 3),
             enemy.top + scaleY * enemy.height, scaleX * 4, GAME_HEIGHT);
         context.save();
+        // Draw a glowing film in the loop if the player hasn't collected the bonus
+        // from the loop yet.
+        if (!enemy.collected) {
+            context.globalAlpha = 0.5 + 0.25 * Math.cos(state.world.time / 200);
+            context.fillStyle = 'white';
+            context.beginPath();
+            let x = enemy.left + scaleX * enemy.width / 2;
+            let y = enemy.top + scaleY * enemy.height / 2;
+            context.ellipse(x, y, 13 * scaleX, 47 * scaleY, 0, 0, Math.PI * 2);
+            context.fill();
+        }
         context.globalAlpha = 0.5;
         renderEnemyFrame(context, state, enemy, frame);
         context.restore();
