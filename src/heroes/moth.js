@@ -12,6 +12,8 @@ const {
     createAnimation,
 } = require('animations');
 const { heroesData, updatePlayer } = require('heroes');
+const { LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
+const { createAttack, addPlayerAttackToState, getAttackFrame } = require('attacks');
 
 const mothHitbox = {left: 27, top: 10, width: 48, height: 40};
 const mothRectangle = r(88, 56, {
@@ -79,10 +81,12 @@ heroesData[HERO_MOTH] = {
                 {specialFrames: player.specialFrames + 1},
             );
         }
+        let invulnerableFor = 4001;
+        if (state.players[0].relics[LOOT_NECKLACE]) invulnerableFor += 1000;
         // Using 4001 will trigger a warning noise from code in
         // heroes.js when there is 1 second left.
         return updatePlayer(state, playerIndex,
-            {usingSpecial: false, invulnerableFor: 4001},
+            {usingSpecial: false, invulnerableFor},
         );
     },
     shotCooldown: 16,
@@ -92,9 +96,14 @@ heroesData[HERO_MOTH] = {
         const shotCooldown = (this.shotCooldown || SHOT_COOLDOWN) - attackSpeedPowers;
         state = updatePlayer(state, playerIndex, {shotCooldown});
         player = state.players[playerIndex];
-        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-        const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
+        let powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
+        let triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        let tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
+        if (state.players[0].relics[LOOT_NEEDLE]) {
+            powers+=2;
+            tripleRates+=2;
+            triplePowers+=2;
+        }
         const scale = 1.5 + triplePowers / 2;
         // This maxes out at 13 bullets.
         const numBullets = 3 + 2 * powers;
@@ -112,7 +121,7 @@ heroesData[HERO_MOTH] = {
                 damage: 1 + triplePowers,
                 left: player.sprite.left + player.sprite.vx + player.sprite.width,
                 xOffset: ATTACK_OFFSET,
-                yOffset: 0,
+                yOffset: 2,
                 vx: vx,
                 vy: vy,
                 delay: 2,
@@ -121,11 +130,12 @@ heroesData[HERO_MOTH] = {
                 piercing: true,
                 scale,
             });
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+            let { width, height } = getAttackFrame(state, blast);
+            blast.left += width * scale / 2;
+            blast.top = player.sprite.top + player.sprite.vy
+                + (player.sprite.height - height) / 2 + blast.yOffset;
             state = addPlayerAttackToState(state, blast);
         }
         return state;
     }
 };
-
-const { createAttack, addPlayerAttackToState } = require('attacks');

@@ -3,16 +3,15 @@
   "version": "1.0.0",
   "description": "Simple Shooter",
   "main": "index.js",
-  "dependencies": {
-    "body-parser": "1.18.2",
-    "eslintify": "^3.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babelify": "^8.0.0",
+    "body-parser": "1.18.2",
     "browserify": "^16.1.1",
+    "eslintify": "^3.1.0",
     "watchify": "^3.11.0"
   },
   "scripts": {

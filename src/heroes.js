@@ -37,6 +37,46 @@ const {
 
 const heroesData = { };
 
+const ladybugAnimation = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 20, cols: 4, duration: 4});
+const ladybugAnimationTint = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 0, cols: 4, duration: 4});
+
+module.exports = {
+    getNewPlayerState,
+    advanceHero,
+    getHeroHitbox,
+    getHeroHitboxes,
+    getHeroCenter,
+    damageHero,
+    renderHero,
+    heroesData,
+    updatePlayer,
+    updatePlayerOnContinue,
+    isPlayerInvulnerable,
+    isHeroSwapping,
+    ladybugAnimation,
+    useMeleeAttack,
+    switchHeroes,
+};
+
+const { ENEMY_BUBBLE_SHIELD } = require('areas/beachBoss');
+const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
+const { createAttack, addPlayerAttackToState } = require('attacks');
+const {
+    createEffect,
+    addEffectToState,
+    getEffectHitbox,
+    updateEffect,
+} = require('effects');
+const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
+const { updateEnemy, damageEnemy } = require('enemies');
+const { advanceFinisher, startFinisher, EFFECT_FINISHER } = require('effects/finisher');
+const { LOOT_HELMET, LOOT_GAUNTLET, LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
+require('heroes/bee');
+require('heroes/dragonfly');
+require('heroes/moth');
+
+const { EFFECT_SEAL_TARGET } = require('effects/sealPortal');
+
 /*const testLightningBug = {
     color:"#4860A0",
     animationTime: 0,
@@ -55,38 +95,44 @@ const heroesData = { };
 };*/
 
 
-const getNewPlayerState = () => ({
-    score: 0,
-    powerupPoints: 0,
-    powerupIndex: 0,
-    comboScore: 0,
-    sprite: getNewSpriteState({...heroesData[HERO_DRAGONFLY].animation.frames[0],
-        left: 160, top: 377,
-        targetLeft: 170, targetTop: 200,
-        spawnSpeed: 7,
-    }),
-    heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH, ],
-    [HERO_DRAGONFLY]: {energy: MAX_ENERGY / 2, deaths: 0},
-    [HERO_BEE]: {energy: MAX_ENERGY / 2, deaths: 0, targets: []},
-    [HERO_MOTH]: {energy: MAX_ENERGY / 2, deaths: 0},
-    time: 0,
-    invulnerableFor: 0,
-    spawning: true,
-    shotCooldown: 0,
-    chargeAttackFrames: 0,
-    powerups: [],
-    relics: {
-    },
-    ladybugs: [],
-    actions: {
-        up: false,
-        down: false,
-        left: false,
-        right: false,
-        shoot: false,
-        start: false,
-    },
-});
+function getNewPlayerState() {
+    return {
+        score: 0,
+        powerupPoints: 0,
+        powerupIndex: 0,
+        comboScore: 0,
+        sprite: getNewSpriteState({...heroesData[HERO_DRAGONFLY].animation.frames[0],
+            left: 160, top: 377,
+            targetLeft: 170, targetTop: 200,
+            spawnSpeed: 7,
+        }),
+        heroes: [HERO_DRAGONFLY, HERO_BEE, HERO_MOTH, ],
+        [HERO_DRAGONFLY]: {energy: MAX_ENERGY / 2, deaths: 0},
+        [HERO_BEE]: {energy: MAX_ENERGY / 2, deaths: 0, targets: []},
+        [HERO_MOTH]: {energy: MAX_ENERGY / 2, deaths: 0},
+        time: 0,
+        invulnerableFor: 0,
+        spawning: true,
+        shotCooldown: 0,
+        chargeAttackFrames: 0,
+        powerups: [],
+        relics: {
+            //[LOOT_HELMET]: true,
+            //[LOOT_GAUNTLET]: true,
+            //[LOOT_NECKLACE]: true,
+            //[LOOT_NEEDLE]: true,
+        },
+        ladybugs: [],
+        actions: {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            shoot: false,
+            start: false,
+        },
+    };
+}
 
 function updatePlayer(state, playerIndex, props, spriteProps = null) {
     const players = [...state.players];
@@ -120,18 +166,22 @@ function updatePlayerOnContinue(state, playerIndex) {
     });
 }
 
-const isPlayerInvulnerable = (state, playerIndex) => {
+function isPlayerInvulnerable(state, playerIndex) {
     const player = state.players[playerIndex];
     return player.invulnerableFor > 0 || player.usingSpecial ||
         player.usingFinisher || player.sprite.targetLeft || player.done;
-};
+}
 
-const useMeleeAttack = (state, playerIndex) => {
+function useMeleeAttack(state, playerIndex) {
     const player = state.players[playerIndex];
     const heroData = heroesData[player.heroes[0]];
     const meleeCooldown = 3 * SHOT_COOLDOWN - player.powerups.filter(powerup => powerup === LOOT_ATTACK_SPEED || powerup === LOOT_COMBO).length;
-    const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-    const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+    let powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
+    let triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+    if (player.relics[LOOT_NEEDLE]) {
+        powers+=2;
+        triplePowers+=2;
+    }
     let scale = 1 + heroData.meleeScaling * (powers + triplePowers / 2);
     const meleeAttack = createAttack(heroData.meleeAttack, {
         damage: heroData.meleePower + triplePowers + powers / 3,
@@ -142,12 +192,13 @@ const useMeleeAttack = (state, playerIndex) => {
         playerIndex,
         scale,
     });
-    if (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) {
+    const chargeRate = player.relics[LOOT_GAUNTLET] ? 2 : 1;
+    if (player.chargeAttackFrames * chargeRate >= CHARGE_FRAMES_SECOND) {
         meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 3);
         meleeAttack.damage += 5;
         meleeAttack.fullyCharged = true;
         meleeAttack.charged = true;
-    } else if (player.chargeAttackFrames >= CHARGE_FRAMES_FIRST) {
+    } else if (player.chargeAttackFrames * chargeRate >= CHARGE_FRAMES_FIRST) {
         meleeAttack.scale = Math.max(meleeAttack.scale, (1 + heroData.meleeScaling) * 2);
         meleeAttack.damage += 2;
         meleeAttack.charged = true;
@@ -155,21 +206,21 @@ const useMeleeAttack = (state, playerIndex) => {
     meleeAttack.left += meleeAttack.width * meleeAttack.scale / 2;
     state = addPlayerAttackToState(state, meleeAttack);
     return updatePlayer(state, playerIndex, {meleeAttackTime: 0, meleeCooldown});
-};
+}
 
-const hasAnotherHero = (state, playerIndex) => {
+function hasAnotherHero(state, playerIndex) {
     const player = state.players[playerIndex];
     for (let i = 1; i < player.heroes.length; i++) {
         if (player[player.heroes[i]].energy >= 0) return true;
     }
     return null;
-};
+}
 
 function isHeroSwapping(player) {
     return player.sprite.targetLeft || player.chasingNeedle || player.catchingNeedleFrames > 0;
 }
 
-const advanceHero = (state, playerIndex) => {
+function advanceHero(state, playerIndex) {
     if (state.players[playerIndex].done) {
         return state;
     }
@@ -195,7 +246,7 @@ const advanceHero = (state, playerIndex) => {
                 // move or are invulnerable/slowing time.
                 (heroType !== player.heroes[0] || (!(player.invulnerableFor > 0) && !player.usingSpecial))
             ) {
-                const recoveryRate = player.relics[LOOT_GAUNTLET] ? 0.04 : 0.02;
+                const recoveryRate = player.relics[LOOT_NECKLACE] ? 0.04 : 0.02;
                 state = updatePlayer(state, playerIndex,
                     {[heroType]: {...player[heroType], energy: player[heroType].energy + recoveryRate}}
                 );
@@ -246,6 +297,34 @@ const advanceHero = (state, playerIndex) => {
                 state = updateEffect(state, state.effects.indexOf(finisherEffect), {done: true});
                 state = updateEnemy(state, enemy, {snaredForFinisher: true});
                 return startFinisher(state, playerIndex);
+            }
+        }
+        for (const sealPortalEffect of state.effects.filter(effect => effect.type === EFFECT_SEAL_TARGET)) {
+            if (Rectangle.collision(heroHitbox, getEffectHitbox(sealPortalEffect))) {
+                const enemy = state.idMap[sealPortalEffect.enemyId];
+                if (!enemy || enemy.dead || enemy.hidden) continue;
+                state = updateEffect(state, state.effects.indexOf(sealPortalEffect), {done: true});
+                state = damageEnemy(state, enemy.id, {damage: enemy.life});
+                state = {...state,
+                    sfx: {...state.sfx, [heroData.specialSfx]: true},
+                    flashHudUntil: state.world.time + 500,
+                    portalsSealed: {
+                        ...(state.portalsSealed || {}),
+                        [enemy.relic]: true,
+                    },
+                };
+                state = updatePlayer(state, playerIndex, {
+                    invulnerableFor: Math.max(player.invulnerableFor, 500),
+                    relics: {
+                        ...player.relics,
+                        [enemy.relic]: undefined,
+                    }
+                }, {
+                    spawnSpeed: 25,
+                    targetLeft: enemy.left - 20,
+                    targetTop: enemy.top + 50,
+                });
+                return state;
             }
         }
     }
@@ -312,21 +391,42 @@ const advanceHero = (state, playerIndex) => {
     if (!(player.cannotSwitchFrames > 0) && player.actions.switch && hasAnotherHero(state, playerIndex) && !isHeroSwapping(player)) {
         return switchHeroes(state, playerIndex);
     }
-    const speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
-    const tripleSpeedPowerups = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO).length;
-    const maxSpeed = heroData.baseSpeed + tripleSpeedPowerups  * 2 + speedPowerups / 2;
+    let speedPowerups = player.powerups.filter(powerup => powerup === LOOT_SPEED || powerup === LOOT_COMBO).length;
+    let tripleSpeedPowerups = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_SPEED || powerup === LOOT_TRIPLE_COMBO).length;
+    if (player.relics[LOOT_NEEDLE]) {
+        speedPowerups += 1;
+        tripleSpeedPowerups += 1;
+    }
+    let maxSpeed = heroData.baseSpeed + tripleSpeedPowerups  * 2 + speedPowerups / 2;
     const accleration = ACCELERATION + speedPowerups / 3 + tripleSpeedPowerups;
     // Accelerate player based on their input.
     if (!isHeroSwapping(player)) {
         let dy = 0, dx = 0;
-        if (player.actions.up) dy -= accleration;
-        if (player.actions.down) dy += accleration;
-        if (player.actions.left) dx -= accleration;
-        if (player.actions.right) dx += accleration;
+        const mapAnalog = value => {
+            return Math.min(1, Math.max(0, 1.5 * value));
+        }
+        let maxSpeedX = maxSpeed, maxSpeedY = maxSpeed;
+        //console.log(player.actions);
+        if (player.actions.up > 0.1) {
+            dy -= accleration * mapAnalog(player.actions.up);
+            maxSpeedY *= mapAnalog(player.actions.up);
+        }
+        if (player.actions.down > 0.1) {
+            dy += accleration * mapAnalog(player.actions.down);
+            maxSpeedY *= mapAnalog(player.actions.down);
+        }
+        if (player.actions.left > 0.1) {
+            dx -= accleration * mapAnalog(player.actions.left);
+            maxSpeedX *= mapAnalog(player.actions.left);
+        }
+        if (player.actions.right > 0.1) {
+            dx += accleration * mapAnalog(player.actions.right);
+            maxSpeedX *= mapAnalog(player.actions.right);
+        }
         if (!dx) vx *= 0.8;
-        else vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx + dx));
+        else vx = Math.max(-maxSpeedX, Math.min(maxSpeedX, vx + dx));
         if (!dy) vy *= 0.8;
-        else vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy + dy));
+        else vy = Math.max(-maxSpeedY, Math.min(maxSpeedY, vy + dy));
         // Update player position based on their
         left += vx;
         top +=  vy;
@@ -388,9 +488,9 @@ const advanceHero = (state, playerIndex) => {
         spawning: false,
     };
     return updatePlayer({...state, sfx}, playerIndex, updatedProps);
-};
+}
 
-const advanceLadybugs = (state, playerIndex) => {
+function advanceLadybugs(state, playerIndex) {
     const player = state.players[playerIndex];
     const sprite = player.sprite;
     const ladybugs = [...player.ladybugs];
@@ -451,9 +551,9 @@ const advanceLadybugs = (state, playerIndex) => {
         };
     }
     return updatePlayer(state, playerIndex, {ladybugs});
-};
+}
 
-const switchHeroes = (updatedState, playerIndex) => {
+function switchHeroes(updatedState, playerIndex) {
     if (!hasAnotherHero(updatedState, playerIndex)) {
         return updatedState;
     }
@@ -502,7 +602,7 @@ const switchHeroes = (updatedState, playerIndex) => {
 
     const sfx = {...updatedState.sfx, 'sfx/needledropflip.mp3': true};
     return {...updatedState, sfx};
-};
+}
 
 function damageHero(updatedState, playerIndex) {
     // Don't damage a hero if they are invulnerable.
@@ -582,13 +682,15 @@ function damageHero(updatedState, playerIndex) {
 
 
     let sfx = {...updatedState.sfx, [deadHeroData.deathSfx]: true};
+    let bgm = updatedState.bgm;
     if (player.done) {
         deathCooldown = DEATH_COOLDOWN;
         sfx['sfx/death.mp3'] = true;
+        bgm = null;
     } else {
         sfx['sfx/needledropflip.mp3'] = true;
     }
-    return {...updatedState, deathCooldown, sfx};
+    return {...updatedState, deathCooldown, sfx, bgm};
 }
 
 function getHeroHitbox(player) {
@@ -609,7 +711,7 @@ function getHeroCenter(player) {
 
 const chargingAnimation = createAnimation('gfx/heroes/charging.png', r(80, 79), {rows: 2, cols: 3});
 const chargedAnimation = createAnimation('gfx/heroes/charging.png', r(80, 79), {y: 2, cols: 2});
-const renderHero = (context, player) => {
+function renderHero(context, player) {
     let {sprite, invulnerableFor, done, ladybugs} = player;
     if (done) return;
     const heroData = heroesData[player.heroes[0]];
@@ -645,11 +747,12 @@ const renderHero = (context, player) => {
     const frame = getFrame(animation, animationTime);
     drawImage(context, frame.image, frame, sprite);
     context.restore();
-    if (player.chargeAttackFrames > 10) {
+    const chargeRate = player.relics[LOOT_GAUNTLET] ? 2 : 1;
+    if (player.chargeAttackFrames * chargeRate > 10) {
         context.save();
-        if (player.chargeAttackFrames < CHARGE_FRAMES_SECOND) {
+        if (player.chargeAttackFrames * chargeRate  < CHARGE_FRAMES_SECOND) {
             context.globalAlpha = 0.8;
-            let chargingFrameIndex = Math.floor(player.chargeAttackFrames / chargingAnimation.frameDuration);
+            let chargingFrameIndex = Math.floor(player.chargeAttackFrames * chargeRate / chargingAnimation.frameDuration);
             chargingFrameIndex %= chargingAnimation.frames.length;
             let chargingFrame = chargingAnimation.frames[chargingFrameIndex];
             let targetRectangle = new Rectangle(chargingFrame).moveCenterTo(
@@ -658,10 +761,10 @@ const renderHero = (context, player) => {
             );
             drawImage(context, chargingFrame.image, chargingFrame, targetRectangle);
         }
-        if (player.chargeAttackFrames > CHARGE_FRAMES_FIRST) {
-            const scale = (player.chargeAttackFrames >= CHARGE_FRAMES_SECOND) ? 1 : 0.5;
+        if (player.chargeAttackFrames * chargeRate  > CHARGE_FRAMES_FIRST) {
+            const scale = (player.chargeAttackFrames * chargeRate  >= CHARGE_FRAMES_SECOND) ? 1 : 0.5;
             context.globalAlpha = 0.8;
-            let chargedFrameIndex = Math.floor(player.chargeAttackFrames / chargedAnimation.frameDuration);
+            let chargedFrameIndex = Math.floor(player.chargeAttackFrames * chargeRate / chargedAnimation.frameDuration);
             chargedFrameIndex %= chargedAnimation.frames.length;
             let chargedFrame = chargedAnimation.frames[chargedFrameIndex];
             let targetRectangle = new Rectangle(chargedFrame).scale(scale).moveCenterTo(
@@ -692,52 +795,11 @@ const renderHero = (context, player) => {
     for (const ladybug of ladybugs) {
         renderLadybug(context, ladybug);
     }
-};
+}
 
-const ladybugAnimation = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 20, cols: 4, duration: 4});
-const ladybugAnimationTint = createAnimation('gfx/heroes/ladybug.png', r(25, 20), {top: 0, cols: 4, duration: 4});
-const renderLadybug = (context, ladybug) => {
+function renderLadybug(context, ladybug) {
     let frame = getFrame(ladybugAnimationTint, ladybug.animationTime);
     drawTintedImage(context, frame.image, ladybug.color, 1, frame, ladybug);
     frame = getFrame(ladybugAnimation, ladybug.animationTime);
     drawImage(context, frame.image, frame, ladybug);
-};
-
-module.exports = {
-    getNewPlayerState,
-    advanceHero,
-    getHeroHitbox,
-    getHeroHitboxes,
-    getHeroCenter,
-    damageHero,
-    renderHero,
-    heroesData,
-    updatePlayer,
-    updatePlayerOnContinue,
-    isPlayerInvulnerable,
-    isHeroSwapping,
-    ladybugAnimation,
-    useMeleeAttack,
-    switchHeroes,
-};
-
-const { ENEMY_BUBBLE_SHIELD } = require('areas/beachBoss');
-
-const { getGroundHeight, getHazardHeight, getHazardCeilingHeight } = require('world');
-
-const { createAttack, addPlayerAttackToState } = require('attacks');
-const {
-    createEffect,
-    addEffectToState,
-    getEffectHitbox,
-    updateEffect,
-} = require('effects');
-const { EFFECT_FAST_LIGHTNING, checkToAddLightning} = require('effects/lightning');
-const { updateEnemy, damageEnemy } = require('enemies');
-const { advanceFinisher, startFinisher, EFFECT_FINISHER } = require('effects/finisher');
-const { LOOT_GAUNTLET } = require('loot');
-
-require('heroes/bee');
-require('heroes/dragonfly');
-require('heroes/moth');
-
+}

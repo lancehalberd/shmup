@@ -2,7 +2,7 @@ const random = require('random');
 
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    LOOT_COIN, LOOT_COMBO,
+    LOOT_COIN, LOOT_TRIPLE_COMBO,
 } = require('gameConstants');
 
 const WORLD_STARS_2 = 'stars2';
@@ -70,7 +70,7 @@ const advanceWorld = (state) => {
     }
     time -= 3000;
     if (!time) {
-        const type = (multiplier >= 3) ? LOOT_COMBO : random.element(ladybugTypes);
+        const type = (multiplier >= 3) ? LOOT_TRIPLE_COMBO : random.element(ladybugTypes);
         const loot = createLoot(type, {left: WIDTH, top: GAME_HEIGHT / 2, scale: 2});
         loot.top -= loot.height / 2;
         state = addLootToState(state, loot);

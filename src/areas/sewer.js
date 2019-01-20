@@ -26,6 +26,7 @@ const SAFE_HEIGHT = GAME_HEIGHT - getSewerWorld().hazardHeight;
 
 module.exports = {
     CHECK_POINT_SEWER_START,
+    CHECK_POINT_SEWER_BOSS,
     WORLD_SEWER,
     getSewerWorld,
     ENEMY_RAT,
@@ -38,6 +39,9 @@ const { updatePlayer, getHeroHitbox } = require('heroes');
 const { spawnEnemy, enemyData, getEnemyHitbox, updateEnemy } = require('enemies');
 const { transitionToSewerBoss } = require('areas/sewerBoss');
 const { createAttack, addEnemyAttackToState, ATTACK_GAS, ATTACK_WATER } = require('attacks');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_3 } = require('areas/stars3');
+const { LOOT_NECKLACE } = require('loot');
 
 checkpoints[CHECK_POINT_SEWER_START] = function (state) {
     const world = getSewerWorld();
@@ -66,6 +70,12 @@ checkpoints[CHECK_POINT_SEWER_BOSS] = function (state) {
 const { nothing, powerup, easyRoaches, normalRoaches, bossPowerup, } = require('enemyPatterns');
 allWorlds[WORLD_SEWER] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NECKLACE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_3, CHECK_POINT_SEWER_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 150});

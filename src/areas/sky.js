@@ -94,7 +94,12 @@ const SAFE_HEIGHT = GAME_HEIGHT;
 const WORLD_SKY = 'sky';
 allWorlds[WORLD_SKY] = {
     initialEvent: 'nothing',
-
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NECKLACE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_3, CHECK_POINT_SKY_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});
@@ -130,7 +135,6 @@ allWorlds[WORLD_SKY] = {
             if (eventTime === 0) {
                 const top = random.range(1, 4) * SAFE_HEIGHT / 5;
                 if (random.chance(0.25)) {
-                    console.log('right');
                     return spawnEnemy(state, ENEMY_DUCK, {left: -500, top, vx: 8 });
                 } else {
                     return spawnEnemy(state, ENEMY_DUCK, {left: WIDTH + 50, top, vx: -8 });
@@ -252,7 +256,7 @@ const getSkyWorld = () => ({
     targetY: 0,
     targetFrames: 50 * 10,
     time: 0,
-    bgm: 'bgm/title.mp3',
+    bgm: 'sky',
     ...getSkyLayers(),
 });
 
@@ -325,6 +329,7 @@ const ENEMY_BLUE_BIRD_SOLDIER = 'blueBirdSoldier';
 
 module.exports = {
     CHECK_POINT_SKY_START,
+    CHECK_POINT_SKY_BOSS,
     EFFECT_GUST,
     ENEMY_BLUE_BIRD,
     ENEMY_BLUE_BIRD_SOLDIER,
@@ -473,6 +478,9 @@ const { transitionToSkyBoss } = require('areas/skyBoss');
 const { createAttack, addEnemyAttackToState, } = require('attacks');
 
 const { createEffect, effects, addEffectToState, updateEffect } = require('effects');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_3 } = require('areas/stars3');
+const { LOOT_NECKLACE } = require('loot');
 
 effects[EFFECT_GUST] = {
     animation: createAnimation('gfx/effects/wind.png', a(r(150, 100), 0.5, 0.5), {duration: 1000}),

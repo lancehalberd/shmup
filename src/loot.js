@@ -282,14 +282,14 @@ const lootData = {
     },
 };
 
-const LOOT_HELMET = 'helmet'; /* Pull coins */
-const LOOT_GAUNTLET = 'gauntlet'; /* Reduced cooldown */
-const LOOT_SHIELD = 'shield'; /* */
-const LOOT_NECKLACE = 'necklace'; /* */
+const LOOT_HELMET = 'helmet'; /* Stage 1: Pull coins */
+const LOOT_GAUNTLET = 'gauntlet'; /* Stage 2: Reduce charge time */
+const LOOT_NECKLACE = 'necklace'; /* Stage 3: Increase energy regeneration. */
+const LOOT_NEEDLE = 'shield'; /* +1 to all basic bonuses */
 const helmetAnimation = createAnimation('gfx/items/special_helmet.png', r(17, 18));
 const gauntletAnimation = createAnimation('gfx/items/special_gauntlet.png', r(17, 18));
-const shieldAnimation = createAnimation('gfx/items/special_shield.png', r(17, 18));
 const necklaceAnimation = createAnimation('gfx/items/special_necklace.png', r(17, 18));
+const shieldAnimation = createAnimation('gfx/items/special_shield.png', r(17, 18));
 lootData[LOOT_HELMET] = {
     animation: helmetAnimation,
     accelerate: circleAcceleration,
@@ -309,13 +309,14 @@ lootData[LOOT_GAUNTLET] = {
     ...lootData[LOOT_HELMET],
     animation: gauntletAnimation,
 };
-lootData[LOOT_SHIELD] = {
-    ...lootData[LOOT_HELMET],
-    animation: shieldAnimation,
-};
 lootData[LOOT_NECKLACE] = {
     ...lootData[LOOT_HELMET],
     animation: necklaceAnimation,
+};
+lootData[LOOT_NEEDLE] = {
+    ...lootData[LOOT_HELMET],
+    // placeholder until we get the needle animation
+    animation: shieldAnimation,
 };
 
 const createLoot = (type, props) => {
@@ -458,7 +459,7 @@ module.exports = {
     LOOT_GAUNTLET,
     LOOT_HELMET,
     LOOT_NECKLACE,
-    LOOT_SHIELD,
+    LOOT_NEEDLE,
     lootData,
     createLoot,
     addLootToState,

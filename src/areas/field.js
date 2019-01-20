@@ -19,7 +19,7 @@ const CHECK_POINT_FIELD_END = 'fieldEnd';
 const CHECK_POINT_FIELD_BOSS = 'fieldBoss';
 module.exports = {
     getFieldWorld, getFieldWorldStart,
-    CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END,
+    CHECK_POINT_FIELD_START, CHECK_POINT_FIELD_MIDDLE, CHECK_POINT_FIELD_END, CHECK_POINT_FIELD_BOSS,
 };
 
 const { spawnEnemy, enemyData } = require('enemies');

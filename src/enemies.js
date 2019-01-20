@@ -489,7 +489,7 @@ function damageEnemy(state, enemyId, attack = {}) {
         enemy = updatedState.idMap[enemyId];
     }
     if (updatedState.idMap[enemyId].dead) {
-        if (attack.playerIndex >= 0) {
+        if (enemy.score && attack.playerIndex >= 0) {
             let hits = attack.hitIds ? Object.keys(attack.hitIds).length : 0;
             let comboScore = Math.min(1000, updatedState.players[attack.playerIndex].comboScore + 4 + 8 * hits);
             updatedState = updatePlayer(updatedState, attack.playerIndex, { comboScore });

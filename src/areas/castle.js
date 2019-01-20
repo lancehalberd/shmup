@@ -17,12 +17,14 @@ const CHECK_POINT_CASTLE_START = 'castleStart';
 const CHECK_POINT_CASTLE_MIDDLE = 'castleMiddle'
 const CHECK_POINT_CASTLE_END = 'castleEnd'
 const CHECK_POINT_CASTLE_BOSS = 'castleBoss'
+const CHECK_POINT_CASTLE_BOSS_WITH_RELICS = 'castleBossWithRelics';
 const CASTLE_START_TIME = 30000;
 const CASTLE_MIDDLE_TIME = 50000;
 const CASTLE_DURATION = 100000;
 
 module.exports = {
     CHECK_POINT_CASTLE_START,
+    CHECK_POINT_CASTLE_BOSS,
     WORLD_CASTLE,
     getCastleWorld,
 };
@@ -44,7 +46,8 @@ const {
 const { ENEMY_SHELL_MONK, ENEMY_SHORT_SAND_TURRET, ENEMY_TALL_SAND_TURRET } = require('areas/beach');
 const { ENEMY_BUBBLE_SHIELD } = require('areas/beachBoss');
 const { ENEMY_PIRANHA, ENEMY_SEA_URCHIN } = require('areas/ocean');
-const { ENEMY_GRASSHOPPER } = require('areas/circus');
+const { ENEMY_GRASSHOPPER, ENEMY_CLAW } = require('areas/circus');
+const { LOOT_HELMET, LOOT_GAUNTLET, LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
 
 checkpoints[CHECK_POINT_CASTLE_START] = function (state) {
     const world = getCastleWorld();
@@ -63,6 +66,20 @@ checkpoints[CHECK_POINT_CASTLE_END] = function (state) {
     return advanceWorld(advanceWorld({...state, world}));
 };
 checkpoints[CHECK_POINT_CASTLE_BOSS] = function (state) {
+    const world = getDryCastleWorld();
+    world.time = CASTLE_DURATION;
+    // Advance world once to add background, and a second time to position it.
+    state = advanceWorld({...state, world});
+    return transitionToCastleBoss(advanceWorld(state));
+};
+checkpoints[CHECK_POINT_CASTLE_BOSS_WITH_RELICS] = function (state) {
+    state = updatePlayer(state, 0, {relics: {
+        [LOOT_HELMET]: true,
+        [LOOT_GAUNTLET]: true,
+        [LOOT_NECKLACE]: true,
+        [LOOT_NEEDLE]: true,
+    }});
+    state = setCheckpoint(state, CHECK_POINT_CASTLE_BOSS);
     const world = getDryCastleWorld();
     world.time = CASTLE_DURATION;
     // Advance world once to add background, and a second time to position it.
@@ -235,6 +252,21 @@ allWorlds[WORLD_CASTLE_DRY] = {
             }
         }
 
+        if (state.world.time === CASTLE_DURATION - 20000) {
+            // Stop displaying cages about 20 seconds before the end of the level, otherwise,
+            // they can prevent the boss from spawning since they will keep spawning claws.
+            state = {...state,
+                world: {...state.world,
+                    torches: {...state.world.torches,
+                        spriteData:{
+                            torchHolder: {animation: torchHolder, scale: 2, offset: [-20], next: 'torch'},
+                            torch: {animation: torch, scale: 2, offset: [50, 120], next: 'torchHolder'},
+                        }
+                    }
+                }
+            }
+        }
+
         let world = state.world;
         if (world.type === WORLD_CASTLE_DRY && world.time >= CASTLE_DURATION && world.event !== 'bossPowerup') {
             return setEvent(state, 'bossPowerup');
@@ -269,6 +301,8 @@ const banner1 = createAnimation('gfx/scene/castle/thronethings.png', r(20, 60), 
 const banner2 = createAnimation('gfx/scene/castle/thronethings.png', r(20, 60), {y: 7});
 const bigBanner1 = createAnimation('gfx/scene/castle/thronethings.png', r(20, 60), {y: 5});
 const bigBanner2 = createAnimation('gfx/scene/castle/thronethings.png', r(20, 60), {y: 8});
+
+const cageAnimation = createAnimation('gfx/scene/circus/cages.png', r(591, 300));
 
 function getCastleLayers() {
     return {
@@ -307,7 +341,10 @@ function getCastleLayers() {
         xFactor: 1, yFactor: 1, yOffset: -200, xOffset: 2 * WIDTH, firstElements: ['torchHolder'],
         spriteData: {
             torchHolder: {animation: torchHolder, scale: 2, offset: [-20], next: 'torch'},
-            torch: {animation: torch, scale: 2, offset: [50, 120], next: 'torchHolder'},
+            torch: {animation: torch, scale: 2, offset: [50, 120], next: ['torchHolder', 'torchHolder', 'cageTorchHolder']},
+            cageTorchHolder: {animation: torchHolder, scale: 2, offset: [-20], next: 'cageTorch'},
+            cageTorch: {animation: torch, scale: 2, offset: [100], next: ['cage']},
+            cage: {animation: cageAnimation, onAdded: addCageClaws, yOffset: 76, scale: 2, next: ['torchHolder'], offset: 100},
         },
     }),
     torchHolders: getNewLayer({
@@ -356,5 +393,22 @@ function getCastleLayers() {
     // Foreground works the same as Midground but is drawn on top of game sprites.
     fgLayerNames: ['deepWater'],
     };
+}
+function addCageClaws(state, cageSprite) {
+    // Remove the middle slot so there are never 3 in a row.
+    let slots = [1, 2, 4, 5];
+    let numberOfClaws = 3;
+    for (let i = 0; i < numberOfClaws; i++) {
+        let slot = random.removeElement(slots);
+        state = spawnEnemy(state, ENEMY_CLAW, {
+            top: GAME_HEIGHT / 2 + i * 50,
+            // (25px bars, 56px gaps) scale x2
+            left: cageSprite.left + 50 + 162 * slot - 20,
+            vx: 0,
+            flipped: Math.random() < 0.5,
+            important: true,
+        });
+    }
+    return state;
 }
 

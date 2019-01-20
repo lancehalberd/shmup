@@ -72,7 +72,8 @@ const update = () => {
     // This is used to prevent constantly activating actions on the menus or pausing+unpausing.
     const releaseThreshold = (state.title || state.gameover) ? thresholdTime : 0;
     state = applyPlayerActions(state, playerIndex, {
-        up: isKeyDown(KEY_UP, releaseThreshold), down: isKeyDown(KEY_DOWN, releaseThreshold),
+        up: isKeyDown(KEY_UP, releaseThreshold),
+        down: isKeyDown(KEY_DOWN, releaseThreshold),
         left: isKeyDown(KEY_LEFT, releaseThreshold), right: isKeyDown(KEY_RIGHT, releaseThreshold),
         melee: isKeyDown(KEY_SPACE, releaseThreshold),
         special: isKeyDown(KEY_C, thresholdTime),

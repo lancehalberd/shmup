@@ -12,6 +12,8 @@ const {
     createAnimation,
 } = require('animations');
 const { heroesData, updatePlayer } = require('heroes');
+const { LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
+const { createAttack, addPlayerAttackToState, getAttackFrame } = require('attacks');
 
 const dragonflyHitbox = {left: 10, top: 15, width: 70, height: 30};
 const dragonflyRectangle = r(88, 56, {
@@ -79,7 +81,12 @@ heroesData[HERO_DRAGONFLY] = {
                 {specialFrames: player.specialFrames + 1},
             );
         }
-        state = updatePlayer(state, playerIndex, {usingSpecial: false, invulnerableFor: 500});
+        let invulnerableFor = 500, slowTimeFor = 8000;
+        if (state.players[0].relics[LOOT_NECKLACE]) {
+            invulnerableFor += 500;
+            slowTimeFor += 2000;
+        }
+        state = updatePlayer(state, playerIndex, {usingSpecial: false, invulnerableFor});
         return {...state, slowTimeFor: 8000};
         /*
         // TODO: support multiple directions, add ghost trail behind her.
@@ -110,9 +117,15 @@ heroesData[HERO_DRAGONFLY] = {
         state = updatePlayer(state, playerIndex, {shotCooldown});
         player = state.players[playerIndex];
 
-        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
-        const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
+        let powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
+        let triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        let tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
+        if (state.players[0].relics[LOOT_NEEDLE]) {
+            powers+=2;
+            tripleRates+=2;
+            triplePowers+=2;
+        }
+
         const middleShot = {x: ATTACK_OFFSET, y: 0, vx: 20, vy: 0};
         const upperA = {x: ATTACK_OFFSET, y: -5, vx: 19, vy: -1}, lowerA = {x: ATTACK_OFFSET, y: 5, vx: 19, vy: 1};
         const upperB = {x: ATTACK_OFFSET - 4, y: -10, vx: 18.5, vy: -2}, lowerB = {x: ATTACK_OFFSET - 4, y: 10, vx: 18.5, vy: 2};
@@ -126,7 +139,7 @@ heroesData[HERO_DRAGONFLY] = {
                                 [upperC, upperA, lowerA, lowerC],
                                 [upperD, upperB, middleShot, lowerB, lowerD],
                                 [upperE, upperC, upperA, lowerA, lowerC, lowerE],
-                            ][tripleRates];
+                            ][Math.min(tripleRates, 5)];
         const scale = 1 + powers + triplePowers / 2;
         for (const blastOffsets of blastPattern) {
             const blast = createAttack(ATTACK_BLAST, {
@@ -140,11 +153,11 @@ heroesData[HERO_DRAGONFLY] = {
                 playerIndex,
                 scale,
             });
-            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - blast.height) / 2);
+            let { width, height } = getAttackFrame(state, blast);
+            blast.left += scale * width / 2;
+            blast.top = player.sprite.top + player.sprite.vy + Math.round((player.sprite.height - height) / 2);
             state = addPlayerAttackToState(state, blast);
         }
         return state;
     }
 };
-
-const { createAttack, addPlayerAttackToState } = require('attacks');

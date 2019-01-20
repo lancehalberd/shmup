@@ -14,6 +14,7 @@ export const KEY_X = 'X'.charCodeAt(0);
 export const KEY_C = 'C'.charCodeAt(0);
 export const KEY_V = 'V'.charCodeAt(0);
 export const KEY_T = 'T'.charCodeAt(0);
+export const ANALOG_THRESHOLD = 0.3;
 
 const KEY_MAPPINGS = {
     ['A'.charCodeAt(0)]: KEY_LEFT,
@@ -28,7 +29,7 @@ const KEY_MAPPINGS = {
 // I based this code on examples from:
 // https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
 // Easy to find mappings at: http://html5gamepad.com/
-var GAME_PAD_MAPPINGS = {
+const GAME_PAD_MAPPINGS = {
     [KEY_C]: 0, // A (bottom button)
     [KEY_V]: 1, // B (right button)
     [KEY_SPACE]: 2, // X (left button)
@@ -40,6 +41,13 @@ var GAME_PAD_MAPPINGS = {
     [KEY_RIGHT]: 15,
     [KEY_R]: 4, // L Front Bumper
     [KEY_SHIFT]: 5,  // R Front bumper
+};
+
+const GAME_PAD_AXIS_MAPPINGS = {
+    [KEY_UP]: [1, -1],
+    [KEY_DOWN]: [1, 1],
+    [KEY_LEFT]: [0, -1],
+    [KEY_RIGHT]: [0, 1],
 };
 
 const physicalKeysDown = {};
@@ -77,23 +85,29 @@ export const isKeyDown = (keyCode, releaseThreshold = false) => {
         if (releaseThreshold) {
             keysDown[keyCode] = 0;
         }
-        return true;
+        return 1;
     }
     // If a mapping exists for the current key code to a gamepad button,
     // check if that gamepad button is pressed.
-    var buttonIndex = GAME_PAD_MAPPINGS[keyCode];
-    if (typeof(buttonIndex) !== 'undefined') {
+    const buttonIndex = GAME_PAD_MAPPINGS[keyCode], axisIndex = GAME_PAD_AXIS_MAPPINGS[keyCode];
+    if (typeof(buttonIndex) !== 'undefined' || typeof(axisIndex) !== 'undefined') {
         // There can be multiple game pads connected. For now, let's just check all of them for the button.
         var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
         for (var gamepad of gamepads) {
             if (!gamepad) continue;
-            if (buttonIsPressed(gamepad.buttons[buttonIndex])) {
+            let value = 0;
+            if (typeof(buttonIndex) !== 'undefined' && buttonIsPressed(gamepad.buttons[buttonIndex])) {
+                value = 1;
+            } else if (typeof(axisIndex) !== 'undefined' && gamepad.axes[axisIndex[0]] * axisIndex[1] > 0) {
+                value = gamepad.axes[axisIndex[0]] * axisIndex[1];
+            }
+            if (value) {
                 const wasLastPressed = lastButtonsPressed[buttonIndex] || 0;
                 const now = Date.now();
-                lastButtonsPressed[buttonIndex] = now
-                if (!releaseThreshold || (now - wasLastPressed >= releaseThreshold)) return true;
+                if (value > ANALOG_THRESHOLD) lastButtonsPressed[buttonIndex] = now;
+                if (!releaseThreshold || (now - wasLastPressed >= releaseThreshold)) return value;
             }
         }
     }
-    return false;
+    return 0;
 };

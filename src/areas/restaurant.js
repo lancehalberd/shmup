@@ -7,13 +7,6 @@ const { advanceWorld, getNewLayer, allWorlds, checkpoints, updateLayerSprite } =
 const { ENEMY_BROWN_SPIDER, ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 /*
 
-Add in interactive candles that light when shot/go out when slashed
-Add jumping fleas that slow/bring down the Knight
-Add normal and mounted cockroaches
-Add trash cats that are invincible with meow SFX
-Add spider boss guarding the window - the spider can capture knights with a web and hold them unless slashed free. The web can only be slashed, and the spider is invincible behind it. After the web is down, the spider can then be attacked directly. There are many other spiders on screen, and possibly flies that also get caught in the web flying from left to right.
-Perhaps also add rats here for both 3B and 3C, climbing the walls of the alley areas.
-
 Here are the background assets for 3b! The first order is the transitions from both possibilities of stage 2 into the city.
 There is a lot of vertical movement possibility to 3b, both in travelling in the brick alley and also when above the roof of
 the alley and seeing the cityscape. There is the ground all the way to the floor of the alley
@@ -37,13 +30,15 @@ const WORLD_RESTAURANT = 'restaurant';
 
 module.exports = {
     CHECK_POINT_RESTAURANT_START,
+    CHECK_POINT_RESTAURANT_BOSS,
     WORLD_RESTAURANT,
     getRestaurantWorld,
 };
-
 const { spawnEnemy, addEnemyToState, createEnemy, ENEMY_FLEA } = require('enemies');
-
 const { transitionToRestaurantBoss } = require('areas/restaurantBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_3 } = require('areas/stars3');
+const { LOOT_NECKLACE } = require('loot');
 
 checkpoints[CHECK_POINT_RESTAURANT_START] = function (state) {
     const world = getRestaurantWorld();
@@ -52,6 +47,9 @@ checkpoints[CHECK_POINT_RESTAURANT_START] = function (state) {
 };
 checkpoints[CHECK_POINT_RESTAURANT_END] = function (state) {
     const world = getRestaurantWorld();
+    // Don't show the beginning of the bar when spawning near the end of the level.
+    world.ground.firstElements = ['barMiddle'];
+    world.ground.xOffset = 0;
     // This is just enough time for a few powerups + large enemies before the boss fight.
     world.time = 135000;
     return {...state, world};
@@ -131,6 +129,12 @@ const {
 } = require('enemyPatterns');
 allWorlds[WORLD_RESTAURANT] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NECKLACE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_3, CHECK_POINT_RESTAURANT_END);
+    },
     events: {
         nothing: nothing(2000, 'easyRoaches'),
         easyRoaches: easyRoaches('powerup'),

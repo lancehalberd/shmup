@@ -4,7 +4,7 @@ const {
 } = require('gameConstants');
 const { ENEMY_HORNET, ENEMY_HORNET_KNIGHT } = require('enemies/hornets');
 const random = require('random');
-const { createAnimation, a, r, requireImage } = require('animations');
+const { createAnimation, r } = require('animations');
 const {
     getNewLayer, allWorlds,
     checkpoints, setCheckpoint, setEvent
@@ -27,6 +27,7 @@ const ENEMY_BURROW_MONK = 'burrowMonk';
 
 module.exports = {
     CHECK_POINT_BEACH_START,
+    CHECK_POINT_BEACH_BOSS,
     WORLD_BEACH,
     getBeachWorld,
     ENEMY_SHELL_MONK,
@@ -49,6 +50,9 @@ const {
     addEnemyAttackToState, createAttack,
     ATTACK_URCHIN_NEEDLE,
 } = require('attacks');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_4 } = require('areas/stars4');
+const { LOOT_NEEDLE } = require('loot');
 
 checkpoints[CHECK_POINT_BEACH_START] = function (state) {
     const world = getBeachWorld();
@@ -80,6 +84,12 @@ const {
 } = require('enemyPatterns');
 allWorlds[WORLD_BEACH] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NEEDLE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_4, CHECK_POINT_BEACH_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: 300, targetTop: 650});

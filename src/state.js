@@ -5,6 +5,7 @@ module.exports = {
 };
 
 const Rectangle = require('Rectangle');
+const { ANALOG_THRESHOLD } = require('keyboard');
 
 const {
     FRAME_LENGTH,
@@ -15,7 +16,6 @@ const {
     clearSprites,
     applyCheckpointToState,
     setCheckpoint,
-    checkpoints,
     getNewWorld,
     advanceWorld,
 } = require('world');
@@ -24,7 +24,7 @@ const {
     attacks, advanceAttack, getAttackHitbox, getAttackHitboxes,
 } = require('attacks');
 const {
-    getNewPlayerState, advanceHero, getHeroHitbox, getHeroHitboxes,
+    getNewPlayerState, advanceHero, getHeroHitboxes,
     damageHero, isPlayerInvulnerable, updatePlayerOnContinue
 } = require('heroes');
 const {
@@ -33,6 +33,7 @@ const {
 } = require('enemies');
 const { advanceAllLoot } = require('loot');
 const { createEffect, addEffectToState, advanceAllEffects } = require('effects');
+const { checkPointArray } = require('checkPoints');
 
 function getNewState() {
     return advanceWorld({
@@ -76,16 +77,15 @@ function advanceState(state) {
     }
     if (updatedState.title) {
         updatedState = {...updatedState, titleTime: updatedState.titleTime + FRAME_LENGTH}
-        //return {...require('states/frogBossFinisher'), interacted: false};
-        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'beachStart'));
+        //return {...require('states/frogBossFinisher')};
+        //return applyCheckpointToState(setCheckpoint({...updatedState, title: false}, 'fieldStart', false));
 
-        const checkpointKeys = Object.keys(checkpoints);
         let titleIndex = updatedState.titleIndex, stageSelectIndex = state.stageSelectIndex;
         if (updatedState.players[0].actions.confirm && titleIndex === 0) {
             let world = updatedState.world;
             if (stageSelectIndex >= 0) {
                 updatedState = {...updatedState, title: false};
-                const checkpoint = checkpointKeys[stageSelectIndex];
+                const checkpoint = checkPointArray[stageSelectIndex];
                 updatedState = setCheckpoint(updatedState, checkpoint);
                 return applyCheckpointToState(updatedState, state.checkpoint, false);
             }
@@ -94,15 +94,15 @@ function advanceState(state) {
         if (updatedState.players[0].actions.confirm && titleIndex === 1) {
             return {...updatedState, instructions: 1};
         }
-        if (updatedState.players[0].actions.up) titleIndex = (titleIndex + 2 - 1) % 2;
-        if (updatedState.players[0].actions.down) titleIndex = (titleIndex + 1) % 2;
-        if (updatedState.players[0].actions.left) {
+        if (updatedState.players[0].actions.up > ANALOG_THRESHOLD) titleIndex = (titleIndex + 2 - 1) % 2;
+        if (updatedState.players[0].actions.down > ANALOG_THRESHOLD) titleIndex = (titleIndex + 1) % 2;
+        if (updatedState.players[0].actions.left > ANALOG_THRESHOLD) {
             stageSelectIndex--;
-            if (stageSelectIndex < -1) stageSelectIndex = checkpointKeys.length - 1;
+            if (stageSelectIndex < -1) stageSelectIndex = checkPointArray.length - 1;
         }
-        if (updatedState.players[0].actions.right) {
+        if (updatedState.players[0].actions.right > ANALOG_THRESHOLD) {
             stageSelectIndex++;
-            if (stageSelectIndex >= checkpointKeys.length) stageSelectIndex = -1;
+            if (stageSelectIndex >= checkPointArray.length) stageSelectIndex = -1;
         }
         return {...updatedState, titleIndex, stageSelectIndex};
     }
@@ -138,7 +138,7 @@ function advanceState(state) {
         if (updatedState.deathCooldown <= 0) {
             return clearSprites({
                 ...updatedState, gameover: true, gameOverTime: 0, bgm: false,
-                continueIndex: 0, slowTimeFor: 0,
+                continueIndex: 0, slowTimeFor: 0, flashHudUntil: undefined,
             });
         }
     }
@@ -348,5 +348,8 @@ function applyPlayerActions(state, playerIndex, actions) {
     const players = [...state.players];
     actions.confirm = actions.start || actions.melee || actions.special || actions.switch;
     players[playerIndex] = {...players[playerIndex], actions};
+    const analogThreshold = (state.title || state.gameover) ? ANALOG_THRESHOLD : 0;
+    if (players[playerIndex].actions.up < analogThreshold) players[playerIndex].actions.up = 0;
+    if (players[playerIndex].actions.down < analogThreshold) players[playerIndex].actions.down = 0;
     return {...state, players};
 }

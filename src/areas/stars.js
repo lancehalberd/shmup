@@ -34,8 +34,14 @@ const getStarWorld = (type) => ({
             stars: {animation: [stars1, stars3], scale: 2, next: ['stars'], offset: [20]},
         },
     }),
+    // Adding this so that the ground layer uses x/y factor * 1
+    midgroundEmpty: getNewLayer({
+        xFactor: 1, yFactor: 1, yOffset: -400,
+        spriteData: {
+        },
+    }),
     bgLayerNames: ['background'],
-    mgLayerNames: ['midgroundTop', 'midgroundBottom'],
+    mgLayerNames: ['midgroundTop', 'midgroundBottom', 'midgroundEmpty'],
     fgLayerNames: [],
 });
 

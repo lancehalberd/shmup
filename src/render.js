@@ -51,7 +51,7 @@ const render = (state) => {
         renderHitboxes(context, state);
         return;
     }
-    if (state.bgm && getCurrentTrackSource() !== state.bgm) {
+    if (!state.instructions && state.bgm && getCurrentTrackSource() !== state.bgm) {
         playTrack(state.bgm, state.world.time);
     }
     if (state.title) return renderTitle(context, state);
@@ -123,13 +123,16 @@ const render = (state) => {
     }
     // Render HUD on top of the screen fading to black.
     renderHUD(context, state);
-    if (state.paused) {
+    if (state.paused || state.instructions) {
         stopTrack();
         context.save();
         context.globalAlpha = .3;
         context.fillStyle = 'black';
         context.fillRect(0, hudImage.height, WIDTH, GAME_HEIGHT);
         context.restore();
+    }
+    if (state.instructions) {
+        renderInstructions(context, state);
     }
     for (const sfx in state.sfx) {
         playSound(sfx);
@@ -249,7 +252,7 @@ const renderHUD = (context, state) => {
         frame = getFrame(necklaceAnimation, state.players[0].sprite.animationTime);
         drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 7, 8));
     }
-    if (state.players[0].relics[LOOT_SHIELD]) {
+    if (state.players[0].relics[LOOT_NEEDLE]) {
         frame = getFrame(shieldAnimation, state.players[0].sprite.animationTime);
         drawImage(context, frame.image, frame, new Rectangle(frame).moveTo(255 + 22 * 8, 8));
     }
@@ -296,11 +299,11 @@ for (const coords of orangeCoords) {
 
 
 //Helper for getting coords off the screen (for example, to create the sparkle coords above)
-const coords = [];
 canvas.onmousedown = function(event) {
     if (window.state && window.state.hitboxFrame) return;
-    coords.push({x:event.pageX - canvas.offsetLeft, y:event.pageY - canvas.offsetTop});
+    let coords = {x:event.pageX - canvas.offsetLeft, y:event.pageY - canvas.offsetTop};
     console.log(JSON.stringify(coords));
+    window.state.instructions = ((window.state.instructions || 0) + 1) % 3;
 };
 
 const renderTitle = (context, state) => {
@@ -326,16 +329,6 @@ const renderTitle = (context, state) => {
         frame = getFrame(sparkle.animation, sparkle.animationTime + state.titleTime);
         drawImage(context, frame.image, frame, new Rectangle(frame).scale(2).moveCenterTo(sparkle.x, sparkle.y));
     }
-
-    // When instructions are displayed, we put them in place of the title screen options.
-    if (state.instructions) {
-        const cardImage = state.instructions === 1 ? instructionsCard1 : instructionsCard2;
-        drawImage(context, cardImage.image, cardImage,
-            new Rectangle(cardImage).scale(2).moveCenterTo(WIDTH / 2, HEIGHT / 2)
-        );
-        return;
-    }
-
     const options = [startGameImage, instructionsImage];
     const targets = [new Rectangle(options[0]).scale(2).moveCenterTo(WIDTH / 2, HEIGHT / 2 + 40)];
     for (let i = 1; i < options.length; i++) {
@@ -348,7 +341,7 @@ const renderTitle = (context, state) => {
         drawImage(context, options[i].image, options[i], targets[i]);
     }
     if (state.stageSelectIndex >= 0) {
-        const checkpoint = Object.keys(checkpoints)[state.stageSelectIndex];
+        const checkpoint = checkPointArray[state.stageSelectIndex];
         context.textBaseline = 'middle';
         context.textAlign = 'left';
         context.font = "30px sans-serif";
@@ -366,6 +359,9 @@ const renderTitle = (context, state) => {
             target.top + target.height / 2,
         ),
     );
+    if (state.instructions) {
+        renderInstructions(context, state);
+    }
     /*drawTintedImage(context, startGameImage.image, '#f0a400', 1, startGameImage,
         new Rectangle(startGameImage).scale(3).moveCenterTo(WIDTH / 2, HEIGHT / 2)
     );*/
@@ -375,6 +371,30 @@ const renderTitle = (context, state) => {
     //);
     // renderForeground(state.world);
 };
+
+
+// VictorPines [CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0)], from Wikimedia Commons
+// https://commons.wikimedia.org/wiki/File:Xbox_button_B.svg
+// https://commons.wikimedia.org/wiki/File:Xbox_button_A.svg
+// https://commons.wikimedia.org/wiki/File:Xbox_button_Y.svg
+// https://commons.wikimedia.org/wiki/File:Xbox_button_X.svg
+// https://commons.wikimedia.org/wiki/File:Xbox_Left_stick_button.svg
+function renderInstructions(context, state) {
+    // When instructions are displayed, we put them in place of the title screen options.
+    if (!state.instructions) return
+    const cardImage = state.instructions === 1 ? instructionsCard1 : instructionsCard2;
+    drawImage(context, cardImage.image, cardImage,
+        new Rectangle(cardImage).scale(2).moveCenterTo(WIDTH / 2, HEIGHT / 2)
+    );
+    if (state.instructions === 1) {
+        drawImage(context, requireImage('gfx/Xbox_button_X.svg'), r(20, 20),
+            r(20, 20, {left: 525, top: 180}));
+        drawImage(context, requireImage('gfx/Xbox_button_A.svg'), r(20, 20),
+            r(20, 20, {left: 525, top: 295}));
+        drawImage(context, requireImage('gfx/Xbox_button_Y.svg'), r(20, 20),
+            r(20, 20, {left: 525, top: 415}));
+    }
+}
 
 const gameOverImage = r(82, 30, {image: requireImage('gfx/gameover.png', PRIORITY_FIELD)});
 const gameOverAnimation = createAnimation('gfx/goversheet.png', r(100, 100),
@@ -417,13 +437,16 @@ function renderGameOver(context, state) {
     }
 
     renderHUD(context, state);
+    if (state.instructions) {
+        renderInstructions(context, state);
+    }
 }
 
 
 module.exports = render;
 
 const {
-    checkpoints, renderBackground, renderForeground,
+    renderBackground, renderForeground,
 } = require('world');
 
 const {
@@ -435,7 +458,7 @@ const {
     LOOT_HELMET,
     LOOT_GAUNTLET,
     LOOT_NECKLACE,
-    LOOT_SHIELD,
+    LOOT_NEEDLE,
     lootData,
     renderLoot,
     getComboMultiplier,
@@ -445,6 +468,8 @@ const {
     necklaceAnimation,
     shieldAnimation,
 } = require('loot');
+
+const { checkPointArray } = require('checkPoints');
 
 const { renderEnemy, renderEnemyForeground } = require('enemies');
 

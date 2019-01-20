@@ -115,23 +115,6 @@ const needleFlipAnimation = {
     frameDuration: 6,
 };
 
-
-const blastRectangle = r(20, 7);
-const blastStartAnimation = {
-    frames: [
-        {...blastRectangle, image: requireImage('gfx/attacks/b1.png', PRIORITY_HEROES)},
-    ],
-    frameDuration: 2,
-};
-const blastLoopAnimation = {
-    frames: [
-        {...blastRectangle, image: requireImage('gfx/attacks/b2.png', PRIORITY_HEROES)},
-        {...blastRectangle, image: requireImage('gfx/attacks/b3.png', PRIORITY_HEROES)},
-        {...blastRectangle, image: requireImage('gfx/attacks/b4.png', PRIORITY_HEROES)},
-    ],
-    frameDuration: 2,
-};
-
 const deflectAnimation = {
     frames: [
         {...r(14, 15), image: requireImage('gfx/attacks/deflect1.png', PRIORITY_FIELD)},
@@ -373,6 +356,7 @@ const rateTextAnimation = {
 };
 
 const getFrame = (animation, animationTime) => {
+    animationTime = Math.max(0, animationTime);
     let frameIndex = Math.floor(animationTime / (FRAME_LENGTH * (animation.frameDuration || 1)));
     if (animation.loop === false) { // You can set this to prevent an animation from looping.
         frameIndex = Math.min(frameIndex, animation.frames.length - 1);
@@ -410,8 +394,6 @@ module.exports = {
     createAnimation,
     getHitbox,
     needleFlipAnimation,
-    blastStartAnimation,
-    blastLoopAnimation,
     deflectAnimation,
     damageAnimation,
     explosionAnimation,

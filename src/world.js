@@ -341,6 +341,7 @@ function setCheckpoint(state, checkpoint) {
 function applyCheckpointToState(state, checkpoint, clearAllSprites = true) {
     if (!checkpoint) checkpoint = state.checkpoint || CHECK_POINT_FIELD_START;
     state = checkpoints[checkpoint](state);
+    state = {...state, flashHudUntil: undefined};
     if (!clearAllSprites) return {...state, bgm: state.world.bgm};
     return clearSprites({...state, bgm: state.world.bgm});
 }

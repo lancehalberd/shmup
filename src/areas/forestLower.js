@@ -22,6 +22,7 @@ const CHECK_POINT_FOREST_LOWER_BOSS = 'forestLowerBoss'
 
 module.exports = {
     CHECK_POINT_FOREST_LOWER_START,
+    CHECK_POINT_FOREST_LOWER_BOSS,
     getForestLowerWorld,
 };
 

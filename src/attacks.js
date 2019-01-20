@@ -15,8 +15,6 @@ const {
     requireImage, r,
     createAnimation,
     getFrame,
-    blastStartAnimation,
-    blastLoopAnimation,
     hugeExplosionAnimation,
     PRIORITY_HEROES,
 } = require('animations');
@@ -36,9 +34,9 @@ const orbAnimation = {
 };
 
 
-const sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(9, 9));
+const sprayStartAnimation = createAnimation('gfx/attacks/s1.png', r(7, 7));
 const sprayAnimationUp = createAnimation('gfx/attacks/s3.png', r(9, 9));
-const sprayAnimationRight = createAnimation('gfx/attacks/s2.png', r(9, 9));
+const sprayAnimationRight = createAnimation('gfx/attacks/s2.png', r(11, 7));
 const sprayAnimationDown = createAnimation('gfx/attacks/s4.png', r(9, 9));
 
 
@@ -66,6 +64,23 @@ const stabAnimation = {
         {...stabGeometry, image: requireImage('gfx/attacks/stab4.png', PRIORITY_HEROES)},
     ],
     frameDuration: 3,
+};
+
+
+const blastRectangle = r(20, 7);
+const blastStartAnimation = {
+    frames: [
+        {...r(7, 7), image: requireImage('gfx/attacks/b1.png', PRIORITY_HEROES)},
+    ],
+    frameDuration: 2,
+};
+const blastLoopAnimation = {
+    frames: [
+        {...blastRectangle, image: requireImage('gfx/attacks/b2.png', PRIORITY_HEROES)},
+        {...blastRectangle, image: requireImage('gfx/attacks/b3.png', PRIORITY_HEROES)},
+        {...blastRectangle, image: requireImage('gfx/attacks/b4.png', PRIORITY_HEROES)},
+    ],
+    frameDuration: 2,
 };
 
 const attacks = {
@@ -233,7 +248,8 @@ const attacks = {
             explosion: true,
         },
     },
-}
+};
+window.attacks = attacks;
 
 attacks[ATTACK_RED_LASER] = {
     ...attacks[ATTACK_LASER],
@@ -356,11 +372,11 @@ const renderAttack = (context, state, attack) => {
     const {color, amount} = getAttackTint(attack);
     const scaleX = attack.scaleX || attack.scale || 1;
     const scaleY = attack.scaleY || attack.scale || 1;
-    let target = attack;
+    let target = new Rectangle(frame).moveTo(attack.left, attack.top);
     context.save();
     const rotation = attack.rotation || 0;
     context.translate(attack.left + target.width / 2, attack.top + target.height / 2);
-    target = new Rectangle(attack).moveTo(-target.width / 2, -target.height / 2);
+    target = new Rectangle(target).moveTo(-target.width / 2, -target.height / 2);
     if (scaleX !== 1 || scaleY !== 1) {
         context.scale(scaleX, scaleY);
     }
@@ -397,7 +413,9 @@ function getAttackTint(attack) {
     return {};
 }
 function default_advanceAttack(state, attack) {
-    let {left, top, width, height, vx, vy, delay, animationTime, playerIndex, ladybugIndex, melee, explosion, ttl} = attack;
+    let {left, top, vx, vy, delay, animationTime, playerIndex, ladybugIndex, melee, explosion, ttl} = attack;
+    let frame = getAttackFrame(state, attack);
+    let { width, height } = frame;
     if ((delay > 0 || melee)) {
         delay--;
         if (!explosion && playerIndex >= 0) {
@@ -406,7 +424,11 @@ function default_advanceAttack(state, attack) {
                 source = state.players[playerIndex].ladybugs[ladybugIndex];
             }
             left = source.left + source.vx + source.width + (attack.xOffset || 0) + Math.round(width * (attack.scale || 1) / 2);
-            top = source.top + source.vy + Math.round((source.height - attack.height) / 2) + (attack.yOffset || 0);
+            top = source.top + source.vy + (source.height - attack.height) / 2 + (attack.yOffset || 0);
+            const startAnimation = attacks[attack.type].startAnimation;
+            if (delay === 0 && startAnimation) {
+                animationTime = startAnimation.frames.length * startAnimation.frameDuration * FRAME_LENGTH;
+            }
         }
     }
     if (!(delay > 0)) {
@@ -445,6 +467,7 @@ function advanceAttack(state, attack) {
 
 module.exports = {
     attacks,
+    getAttackFrame,
     createAttack,
     getAttackHitbox,
     getAttackHitboxes,

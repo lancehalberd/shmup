@@ -1,5 +1,6 @@
 /* globals Float32Array, clearTimeout, setTimeout, Audio, Set, Map */
 const sounds = new Map();
+window.sounds = sounds;
 let soundsMuted = false;
 
 function ifdefor(value, defaultValue) {
@@ -13,7 +14,7 @@ function ifdefor(value, defaultValue) {
 }
 
 const requireSound = key => {
-    let source, offset, volume, duration, limit;
+    let source, offset, volume, duration, limit, repeatFrom;
     if (typeof key === 'string') {
         [source, offset, volume] = key.split('+');
         key = source;
@@ -22,6 +23,7 @@ const requireSound = key => {
         volume = key.volume;
         limit = key.limit;
         source = key.source;
+        repeatFrom = key.repeatFrom;
         key = key.key || source;
     }
     if (sounds.has(key)) return sounds.get(key);
@@ -32,6 +34,7 @@ const requireSound = key => {
     newSound.customDuration = duration || 0;
     newSound.defaultVolume = volume || 1;
     newSound.instanceLimit = limit || 5;
+    newSound.repeatFrom = repeatFrom || 0;
     sounds.set(key, newSound);
     return newSound;
 };
@@ -78,38 +81,35 @@ const playSound = (key) => {
 
 let previousTrack = null, currentTrackSource = null;
 const playTrack = (source, timeOffset) => {
-    let originalSource = source;
-    let offset, volume, duration;
-    [source, offset, volume] = source.split('+');
     if (previousTrack) {
         previousTrack.pause();
         if (previousTrack.timeoutId) clearTimeout(previousTrack.timeoutId);
     }
-    if (offset) [offset, duration] = offset.split(':').map(Number);
     const sound = requireSound(source);
-    const startOffset = (ifdefor(offset, sound.offset) || 0) / 1000;
-    const customDuration = (duration || sound.customDuration || 0) / 1000;
-    sound.volume = Math.min(1, (ifdefor(volume, sound.defaultVolume) || 1) / 50);
+    const startOffset = (sound.offset || 0) / 1000;
+    const customDuration = (sound.customDuration || 0) / 1000;
+    sound.volume = Math.min(1, (sound.defaultVolume || 1) / 50);
     if (soundsMuted) {
         sound.volume = 0;
     }
-    currentTrackSource = originalSource;
     function startTrack(offset) {
+        currentTrackSource = source;
+        // console.log('bgm:', {offset});
         // console.log({source, offset, actual: startOffset + offset, customDuration});
         sound.currentTime = startOffset + offset;
         sound.play().then(() => {
-            currentTrackSource = originalSource;
+            currentTrackSource = source;
             // If a custom duration is set, restart the song at that point.
             if (customDuration) {
                 sound.timeoutId = setTimeout(() => {
                     sound.pause();
-                    startTrack(0);
+                    startTrack(sound.repeatFrom / 1000);
                 }, (customDuration - offset) * 1000);
             }
             sound.onended = () => {
                 if (sound.timeoutId) clearTimeout(sound.timeoutId);
                 currentTrackSource = null;
-                startTrack(0);
+                startTrack(sound.repeatFrom / 1000);
             }
         }).catch(() => {
             currentTrackSource = null;
@@ -193,6 +193,7 @@ const preloadSounds = () => {
         'bgm/space.mp3+0+2',
         'bgm/circus.mp3+0+1',
         'bgm/ocean.mp3+0+2',
+        {key: 'city', source: 'bgm/sky.mp3', volume: 10, repeatFrom: 8000, offset: '0:132000'},
     ].forEach(requireSound);
 };
 

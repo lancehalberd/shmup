@@ -20,6 +20,11 @@ const {
     getFrame,
 } = require('animations');
 const { heroesData, updatePlayer, isHeroSwapping } = require('heroes');
+const { LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
+const { getAttackTint } = require('attacks');
+const { addEffectToState, createEffect } = require('effects');
+const { getEnemyHitboxes, enemyIsActive, isIntersectingEnemyHitboxes } = require('enemies');
+const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
 
 const beeHitbox = {left: 10, top: 12, width: 60, height: 40};
 const beeRectangle = r(88, 56, {
@@ -99,16 +104,23 @@ heroesData[HERO_BEE] = {
             left: player.sprite.left + player.sprite.width - 10,
             top: player.sprite.top + player.sprite.height / 2,
         });
+        let invulnerableFor = 500;
+        if (state.players[0].relics[LOOT_NECKLACE]) invulnerableFor += 500;
         return updatePlayer(state, playerIndex,
-            {usingSpecial: false, invulnerableFor: 500},
+            {usingSpecial: false, invulnerableFor},
         );
     },
     advanceHero(state, playerIndex) {
         const player = state.players[playerIndex];
         const sprite = player.sprite;
-        const powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
-        const tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
-        const triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        let powers = player.powerups.filter(powerup => powerup === LOOT_ATTACK_POWER || powerup === LOOT_COMBO).length;
+        let tripleRates = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_RATE || powerup === LOOT_TRIPLE_COMBO).length;
+        let triplePowers = player.powerups.filter(powerup => powerup === LOOT_TRIPLE_POWER || powerup === LOOT_TRIPLE_COMBO).length;
+        if (state.players[0].relics[LOOT_NEEDLE]) {
+            powers+=2;
+            tripleRates+=2;
+            triplePowers+=2;
+        }
         const numTargets = 3 + tripleRates;
         const size = 50 + powers * 10 + triplePowers * 5;
         const targets = [...player[HERO_BEE].targets].slice(0, numTargets);
@@ -284,9 +296,3 @@ heroesData[HERO_BEE] = {
         return updatePlayer(state, playerIndex, {[HERO_BEE]: {...player[HERO_BEE], targets}});
     },
 };
-
-const { getAttackTint } = require('attacks');
-const { addEffectToState, createEffect } = require('effects');
-const { getEnemyHitboxes, enemyIsActive, isIntersectingEnemyHitboxes } = require('enemies');
-const { checkToAddLightning, EFFECT_ARC_LIGHTNING } = require('effects/lightning');
-

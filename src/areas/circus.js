@@ -1,6 +1,6 @@
 const {
     FRAME_LENGTH, GAME_HEIGHT, WIDTH,
-    ATTACK_BULLET, ENEMY_MONK, LOOT_FLAME_COIN,
+    ATTACK_BULLET, LOOT_FLAME_COIN,
 } = require('gameConstants');
 const { ENEMY_HORNET, ENEMY_HORNET_KNIGHT } = require('enemies/hornets');
 const random = require('random');
@@ -8,7 +8,7 @@ const { createAnimation, r, requireImage, getFrame } = require('animations');
 const {
     getNewLayer, allWorlds, updateLayerSprite,
     checkpoints, setCheckpoint, setEvent, advanceWorld,
-    clearLayers,
+    clearLayers, getGroundHeight,
 } = require('world');
 
 const WORLD_CIRCUS = 'circus';
@@ -19,7 +19,6 @@ const CHECK_POINT_CIRCUS_END = 'circusEnd';
 const CHECK_POINT_CIRCUS_BOSS = 'circusBoss';
 const CIRCUS_DURATION = 120000;
 const CIRCUS_EASY_DURATION = 30000;
-const SAFE_HEIGHT = GAME_HEIGHT;
 
 const ENEMY_FIRE_RING = 'fireRing';
 const ENEMY_BUBBLE_MACHINE = 'bubbleMachine';
@@ -32,8 +31,11 @@ const ENEMY_BALLOON_MONK = 'balloonMonk';
 
 module.exports = {
     CHECK_POINT_CIRCUS_START,
+    CHECK_POINT_CIRCUS_BOSS,
     WORLD_CIRCUS,
     ENEMY_GRASSHOPPER,
+    ENEMY_FIRE_RING,
+    ENEMY_CLAW,
     getCircusWorld,
 };
 
@@ -41,16 +43,17 @@ const { updatePlayer, getHeroHitbox } = require('heroes');
 const { addLootToState, createLoot } = require('loot');
 const {
     updateEnemy, getEnemyHitbox, removeEnemy,
-    enemyData, shoot_bulletAtPlayer,
-    createEnemy, addEnemyToState,
-    spawnEnemy, damageEnemy, setMode,
-    addBullet, renderEnemyFrame,
+    enemyData, createEnemy, addEnemyToState,
+    spawnEnemy, setMode, renderEnemyFrame,
 } = require('enemies');
 const { transitionToCircusBoss } = require('areas/circusBoss');
 const {
     addEnemyAttackToState, createAttack,
 } = require('attacks');
 const { ENEMY_BUBBLE, ENEMY_BUBBLE_SHOT } = require('areas/beachBoss');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_4 } = require('areas/stars4');
+const { LOOT_NEEDLE } = require('loot');
 
 checkpoints[CHECK_POINT_CIRCUS_START] = function (state) {
     const world = getCircusWorld();
@@ -99,6 +102,12 @@ function spawnRing(state, top, left) {
 }
 allWorlds[WORLD_CIRCUS] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NEEDLE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_4, CHECK_POINT_CIRCUS_END);
+    },
     events: {
         transition: (state, eventTime) => {
             state = updatePlayer(state, 0, {}, {targetLeft: -100, targetTop: 300});
@@ -474,7 +483,7 @@ enemyData[ENEMY_CLAW] = {
         state = updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
         enemy = state.idMap[enemy.id];
         if (enemy.mode === 'swiping') {
-            if (hitbox.top + hitbox.height > GAME_HEIGHT) {
+            if (hitbox.top + hitbox.height >= Math.min(GAME_HEIGHT, getGroundHeight(state))) {
                 return setMode(state, enemy, 'pause', {vy: 0});
             }
             return updateEnemy(state, enemy, {vy: Math.min(15, enemy.vy + 1)});

@@ -37,6 +37,7 @@ const SAFE_HEIGHT = GAME_HEIGHT - 90;
 const WORLD_FOREST_UPPER = 'forestUpper';
 module.exports = {
     CHECK_POINT_FOREST_UPPER_START,
+    CHECK_POINT_FOREST_UPPER_BOSS,
     getForestUpperWorld,
 };
 

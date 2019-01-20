@@ -1,4 +1,6 @@
-
+module.exports = {
+    transitionToCastleBoss,
+};
 const {
     FRAME_LENGTH, HEIGHT, WIDTH, GAME_HEIGHT,
     ENEMY_FLYING_ANT,
@@ -6,27 +8,30 @@ const {
 } = require('gameConstants');
 const random = require('random');
 const Rectangle = require('Rectangle');
-const { createAnimation, r, getFrame, requireImage, getHitbox } = require('animations');
+const { createAnimation, r } = require('animations');
 const { allWorlds, getNewLayer, clearLayers, getGroundHeight } = require('world');
-
-const WORLD_CASTLE_BOSS = 'castleBoss';
-const BOSS_DURATION = 80000;
-
-module.exports = {
-    transitionToCastleBoss,
-};
-
 const { getNewSpriteState } = require('sprites');
 const { createAttack, addEnemyAttackToState } = require('attacks');
 const {
     enemyData, createEnemy, addEnemyToState,
     updateEnemy, setMode, getEnemyHitbox,
-    removeEnemy,
+    removeEnemy, damageEnemy,
  } = require('enemies');
+ const {
+    createEffect, addEffectToState
+ } = require('effects');
+ const {
+    getSealTargetPosition, EFFECT_SEAL_TARGET
+ } = require('effects/sealPortal');
 const { ATTACK_LIGHTNING_BOLT } = require('enemies/beetles');
 const { ENEMY_JUMPING_SPIDER } = require('enemies/spiders');
 const { ENEMY_STINK_BUG } = require('areas/sewer');
 const { ENEMY_BUBBLE_SHOT } = require('areas/beachBoss');
+const { LOOT_HELMET, LOOT_GAUNTLET, LOOT_NECKLACE, LOOT_NEEDLE } = require('loot');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_BOSS } = require('areas/starsBoss');
+
+const WORLD_CASTLE_BOSS = 'castleBoss';
 
 const throneAnimation = createAnimation('gfx/scene/castle/throneroom.png', r(400, 300));
 const flag = createAnimation('gfx/scene/castle/thronethings.png', r(20, 60), {y: 9, rows: 4});
@@ -148,6 +153,8 @@ allWorlds[WORLD_CASTLE_BOSS] = {
                 left: throne.left + 335,
                 top: 150,
             });
+            const portalsSealed = state.portalsSealed || {};
+            newEnemy.life *= (1 - 0.2 * Object.keys(portalsSealed).length);
             lifebars[newEnemy.id] = {
                 left: 100, top: HEIGHT - 12, width: 600, height: 8, startTime: world.time,
             };
@@ -199,6 +206,9 @@ const empressGeometry = r(90, 93,{
         {"left":25,"width":14,"top":27,"height":7},
     ],
 });
+const friendlyEmpressGeometry = {...empressGeometry,
+    hitboxes: [], damageBoxes: [],
+};
 const prepareGeometry = {...empressGeometry,
     damageBoxes:[
         {"left":13,"width":12,"top":5,"height":6},
@@ -233,6 +243,7 @@ const deadEmpressGeometry = r(90, 93,{
 enemyData[ENEMY_EMPRESS] = {
     sittingAnimation: createAnimation('gfx/enemies/empress/sittingempress.png', sittingEmpressGeometry),
     animation: createAnimation('gfx/enemies/empress/empress.png', empressGeometry, {cols: 2}),
+    friendlyAnimation: createAnimation('gfx/enemies/empress/empress.png', friendlyEmpressGeometry, {cols: 2}),
     prepareAnimation: createAnimation('gfx/enemies/empress/empress.png', prepareGeometry, {x: 2}),
     strike1Animation: createAnimation('gfx/enemies/empress/empress.png', strike1Geometry, {x: 3}),
     strike2Animation: createAnimation('gfx/enemies/empress/empress.png', strike2Geometry, {x: 4}),
@@ -246,6 +257,9 @@ enemyData[ENEMY_EMPRESS] = {
             if (touchingGround) return this.deadAnimation;
             return this.hurtAnimation;
         }
+        if (enemy.mode === 'hurt') return this.hurtAnimation;
+        if (enemy.mode === 'defeated') return this.deadAnimation;
+        if (enemy.mode === 'returnToThrone' || enemy.mode === 'sit') return this.friendlyAnimation;
         if (enemy.mode === 'prepareSlash1' || enemy.mode === 'preparingThunder') {
             return this.prepareAnimation;
         }
@@ -258,17 +272,23 @@ enemyData[ENEMY_EMPRESS] = {
     },
     updateState(state, enemy) {
         if (enemy.dead || enemy.snaredForFinisher) return state;
+        const allPortalsSealed = Object.keys(state.portalsSealed || {}).length >= 4;
         state = updateEnemy(state, enemy, {modeTime: enemy.modeTime + FRAME_LENGTH});
         enemy = state.idMap[enemy.id];
         if (enemy.mode === 'sitting') {
             if (state.world.throneRoom.sprites[0].left < 10) {
+                if (allPortalsSealed) {
+                    if (enemy.modeTime >= 2000) {
+                        return enterStarWorld(state, CHECK_POINT_STARS_BOSS, CHECK_POINT_STARS_BOSS);
+                    }
+                    return state;
+                }
                 state = addPortals(state);
                 return setMode(state, enemy, 'prepareSlashCombo', {
                     left: enemy.left - 55,
                     top: enemy.top - 10,
                     comboX: 400, comboY: 100
                 });
-
             }
         } else if (enemy.mode === 'prepareSlashCombo') {
             return moveToTarget(state, enemy, enemy.speed / 2, enemy.comboX, enemy.comboY, 'prepareSlash1', 400);
@@ -362,6 +382,27 @@ enemyData[ENEMY_EMPRESS] = {
                     lightningChance: Math.min(1, enemy.lightningChance + 0.2),
                 });
             }
+        } else if (enemy.mode === 'hurt') {
+            if (enemy.modeTime >= 500 && !allPortalsSealed) {
+                return setMode(state, enemy, 'choose', {vx: 0, vy: 0, modeTime: -600});
+            }
+            const touchingGround = enemy.top + 220 >= getGroundHeight(state);
+            if (allPortalsSealed && touchingGround) {
+                state = {...state, world: {...state.world, lifebars: []}};
+                return setMode(state, enemy, 'defeated', {vx: 0, life: 100});
+            }
+            return updateEnemy(state, enemy, {vx: 2, vy: enemy.vy + 0.5});
+        } else if (enemy.mode === 'defeated') {
+            if (enemy.modeTime >= 1500) {
+                return setMode(state, enemy, 'returnToThrone');
+            }
+        } else if (enemy.mode === 'returnToThrone') {
+            return moveToTarget(state, enemy, enemy.speed / 3, 405, 218, 'sit', 300);
+        } else if (enemy.mode === 'sit') {
+            // This extra mode is used to offset the empress as she changes to the sitting frame
+            // which doesn't line up well with her other frames. We do the inverse of this
+            // when she first leaves the throne.
+            return setMode(state, enemy, 'sitting', {left: enemy.left + 55, top: enemy.top + 10});
         }
         return state;
     },
@@ -429,19 +470,30 @@ function moveToTarget(state, enemy, speed, targetX, targetY, mode, delay = 0) {
     });
 }
 function addPortals(state) {
+    const portalsSealed = state.portalsSealed || {};
     const firstPortalTime = 5000 / FRAME_LENGTH;
-    let portal = createEnemy(state, ENEMY_FLYING_ANT_PORTAL,
-        {left: 720, top: 320, delay: firstPortalTime});
-    state = addEnemyToState(state, portal);
-    portal = createEnemy(state, ENEMY_JUMPING_SPIDER_PORTAL,
-        {left: 700, top: -20, rotation: Math.PI / 2, delay: firstPortalTime + 10 * 50});
-    state = addEnemyToState(state, portal);
-    portal = createEnemy(state, ENEMY_STINK_BUG_PORTAL,
-        {left: 720, top: 200, delay: firstPortalTime + 20 * 50});
-    state = addEnemyToState(state, portal);
-    portal = createEnemy(state, ENEMY_BUBBLE_SHOT_PORTAL,
-        {left: 700, top: 450, rotation: Math.PI / 3, delay: firstPortalTime + 25 * 50});
-    state = addEnemyToState(state, portal);
+    const testFactor = 1;
+    let portal;
+    if (!portalsSealed[enemyData[ENEMY_FLYING_ANT_PORTAL].relic]) {
+        portal = createEnemy(state, ENEMY_FLYING_ANT_PORTAL,
+            {left: 720, top: 320, delay: firstPortalTime});
+        state = addEnemyToState(state, portal);
+    }
+    if (!portalsSealed[enemyData[ENEMY_JUMPING_SPIDER_PORTAL].relic]) {
+        portal = createEnemy(state, ENEMY_JUMPING_SPIDER_PORTAL,
+            {left: 700, top: -20, rotation: Math.PI / 2, delay: firstPortalTime + 10 * 50 * testFactor});
+        state = addEnemyToState(state, portal);
+    }
+    if (!portalsSealed[enemyData[ENEMY_STINK_BUG_PORTAL].relic]) {
+        portal = createEnemy(state, ENEMY_STINK_BUG_PORTAL,
+            {left: 720, top: 200, delay: firstPortalTime + 20 * 50 * testFactor});
+        state = addEnemyToState(state, portal);
+    }
+    if (!portalsSealed[enemyData[ENEMY_BUBBLE_SHOT_PORTAL].relic]) {
+        portal = createEnemy(state, ENEMY_BUBBLE_SHOT_PORTAL,
+            {left: 700, top: 450, rotation: Math.PI / 3, delay: firstPortalTime + 25 * 50 * testFactor});
+        state = addEnemyToState(state, portal);
+    }
     return state;
 }
 const ENEMY_FLYING_ANT_PORTAL = 'flyingAntPortal';
@@ -453,7 +505,7 @@ const portalAnimation = createAnimation('gfx/scene/portal/portal.png', portalGeo
 const startTime = 2000;
 enemyData[ENEMY_FLYING_ANT_PORTAL] = {
     animation: portalAnimation,
-    deathAnimation: createAnimation('gfx/scene/portal/portal.png', portalGeometry, {rows: 3, y: -1, duration: 8, frameMap: [2, 1, 0]}, {loop: false}),
+    deathAnimation: createAnimation('gfx/scene/portal/portal.png', portalGeometry, {rows: 4, y: -1, duration: 8, frameMap: [3, 2, 1, 0]}, {loop: false}),
     getAnimation(state, enemy) {
         if (enemy.dead) return this.deathAnimation;
         if (enemy.modTime >= startTime + this.number * this.interval) return this.deathAnimation;
@@ -469,6 +521,24 @@ enemyData[ENEMY_FLYING_ANT_PORTAL] = {
             }
             return state;
         }
+        // Add a target for sealing the portal to the screen if the player has the
+        // relic that matches this portal.
+        if (this.getAnimation(state, enemy) === this.animation && state.players[0].relics[this.relic]) {
+            const myPortal = state.effects.filter(
+                e => e.type === EFFECT_SEAL_TARGET && e.enemyId === enemy.id
+            )[0];
+            if (!myPortal) {
+                state = updateEnemy(state, enemy, {relic: this.relic});
+
+                let portal = createEffect(EFFECT_SEAL_TARGET, {enemyId: enemy.id});
+                // Make sure the target is position correctly on the first frame.
+                portal = {
+                    ...portal,
+                    ...getSealTargetPosition(state, portal, enemy),
+                };
+                return addEffectToState(state, portal);
+            }
+        }
         return this.checkToSpawn(state, enemy);
     },
     checkToSpawn(state, enemy) {
@@ -476,7 +546,8 @@ enemyData[ENEMY_FLYING_ANT_PORTAL] = {
         enemy = state.idMap[enemy.id];
         const modTime = enemy.modTime;
         if (modTime === 0 || modTime === startTime + this.number * this.interval) {
-            state = updateEnemy(state, enemy, {animationTime: 0});
+            // Note thate marking hidden removes the target when the portal starts closing.
+            state = updateEnemy(state, enemy, {animationTime: 0, hidden: modTime !== 0});
         }
         //if (modTime >= startTime - 1000 && modTime < startTime) return flashEnemy(state, enemy);
         //if (modTime === startTime) return updateEnemy(state, enemy, {tint: null});
@@ -499,9 +570,17 @@ enemyData[ENEMY_FLYING_ANT_PORTAL] = {
             weight: 30, // This is the weight of the current velocity over the tracking velocity.
         });
     },
+    onDeathEffect(state) {
+        let empress = state.enemies.filter(e => e.type === ENEMY_EMPRESS)[0];
+        if (!empress) return state;
+        state = damageEnemy(state, empress.id, {damage: enemyData[ENEMY_EMPRESS].props.life / 5});
+        empress = state.idMap[empress.id];
+        return setMode(state, empress, 'hurt', {tint: null, vy: -2});
+    },
     interval: 300,
     number: 10,
     period: 15000,
+    relic: LOOT_HELMET,
     props: {
         life: 1,
         stationary: true,
@@ -520,13 +599,14 @@ enemyData[ENEMY_JUMPING_SPIDER_PORTAL] = {
             vy: 5,
             grounded: true,
             jumps: 3,
-            jumpVelocity: random.element([-16, -22, -28]),
+            jumpVelocity: [-16, -22, -28][index % 3],
             mode: 'jumping',
         });
     },
     interval: 500,
     number: 5,
     period: 20000,
+    relic: LOOT_GAUNTLET,
 };
 
 enemyData[ENEMY_STINK_BUG_PORTAL] = {
@@ -547,11 +627,12 @@ enemyData[ENEMY_STINK_BUG_PORTAL] = {
     interval: 20,
     number: 8,
     period: 25000,
+    relic: LOOT_NECKLACE,
 };
 
 enemyData[ENEMY_BUBBLE_SHOT_PORTAL] = {
     ...enemyData[ENEMY_FLYING_ANT_PORTAL],
-    spawnEnemy(state, enemy, index) {
+    spawnEnemy(state, enemy) {
         const sourceOffset = [20, 40]
         return createEnemy(state, ENEMY_BUBBLE_SHOT, {
             left: enemy.left + sourceOffset[0],
@@ -567,6 +648,7 @@ enemyData[ENEMY_BUBBLE_SHOT_PORTAL] = {
     interval: 400,
     number: 6,
     period: 30000,
+    relic: LOOT_NEEDLE,
 };
 
 

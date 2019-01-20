@@ -31,6 +31,9 @@ const { spawnEnemy, createEnemy, addEnemyToState, updateEnemy, enemyData, remove
     ENEMY_FLEA,
 } = require('enemies');
 const { transitionToRestaurant } = require('areas/cityToRestaurant');
+const { enterStarWorld } = require('areas/stars');
+const { CHECK_POINT_STARS_3 } = require('areas/stars3');
+const { LOOT_NECKLACE } = require('loot');
 
 checkpoints[CHECK_POINT_CITY_START] = function (state) {
     const world = getCityWorld();
@@ -59,6 +62,12 @@ const {
 } = require('enemyPatterns');
 allWorlds[WORLD_CITY] = {
     initialEvent: 'nothing',
+    isPortalAvailable(state) {
+        return !state.players[0].relics[LOOT_NECKLACE];
+    },
+    enterStarWorld(state) {
+        return enterStarWorld(state, CHECK_POINT_STARS_3, CHECK_POINT_CITY_MIDDLE);
+    },
     events: {
         nothing: nothing(1000, 'easyRoaches'),
         easyRoaches: easyRoaches('powerup'),
@@ -168,7 +177,7 @@ function getCityWorld() {
         targetY: 500,
         targetFrames: 50 * 10,
         time: 0,
-        bgm: 'bgm/alley.mp3',
+        bgm: 'city',
         groundHeight: 30,
         ...getCityLayers(),
     };
