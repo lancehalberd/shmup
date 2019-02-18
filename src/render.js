@@ -32,6 +32,41 @@ const {
     getFrame,
 } = require('animations');
 
+module.exports = render;
+
+const {
+    renderBackground, renderForeground,
+} = require('world');
+
+const {
+    heroesData,
+    renderHero,
+} = require('heroes');
+
+const {
+    LOOT_HELMET,
+    LOOT_GAUNTLET,
+    LOOT_NECKLACE,
+    LOOT_NEEDLE,
+    lootData,
+    renderLoot,
+    getComboMultiplier,
+    powerupGoals,
+    helmetAnimation,
+    gauntletAnimation,
+    necklaceAnimation,
+    shieldAnimation,
+} = require('loot');
+const { checkPointArray } = require('checkPoints');
+const { renderEnemy, renderEnemyForeground } = require('enemies');
+const {
+    renderEffect
+} = require('effects');
+const {
+    renderAttack,
+} = require('attacks');
+const { WORLD_FIELD } = require('areas/field');
+
 const canvas = document.createElement('canvas');
 window.canvas = canvas;
 canvas.width = WIDTH;
@@ -46,7 +81,7 @@ const HUD_PADDING = 9;
 const dragonflyIdleAnimation = createAnimation('gfx/heroes/dragonfly/dragonflyidle.png', r(88, 56), {priority: PRIORITY_TITLE});
 
 let rewindAlpha = 1;
-const render = (state) => {
+function render(state) {
     if (state.hitboxFrame) {
         renderHitboxes(context, state);
         return;
@@ -123,6 +158,7 @@ const render = (state) => {
     }
     // Render HUD on top of the screen fading to black.
     renderHUD(context, state);
+    renderControllerHints(context, state);
     if (state.paused || state.instructions) {
         stopTrack();
         context.save();
@@ -138,12 +174,12 @@ const render = (state) => {
         playSound(sfx);
     }
     state.sfx = {};
-};
+}
 
 const hudImage = r(800, 36, {image: requireImage('gfx/hud/newhud.png', PRIORITY_FIELD)});
 const powerupBarAnimation = createAnimation('gfx/hud/powerup0.png', r(100, 19), {priority: PRIORITY_FIELD});
 const comboBarAnimation = createAnimation('gfx/hud/combo0.png', r(100, 19), {priority: PRIORITY_FIELD});
-const renderHUD = (context, state) => {
+function renderHUD(context, state) {
     drawImage(context, hudImage.image, hudImage, hudImage);
     for (let i = 0; i < state.players[0].heroes.length; i++) {
         const heroType = state.players[0].heroes[i];
@@ -259,7 +295,44 @@ const renderHUD = (context, state) => {
     if (state.flashHudUntil > state.world.time) {
         drawImage(context, requireImage('gfx/hud/hudflash.png', PRIORITY_FIELD), r(800, 36), r(800, 36));
     }
-};
+}
+const buttonImage = requireImage('gfx/buttonssheet.png', PRIORITY_TITLE);
+const controllerKeyImage = r(30, 30, {left: 90, image: buttonImage});
+const controllerSpaceImage = r(30, 30, {image: buttonImage});
+const controllerCImage = r(30, 30, {left: 30, image: buttonImage});
+const controllerXImage = r(30, 30, {left: 60, image: buttonImage});
+const controllerButtonImage = r(30, 30, {left: 240, image: buttonImage});
+const controllerLeftButtonImage = r(30, 30, {left: 150, image: buttonImage});
+const controllerTopButtonImage = r(30, 30, {left: 210, image: buttonImage});
+const controllerBottomButtonImage = r(30, 30, {left: 180, image: buttonImage});
+const controllerHints = [
+    {keyImage: controllerSpaceImage, buttonImage: controllerLeftButtonImage},
+    {keyImage: controllerCImage, buttonImage: controllerBottomButtonImage},
+    {keyImage: controllerXImage, buttonImage: controllerTopButtonImage},
+]
+function renderControllerHints(context, state) {
+    if (state.world.type !== WORLD_FIELD) return;
+    let time = state.world.time;
+    const duration = 5000;
+    const pause = 2000;
+    const x = WIDTH / 2, y = Math.round(HEIGHT / 5);
+    for (const controllerHint of controllerHints) {
+        if (time < duration) {
+            if (time % (duration + pause) > 500 && time % (duration + pause) < 1000) return;
+            const { keyImage, buttonImage } = controllerHint;
+            let keyTarget = new Rectangle(keyImage).scale(2).moveCenterTo(x - 50, y);
+            drawImage(context, controllerKeyImage.image, controllerKeyImage, keyTarget);
+            drawImage(context, keyImage.image, keyImage, keyTarget);
+            let buttonTarget = new Rectangle(buttonImage).scale(2).moveCenterTo(x + 50, y);
+            drawImage(context, controllerButtonImage.image, controllerButtonImage, buttonTarget);
+            drawImage(context, buttonImage.image, buttonImage, buttonTarget);
+            return;
+        }
+        time -= duration;
+        if (time < pause) return;
+        time -= pause;
+    }
+}
 
 
 const selectNeedleImage = r(58, 7, {image: requireImage('gfx/needle.png', PRIORITY_TITLE)});
@@ -441,42 +514,3 @@ function renderGameOver(context, state) {
         renderInstructions(context, state);
     }
 }
-
-
-module.exports = render;
-
-const {
-    renderBackground, renderForeground,
-} = require('world');
-
-const {
-    heroesData,
-    renderHero,
-} = require('heroes');
-
-const {
-    LOOT_HELMET,
-    LOOT_GAUNTLET,
-    LOOT_NECKLACE,
-    LOOT_NEEDLE,
-    lootData,
-    renderLoot,
-    getComboMultiplier,
-    powerupGoals,
-    helmetAnimation,
-    gauntletAnimation,
-    necklaceAnimation,
-    shieldAnimation,
-} = require('loot');
-
-const { checkPointArray } = require('checkPoints');
-
-const { renderEnemy, renderEnemyForeground } = require('enemies');
-
-const {
-    renderEffect
-} = require('effects');
-
-const {
-    renderAttack,
-} = require('attacks');
